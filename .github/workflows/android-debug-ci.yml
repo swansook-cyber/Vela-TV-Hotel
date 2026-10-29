@@ -45,7 +45,7 @@ jobs:
           mkdir -p dist
           cp "$APK" dist/Vela-TV-Hotel-v1.0.0-code8-${GITHUB_SHA:0:7}-debug.apk
           sha256sum dist/*.apk | tee dist/SHA256SUMS.txt
-          printf 'source_commit=%s\\nversion_name=0.3.3\\nversion_code=7\\n' "$GITHUB_SHA" > dist/BUILD-IDENTITY.txt
+          printf 'source_commit=%s\\nversion_name=1.0.0\\nversion_code=8\\n' "$GITHUB_SHA" > dist/BUILD-IDENTITY.txt
       - uses: actions/upload-artifact@v4
         with:
           name: Vela-TV-Hotel-V1.0.0-VERIFIED-${{ github.run_number }}
