@@ -173,7 +173,7 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Content-Type", "text/html; charset=utf-8")
         self.send_header("Cache-Control", "no-store")
         self.send_header("X-Frame-Options", "DENY")
-        self.send_header("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'self'; form-action 'self'")
+        self.send_header("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'self'; img-src 'self'; media-src 'self'; form-action 'self'")
         self.send_header("Content-Length", str(len(payload)))
         self.end_headers()
         self.wfile.write(payload)
@@ -267,6 +267,22 @@ class Handler(BaseHTTPRequestHandler):
                     "SELECT at,actor,action,detail FROM audit ORDER BY id DESC LIMIT 50")]
                 return self.respond(200, {"published": store.state("published"), "devices": devices,
                                           "revisions": revisions, "audit": audit})
+            if path.startswith("/api/v1/admin/media-file/"):
+                filename = path.rsplit("/", 1)[-1]
+                stem, dot, extension = filename.partition(".")
+                if dot != "." or len(stem) != 64 or any(c not in "0123456789abcdef" for c in stem) or extension not in ("jpg", "jpeg", "png", "mp4"):
+                    return self.respond(404, {"error": "not_found"})
+                file = store.media_dir / filename
+                if not file.is_file():
+                    return self.respond(404, {"error": "not_found"})
+                data = file.read_bytes()
+                self.send_response(200)
+                self.send_header("Content-Type", {"jpg": "image/jpeg", "jpeg": "image/jpeg",
+                                                  "png": "image/png", "mp4": "video/mp4"}[extension])
+                self.send_header("Cache-Control", "no-store")
+                self.send_header("Content-Length", str(len(data)))
+                self.end_headers()
+                return self.wfile.write(data)
             return self.respond(404, {"error": "not_found"})
         finally:
             store.db.close()
@@ -288,6 +304,7 @@ button{{padding:.8rem;margin:.5rem;background:#dbad61;border:0}}pre{{white-space
 <button onclick="call('device',{{device_id:document.getElementById('device').value,action:'revoke'}})">Revoke</button></p>
 <p><input type="file" id="mediaFile" accept="image/jpeg,image/png,video/mp4">
 <button onclick="upload()">Upload media</button></p>
+<div id="mediaPreview"></div>
 <p>Playlist JSON (published separately from upload)</p><textarea id="playlist" style="height:8rem">[]</textarea>
 <button onclick="call('media',{{media:JSON.parse(document.getElementById('playlist').value)}})">Save playlist</button>
 <pre id="result"></pre>
@@ -300,7 +317,10 @@ async function upload(){{let file=document.getElementById('mediaFile').files[0];
 let bytes=await file.arrayBuffer();let hash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes))).map(x=>x.toString(16).padStart(2,'0')).join('');
 let ext=file.name.split('.').pop().toLowerCase();let r=await fetch('/api/v1/admin/media-file',{{method:'PUT',
 headers:{{'X-Content-SHA256':hash,'X-Media-Extension':ext}},body:bytes}});
-document.getElementById('result').textContent=await r.text()}}</script></html>"""
+document.getElementById('result').textContent=await r.text();
+if(r.ok){{let view=document.createElement(ext==='mp4'?'video':'img');view.src='/api/v1/admin/media-file/'+hash+'.'+ext;
+view.style.maxWidth='600px';view.style.maxHeight='320px';if(ext==='mp4')view.controls=true;
+document.getElementById('mediaPreview').replaceChildren(view)}}}}</script></html>"""
         return self.page(200, markup)
 
     def do_POST(self):
