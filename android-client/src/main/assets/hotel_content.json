@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "resort": {
+    "items": [
+      {
+        "title": "Welcome",
+        "description": "Welcome to Ao Nang Fiore Resort. Explore our resort information and enjoy your stay."
+      },
+      {
+        "title": "Resort Facilities",
+        "description": "Add verified opening times, facilities, photos and guest directions here."
+      },
+      {
+        "title": "Dining",
+        "description": "Add your verified restaurant menu, dining hours and booking details here."
+      },
+      {
+        "title": "Experiences",
+        "description": "Add your resort activities, offers and booking instructions here."
+      }
+    ]
+  },
+  "resort_entries_note": "Sample copy for testing. Replace with verified hotel information before guest use.",
+  "explore": {
+    "items": [
+      {
+        "title": "Ao Nang Beach",
+        "description": "Explore Ao Nang Beach. Add verified transport advice and current activity details."
+      },
+      {
+        "title": "Railay",
+        "description": "Explore Railay. Confirm boat schedules and conditions locally before sharing with guests."
+      },
+      {
+        "title": "Krabi Experiences",
+        "description": "Add your curated tours, activities, prices and verified operator contacts here."
+      }
+    ]
+  },
+  "guest": {
+    "items": [
+      {
+        "title": "Wi-Fi Information",
+        "description": "Add the approved guest Wi-Fi network and connection instructions here. Do not add passwords to a public repository."
+      },
+      {
+        "title": "Reception",
+        "description": "Add the hotel's verified contact and extension number here."
+      },
+      {
+        "title": "Check-in / Check-out",
+        "description": "Add verified check-in and check-out times here."
+      },
+      {
+        "title": "Guest Assistance",
+        "description": "Add safety and emergency procedures approved by resort management here."
+      }
+    ]
+  }
+}
