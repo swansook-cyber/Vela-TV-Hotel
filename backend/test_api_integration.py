@@ -1,4 +1,5 @@
 import json
+import os
 import tempfile
 import threading
 import unittest
@@ -58,6 +59,36 @@ class ApiIntegrationTests(unittest.TestCase):
                 with self.assertRaises(urllib.error.HTTPError) as error:
                     request("/api/v1/device/manifest", token=enrolled["token"])
                 self.assertEqual(error.exception.code, 401)
+            finally:
+                server.shutdown()
+                server.server_close()
+                thread.join(timeout=2)
+
+    def test_corrupt_upload_and_editor_cannot_publish(self):
+        with tempfile.TemporaryDirectory() as temp, patch.object(hotel_api, "ROOT", Path(temp)), \
+                patch.dict(os.environ, {"HOTEL_EDITOR_TOKEN": "editor-test-only",
+                                        "HOTEL_PUBLISHER_TOKEN": "publisher-test-only"}):
+            server = ThreadingHTTPServer(("127.0.0.1", 0), hotel_api.Handler)
+            thread = threading.Thread(target=server.serve_forever, daemon=True)
+            thread.start()
+            base = f"http://127.0.0.1:{server.server_port}"
+            try:
+                request = urllib.request.Request(
+                    base + "/api/v1/admin/publish", b"{}",
+                    {"Authorization": "Bearer editor-test-only",
+                     "Content-Type": "application/json"}, method="POST")
+                with self.assertRaises(urllib.error.HTTPError) as error:
+                    urllib.request.urlopen(request)
+                self.assertEqual(error.exception.code, 403)
+                request = urllib.request.Request(
+                    base + "/api/v1/admin/media-file", b"\xff\xd8\xffcorrupt",
+                    {"Authorization": "Bearer publisher-test-only",
+                     "X-Content-SHA256": "a" * 64, "X-Media-Extension": "jpg"},
+                    method="PUT")
+                with self.assertRaises(urllib.error.HTTPError) as error:
+                    urllib.request.urlopen(request)
+                self.assertEqual(error.exception.code, 400)
+                self.assertEqual(list((Path(temp) / "media").iterdir()), [])
             finally:
                 server.shutdown()
                 server.server_close()
