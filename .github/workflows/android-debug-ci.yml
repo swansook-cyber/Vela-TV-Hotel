@@ -32,8 +32,22 @@ jobs:
         run: python3 -m unittest discover -s backend -p 'test_*.py' -v
       - name: Build debug APK
         run: gradle --no-daemon :android-client:assembleDebug
+      - name: Verify actual APK identity, version and unique filename
+        shell: bash
+        run: |
+          set -euo pipefail
+          APK="android-client/build/outputs/apk/debug/android-client-debug.apk"
+          test -s "$APK"
+          AAPT="$(find "${ANDROID_HOME}/build-tools" -name aapt -type f | sort -V | tail -n 1)"
+          test -x "$AAPT"
+          "$AAPT" dump badging "$APK" | grep '^package:'
+          "$AAPT" dump badging "$APK" | grep -E "^package: name='net.velalab.tvhotel' versionCode='6' versionName='0.3.2'"
+          mkdir -p dist
+          cp "$APK" dist/Vela-TV-Hotel-v0.3.2-code6-${GITHUB_SHA:0:7}-debug.apk
+          sha256sum dist/*.apk | tee dist/SHA256SUMS.txt
+          printf 'source_commit=%s\\nversion_name=0.3.2\\nversion_code=6\\n' "$GITHUB_SHA" > dist/BUILD-IDENTITY.txt
       - uses: actions/upload-artifact@v4
         with:
-          name: Vela-TV-Hotel-V0.3.2-DEBUG-PILOT
-          path: android-client/build/outputs/apk/debug/*.apk
+          name: Vela-TV-Hotel-V0.3.2-VERIFIED-${{ github.run_number }}
+          path: dist/
           if-no-files-found: error
