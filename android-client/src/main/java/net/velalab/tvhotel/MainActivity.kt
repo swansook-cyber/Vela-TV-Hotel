@@ -8,6 +8,8 @@ import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.view.Gravity
 import android.view.View
+import android.widget.FrameLayout
+import java.io.File
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.LinearLayout
@@ -18,6 +20,29 @@ import android.widget.TextView
  * The hotel logo will be added as an original image asset after binary asset import.
  */
 class MainActivity : Activity() {
+    private var slideshow: MediaSlideshow? = null
+    private var slideshowHost: FrameLayout? = null
+
+    override fun onStart() {
+        super.onStart()
+        // Only previously validated, local files can be displayed.
+        val mediaDir = File(filesDir, "active-media")
+        val slides = mediaDir.listFiles()?.filter { it.isFile }?.sortedBy { it.name }
+            ?.mapNotNull { file ->
+                when (file.extension.lowercase()) {
+                    "jpg", "jpeg", "png" -> MediaSlideshow.Slide(file, false, 12000)
+                    "mp4" -> MediaSlideshow.Slide(file, true, 30000)
+                    else -> null
+                }
+            }.orEmpty()
+        if (slides.isNotEmpty()) slideshow?.start(slides)
+    }
+
+    override fun onStop() {
+        slideshow?.stop()
+        super.onStop()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val root = LinearLayout(this).apply {
@@ -80,7 +105,14 @@ class MainActivity : Activity() {
         root.addView(apps, LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
         ).apply { topMargin = 36 })
-        setContentView(root)
+        val container = FrameLayout(this)
+        slideshowHost = FrameLayout(this)
+        container.addView(slideshowHost, FrameLayout.LayoutParams(-1, -1))
+        val overlay = View(this).apply { setBackgroundColor(Color.argb(170, 0, 15, 12)) }
+        container.addView(overlay, FrameLayout.LayoutParams(-1, -1))
+        container.addView(root, FrameLayout.LayoutParams(-1, -1))
+        slideshow = MediaSlideshow(this, slideshowHost!!)
+        setContentView(container)
         if (launchable.isNotEmpty()) {
             apps.getChildAt(0).requestFocus()
         }
