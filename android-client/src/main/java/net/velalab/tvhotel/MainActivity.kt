@@ -25,16 +25,7 @@ class MainActivity : Activity() {
 
     override fun onStart() {
         super.onStart()
-        // Pilot-only local directory. Do not populate from network until digest verification is implemented.
-        val mediaDir = File(filesDir, "active-media")
-        val slides = mediaDir.listFiles()?.filter { it.isFile }?.sortedBy { it.name }
-            ?.mapNotNull { file ->
-                when (file.extension.lowercase()) {
-                    "jpg", "jpeg", "png" -> MediaSlideshow.Slide(file, false, 12000)
-                    "mp4" -> MediaSlideshow.Slide(file, true, 30000)
-                    else -> null
-                }
-            }.orEmpty()
+        val slides = VerifiedMediaCache(this).activeSlides()
         if (slides.isNotEmpty()) slideshow?.start(slides)
     }
 
