@@ -1,7 +1,7 @@
 name: Hotel Foundation CI
 on:
   push:
-    branches: [develop/hotel-v0.1-foundation, 'fix/hotel-*']
+    branches: [develop/hotel-v0.1-foundation, 'fix/hotel-*', 'feature/hotel-*']
   pull_request:
   workflow_dispatch:
 permissions:
