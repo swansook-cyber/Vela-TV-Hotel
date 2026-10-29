@@ -1,0 +1,56 @@
+name: Hotel Android Debug CI
+on:
+  push:
+    branches:
+      - develop/hotel-v0.1-foundation
+      - fix/hotel-*
+      - feature/hotel-*
+    paths: ['android-client/**', '*.gradle.kts', 'gradle.properties', '.github/workflows/android-debug-ci.yml']
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  debug:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+      # v3 requests the removed SDK 'tools' package and fails before compilation.
+      - uses: android-actions/setup-android@v4
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+      - name: Verify original resort logo bytes
+        run: echo "3a1c4b7459df4555b1953cf54514462983bd2ec86453f21e153786df1d3c5c54  android-client/src/main/res/drawable-nodpi/aonang_fiore_logo.png" | sha256sum --check
+      - name: Validate Android manifest XML
+        run: python3 -c "import xml.etree.ElementTree as ET; ET.parse('android-client/src/main/AndroidManifest.xml')"
+      - name: Run backend contract tests
+        run: python3 -m unittest discover -s backend -p 'test_*.py' -v
+      - name: Build debug APK
+        run: gradle --no-daemon :android-client:assembleDebug
+      - name: Verify actual APK identity, version and unique filename
+        shell: bash
+        run: |
+          set -euo pipefail
+          APK="android-client/build/outputs/apk/debug/android-client-debug.apk"
+          test -s "$APK"
+          AAPT="$(find "${ANDROID_HOME}/build-tools" -name aapt -type f | sort -V | tail -n 1)"
+          test -x "$AAPT"
+          "$AAPT" dump badging "$APK" | grep '^package:'
+          "$AAPT" dump badging "$APK" | grep -E "^package: name='net.velalab.tvhotel' versionCode='8' versionName='1.0.0'"
+          mkdir -p dist
+          SOURCE_SHA="${{ github.event.pull_request.head.sha || github.sha }}"
+          cp "$APK" dist/Vela-TV-Hotel-v1.0.0-code8-${SOURCE_SHA:0:7}-debug.apk
+          sha256sum dist/*.apk | tee dist/SHA256SUMS.txt
+          printf 'source_commit=%s\\nversion_name=1.0.0\\nversion_code=8\\n' "$SOURCE_SHA" > dist/BUILD-IDENTITY.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Vela-TV-Hotel-V1.0.0-VERIFIED-${{ github.run_number }}
+          path: dist/
+          if-no-files-found: error

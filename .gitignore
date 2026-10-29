@@ -1,0 +1,6 @@
+**/build/
+**/__pycache__/
+backend/.hotel-data/
+.gradle/
+local.properties
+*.apk
