@@ -71,7 +71,7 @@ class MainActivity : Activity() {
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER_HORIZONTAL
-            setPadding(dp(28), dp(18), dp(28), dp(18))
+            setPadding(dp(22), dp(8), dp(22), dp(10))
             setBackgroundColor(navy)
         }
         val scroll = ScrollView(this).apply {
@@ -91,14 +91,14 @@ class MainActivity : Activity() {
             contentDescription = "Ao Nang Fiore Resort"
         }
         root.addView(logo, LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT, dp(if (home) 155 else 95)
+            ViewGroup.LayoutParams.MATCH_PARENT, dp(if (home) 86 else 80)
         ))
     }
 
     private fun section(id: String): JSONObject = content.optJSONObject(id) ?: JSONObject()
     private fun entries(id: String) = section(id).optJSONArray("items")
 
-    private fun addAppButtons(root: LinearLayout, limit: Int = 8) {
+    private fun addAppButtons(root: LinearLayout, limit: Int = 8, compact: Boolean = false) {
         val available = packageManager.queryIntentActivities(
             Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LEANBACK_LAUNCHER), 0
         ).filter { it.activityInfo.packageName != packageName }
@@ -124,12 +124,15 @@ class MainActivity : Activity() {
                         Toast.makeText(this, "Unable to open this app", Toast.LENGTH_SHORT).show()
                     }
                 }
+                button.textSize = if (compact) 12f else 16f
                 val icon = info.loadIcon(packageManager)
-                icon.setBounds(0, 0, dp(40), dp(40))
+                val iconSize = dp(if (compact) 30 else 40)
+                icon.setBounds(0, 0, iconSize, iconSize)
                 button.setCompoundDrawables(null, icon, null, null)
-                button.compoundDrawablePadding = dp(8)
-                row.addView(button, LinearLayout.LayoutParams(0, dp(108), 1f).apply {
-                    setMargins(dp(7), dp(7), dp(7), dp(7))
+                button.compoundDrawablePadding = dp(if (compact) 3 else 8)
+                row.addView(button, LinearLayout.LayoutParams(0, dp(if (compact) 74 else 108), 1f).apply {
+                    val gap = dp(if (compact) 4 else 7)
+                    setMargins(gap, gap, gap, gap)
                 })
             }
             root.addView(row, LinearLayout.LayoutParams(-1, -2))
@@ -140,9 +143,9 @@ class MainActivity : Activity() {
         page = "home"
         val root = newPage()
         addLogo(root, true)
-        root.addView(label("Welcome to Ao Nang Fiore Resort", 24f, true))
-        root.addView(label("Discover your stay", 16f), LinearLayout.LayoutParams(-1, -2).apply {
-            bottomMargin = dp(20)
+        root.addView(label("Welcome to Ao Nang Fiore Resort", 21f, true))
+        root.addView(label("Discover your stay", 14f), LinearLayout.LayoutParams(-1, -2).apply {
+            bottomMargin = dp(7)
         })
         val sections = listOf(
             "entertainment" to "Entertainment",
@@ -155,23 +158,32 @@ class MainActivity : Activity() {
             val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
             pair.forEach { (id, title) ->
                 val button = action(title) { showSection(id, title) }
+                val iconRes = when (id) {
+                    "entertainment" -> android.R.drawable.ic_media_play
+                    "resort" -> android.R.drawable.ic_menu_myplaces
+                    "explore" -> android.R.drawable.ic_menu_compass
+                    else -> android.R.drawable.ic_menu_info_details
+                }
+                val icon = getDrawable(iconRes)
+                icon?.setBounds(0, 0, dp(20), dp(20))
+                button.setCompoundDrawables(icon, null, null, null)
+                button.compoundDrawablePadding = dp(8)
                 buttons.add(button)
-                row.addView(button, LinearLayout.LayoutParams(0, dp(78), 1f).apply {
-                    setMargins(dp(8), dp(7), dp(8), dp(7))
+                row.addView(button, LinearLayout.LayoutParams(0, dp(54), 1f).apply {
+                    setMargins(dp(6), dp(4), dp(6), dp(4))
                 })
             }
             root.addView(row, LinearLayout.LayoutParams(-1, -2))
         }
-        root.addView(label("Quick Apps", 18f, true), LinearLayout.LayoutParams(-1, -2).apply {
-            topMargin = dp(18)
+        root.addView(label("Quick Apps", 17f, true), LinearLayout.LayoutParams(-1, -2).apply {
+            topMargin = dp(7)
         })
-        addAppButtons(root, 4)
+        addAppButtons(root, 4, compact = true)
         buttons.getOrNull(lastHomeIndex.coerceIn(0, buttons.lastIndex))?.let {
             it.post { it.requestFocus() }
         }
         buttons.forEachIndexed { index, btn ->
-            val previous = btn.onFocusChangeListener
-            btn.setOnFocusChangeListener { v, focused ->
+            btn.setOnFocusChangeListener { _, focused ->
                 style(btn, focused)
                 if (focused) lastHomeIndex = index
             }
