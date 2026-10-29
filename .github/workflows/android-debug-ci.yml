@@ -31,8 +31,21 @@ jobs:
         run: python3 -m unittest discover -s backend -p 'test_*.py' -v
       - name: Build debug APK
         run: gradle --no-daemon :android-client:assembleDebug
+      - name: Verify packaged APK identity and version
+        shell: bash
+        run: |
+          set -euo pipefail
+          APK="android-client/build/outputs/apk/debug/android-client-debug.apk"
+          test -s "$APK"
+          AAPT="$(find "${ANDROID_HOME}/build-tools" -maxdepth 2 -type f -name aapt | sort -V | tail -1)"
+          test -x "$AAPT"
+          "$AAPT" dump badging "$APK" | tee /tmp/hotel-apk-badging.txt
+          grep -Eq "^package: name='net\\.velalab\\.tvhotel' versionCode='2' versionName='0\\.1\\.1'" /tmp/hotel-apk-badging.txt
+          mkdir -p pilot-artifacts
+          cp "$APK" pilot-artifacts/Vela-TV-Hotel-v0.1.1-FOCUS-QA-debug.apk
+          sha256sum pilot-artifacts/*.apk | tee pilot-artifacts/SHA256SUMS.txt
       - uses: actions/upload-artifact@v4
         with:
-          name: Vela-TV-Hotel-V0.1-DEBUG-PILOT
-          path: android-client/build/outputs/apk/debug/*.apk
+          name: Vela-TV-Hotel-v0.1.1-FOCUS-QA-commit-${{ github.sha }}
+          path: pilot-artifacts/
           if-no-files-found: error
