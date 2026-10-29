@@ -20,7 +20,8 @@ class HttpsMediaDownloader(
     fun download(
         manifest: JSONObject,
         destination: File,
-        allowedHost: String
+        allowedHost: String,
+        deviceToken: String
     ): DownloadResult? {
         if (manifest.optInt("schema_version", -1) != 1) return null
         val media = manifest.optJSONArray("media") ?: return null
@@ -58,6 +59,7 @@ class HttpsMediaDownloader(
                     connection.readTimeout = 20000
                     connection.instanceFollowRedirects = false
                     connection.setRequestProperty("Accept-Encoding", "identity")
+                    connection.setRequestProperty("Authorization", "Bearer $deviceToken")
                     if (connection.responseCode != 200) return null
                     val size = connection.contentLengthLong
                     if (size > maxTotalBytes - totalBytes) return null

@@ -10,6 +10,7 @@ import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -17,6 +18,9 @@ import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
 import org.json.JSONObject
+import java.io.File
+import java.net.HttpURLConnection
+import java.net.URL
 
 /**
  * Hotel-first offline guest guide. Remote uses native Android focus/OK navigation.
@@ -30,6 +34,8 @@ class MainActivity : Activity() {
     private var lastHomeIndex = 0
     private var page = "home"
     private var content = JSONObject()
+    private var syncStatus = "Offline guide"
+    private val credentials by lazy { DeviceCredentials(this) }
 
     private fun dp(n: Int): Int = (n * resources.displayMetrics.density).toInt()
     private fun label(text: String, size: Float, bold: Boolean = false): TextView =
@@ -103,10 +109,7 @@ class MainActivity : Activity() {
 
     /** A fixed, admin-configurable list of five shortcuts. Missing apps never get substituted. */
     private fun quickApps(root: LinearLayout) {
-        val names = content.optJSONArray("quick_apps")
-        val requested = if (names != null && names.length() == 5)
-            (0 until 5).map { names.optString(it).trim() }
-        else listOf("Netflix", "Disney+", "YouTube", "Prime Video", "iQIYI")
+        val requested = listOf("Netflix", "Disney+", "YouTube", "Prime Video", "iQIYI")
         val available = packageManager.queryIntentActivities(
             Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LEANBACK_LAUNCHER), 0
         ).filter { it.activityInfo.packageName != packageName }
@@ -114,17 +117,18 @@ class MainActivity : Activity() {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER
         }
-        val aliases = mapOf(
-            "Prime Video" to listOf("Prime Video", "Amazon Prime Video"),
-            "iQIYI" to listOf("iQIYI", "iQIYI Video"),
-            "Disney+" to listOf("Disney+", "Disney Plus")
+        val packages = mapOf(
+            "Netflix" to setOf("com.netflix.ninja"),
+            "Disney+" to setOf("com.disney.disneyplus"),
+            "YouTube" to setOf("com.google.android.youtube.tv"),
+            "Prime Video" to setOf("com.amazon.amazonvideo.livingroom", "com.amazon.avod.thirdpartyclient"),
+            "iQIYI" to setOf("com.iqiyi.i18n.tv", "com.qiyi.video.tv")
         )
         requested.forEach { name ->
-            val labels = aliases[name] ?: listOf(name)
             val found = available.firstOrNull { candidate ->
-                labels.any { it.equals(candidate.loadLabel(packageManager).toString(), ignoreCase = true) }
+                candidate.activityInfo.packageName in (packages[name] ?: emptySet())
             }
-            val button = action(if (found == null) "$name (not installed)" else name) {
+            val button = action(if (found == null) "$name\nNot Installed" else name) {
                 val target = found?.activityInfo
                 if (target != null) {
                     try {
@@ -200,8 +204,32 @@ class MainActivity : Activity() {
     private fun showHome() {
         page = "home"
         val root = newPage()
-        addLogo(root, true)
-        root.addView(label("Welcome to Ao Nang Fiore Resort", 22f, true))
+        val hero = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(dp(24), dp(10), dp(24), dp(10))
+            background = GradientDrawable(
+                GradientDrawable.Orientation.LEFT_RIGHT,
+                intArrayOf(Color.rgb(16, 67, 66), Color.rgb(5, 32, 46))
+            ).apply { cornerRadius = dp(24).toFloat() }
+        }
+        val logo = ImageView(this).apply {
+            setImageResource(R.drawable.aonang_fiore_logo)
+            scaleType = ImageView.ScaleType.FIT_CENTER
+            contentDescription = "Ao Nang Fiore Resort"
+        }
+        hero.addView(logo, LinearLayout.LayoutParams(0, dp(126), 1f))
+        val greetingBlock = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER
+        }
+        greetingBlock.addView(label("WELCOME TO", 14f, true))
+        greetingBlock.addView(label("Ao Nang Fiore Resort", 25f, true))
+        hero.addView(greetingBlock, LinearLayout.LayoutParams(0, -2, 1f))
+        root.addView(hero, LinearLayout.LayoutParams(-1, -2).apply {
+            topMargin = dp(12)
+            bottomMargin = dp(12)
+        })
         val greeting = content.optJSONObject("guest_welcome")
         val mode = greeting?.optString("mode", "generic") ?: "generic"
         val value = greeting?.optString("value", "")?.trim()?.take(50) ?: ""
@@ -212,8 +240,8 @@ class MainActivity : Activity() {
             else -> "Welcome, Guest"
         }
         if (welcomeLine.isNotEmpty()) {
-            root.addView(label(welcomeLine, 16f), LinearLayout.LayoutParams(-1, -2).apply {
-                bottomMargin = dp(12)
+            root.addView(label(welcomeLine, 18f), LinearLayout.LayoutParams(-1, -2).apply {
+                bottomMargin = dp(10)
             })
         }
 
@@ -232,7 +260,7 @@ class MainActivity : Activity() {
             }
             pair.forEach { (id, title, subtitle) ->
                 val button = action("$title\n$subtitle") { showSection(id, title) }.apply {
-                    textSize = 15f
+                    textSize = 18f
                     setLineSpacing(dp(2).toFloat(), 1f)
                     val iconRes = when (id) {
                         "entertainment" -> android.R.drawable.ic_media_play
@@ -249,8 +277,8 @@ class MainActivity : Activity() {
                     }
                 }
                 buttons.add(button)
-                row.addView(button, LinearLayout.LayoutParams(0, dp(74), 1f).apply {
-                    setMargins(dp(6), dp(4), dp(6), dp(4))
+                row.addView(button, LinearLayout.LayoutParams(0, dp(90), 1f).apply {
+                    setMargins(dp(7), dp(5), dp(7), dp(5))
                 })
             }
             root.addView(row, LinearLayout.LayoutParams(-1, -2))
@@ -260,6 +288,14 @@ class MainActivity : Activity() {
             bottomMargin = dp(2)
         })
         quickApps(root)
+        val footer = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+        footer.addView(label(syncStatus, 13f), LinearLayout.LayoutParams(0, dp(42), 1f))
+        val settings = action("Connect / Sync") { showSetup() }.apply { textSize = 13f }
+        footer.addView(settings, LinearLayout.LayoutParams(dp(190), dp(44)))
+        root.addView(footer, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(8) })
         buttons.forEachIndexed { index, btn ->
             btn.setOnFocusChangeListener { _, focused ->
                 style(btn, focused)
@@ -294,7 +330,9 @@ class MainActivity : Activity() {
             for (i in 0 until items.length()) {
                 val item = items.optJSONObject(i) ?: continue
                 val name = item.optString("title", "Information")
-                val details = item.optString("description", "")
+                val details = if (item.optBoolean("verified", false))
+                    item.optString("description", "") else
+                    "Information pending • " + item.optString("description", "TEST DATA")
                 val button = action(name) { showDetail(id, title, name, details) }
                 root.addView(button, LinearLayout.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT, dp(64)
@@ -337,10 +375,113 @@ class MainActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         content = try {
-            JSONObject(assets.open("hotel_content.json").bufferedReader().use { it.readText() })
+            val published = File(filesDir, "published-content.json")
+            if (published.isFile) JSONObject(published.readText())
+            else JSONObject(assets.open("hotel_content.json").bufferedReader().use { it.readText() })
         } catch (_: Exception) {
             JSONObject()
         }
+        val last = getSharedPreferences("sync_status", MODE_PRIVATE).getLong("last_updated", 0)
+        if (last > 0) syncStatus = "Last updated " +
+            java.text.SimpleDateFormat("dd MMM HH:mm", java.util.Locale.getDefault())
+                .format(java.util.Date(last))
         showHome()
+        syncInBackground()
+    }
+
+    private fun syncInBackground() {
+        val endpoint = ServerConfigStore(this).active() ?: return
+        val token = credentials.token() ?: return
+        Thread {
+            val host = java.net.URI(endpoint.normalizedHttpsUrl()).host
+            val result = MediaSyncCoordinator(this).sync(endpoint, token, host)
+            runOnUiThread {
+                syncStatus = when (result) {
+                    MediaSyncCoordinator.Status.UPDATED -> {
+                        content = try { JSONObject(File(filesDir, "published-content.json").readText()) }
+                        catch (_: Exception) { content }
+                        getSharedPreferences("sync_status", MODE_PRIVATE).edit()
+                            .putLong("last_updated", System.currentTimeMillis()).apply()
+                        "Updated " + java.text.SimpleDateFormat("dd MMM HH:mm", java.util.Locale.getDefault())
+                            .format(java.util.Date())
+                    }
+                    MediaSyncCoordinator.Status.REJECTED -> "Sync rejected • check enrollment"
+                    else -> "Offline • showing saved guide"
+                }
+                if (page == "home") showHome()
+            }
+        }.start()
+    }
+
+    private fun showSetup() {
+        page = "setup"
+        val root = newPage()
+        root.addView(label("TV connection", 27f, true))
+        root.addView(label("Enter the HTTPS server and one-time code from the admin CMS.", 16f))
+        val server = EditText(this).apply {
+            hint = "https://hotel-staging.example.com"
+            setSingleLine(true)
+            setText(ServerConfigStore(this@MainActivity).active()?.baseUrl ?: "")
+            setTextColor(Color.WHITE)
+            setHintTextColor(Color.LTGRAY)
+        }
+        val code = EditText(this).apply {
+            hint = "One-time enrollment code"
+            setSingleLine(true)
+            setTextColor(Color.WHITE)
+            setHintTextColor(Color.LTGRAY)
+        }
+        root.addView(server, LinearLayout.LayoutParams(-1, dp(58)))
+        root.addView(code, LinearLayout.LayoutParams(-1, dp(58)))
+        val connect = action("Enroll this TV") {
+            val endpoint = ServerEndpoint(server.text.toString())
+            val base = endpoint.normalizedHttpsUrl()
+            val enrollmentCode = code.text.toString().trim()
+            if (base == null || enrollmentCode.isBlank()) {
+                Toast.makeText(this, "Valid HTTPS URL and code required", Toast.LENGTH_LONG).show()
+            } else {
+                Thread {
+                    val result = enroll(base, enrollmentCode)
+                    runOnUiThread {
+                        code.text.clear()
+                        if (result != null && credentials.save(result.first, result.second) &&
+                            ServerConfigStore(this).saveVerifiedEndpoint(endpoint)) {
+                            syncStatus = "Enrolled • syncing"
+                            showHome()
+                            syncInBackground()
+                        } else Toast.makeText(this, "Enrollment failed", Toast.LENGTH_LONG).show()
+                    }
+                }.start()
+            }
+        }
+        root.addView(connect, LinearLayout.LayoutParams(dp(280), dp(58)))
+        val back = action("Back to Welcome") { showHome() }
+        root.addView(back, LinearLayout.LayoutParams(dp(280), dp(54)))
+        server.requestFocus()
+    }
+
+    private fun enroll(base: String, code: String): Pair<String, String>? {
+        val connection = try {
+            URL("$base/api/v1/device/enroll").openConnection() as HttpURLConnection
+        } catch (_: Exception) { return null }
+        return try {
+            connection.requestMethod = "POST"
+            connection.doOutput = true
+            connection.instanceFollowRedirects = false
+            connection.connectTimeout = 10000
+            connection.readTimeout = 15000
+            connection.setRequestProperty("Content-Type", "application/json")
+            connection.outputStream.use {
+                it.write(JSONObject().put("code", code).toString().toByteArray())
+            }
+            if (connection.responseCode != 200 || connection.contentLengthLong > 4096) null
+            else {
+                val data = connection.inputStream.use { it.readBytes() }
+                if (data.size > 4096) null else JSONObject(String(data)).let {
+                    Pair(it.getString("device_id"), it.getString("token"))
+                }
+            }
+        } catch (_: Exception) { null }
+        finally { connection.disconnect() }
     }
 }

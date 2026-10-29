@@ -15,11 +15,34 @@ class MediaSyncCoordinator(private val context: Context) {
     private val cache = VerifiedMediaCache(context)
     private val downloader = HttpsMediaDownloader()
 
+    private fun saveContent(content: JSONObject): Boolean {
+        if (content.optInt("schema_version", -1) != 1 ||
+            content.optJSONObject("hotel")?.optString("name") != "Ao Nang Fiore Resort" ||
+            content.optJSONArray("quick_apps")?.length() != 5 ||
+            listOf("resort", "explore", "guest").any {
+                content.optJSONObject(it)?.optJSONArray("items") == null
+            }) return false
+        val target = File(context.filesDir, "published-content.json")
+        val temp = File(context.filesDir, "published-content.tmp")
+        return try {
+            temp.writeText(content.toString())
+            if (!temp.renameTo(target)) {
+                temp.copyTo(target, overwrite = true)
+                temp.delete()
+            }
+            true
+        } catch (_: Exception) {
+            temp.delete()
+            false
+        }
+    }
+
     fun sync(endpoint: ServerEndpoint, deviceToken: String, mediaHost: String): Status {
         val base = endpoint.normalizedHttpsUrl() ?: return Status.REJECTED
         if (deviceToken.isBlank() || mediaHost.isBlank()) return Status.REJECTED
-        val connection = (URL("$base/api/v1/device/manifest").openConnection()
-            as HttpURLConnection)
+        val connection = try {
+            URL("$base/api/v1/device/manifest").openConnection() as HttpURLConnection
+        } catch (_: Exception) { return Status.OFFLINE_UNCHANGED }
         val manifest = try {
             connection.connectTimeout = 10000
             connection.readTimeout = 15000
@@ -51,20 +74,19 @@ class MediaSyncCoordinator(private val context: Context) {
         if (manifest.optInt("schema_version", -1) != 1 ||
             manifest.optString("revision").isBlank() ||
             manifest.optJSONObject("hotel")?.optString("name").isNullOrBlank() ||
-            media == null || media.length() !in 1..30) {
+            media == null || media.length() !in 0..30) {
             return Status.REJECTED
         }
+        val content = manifest.optJSONObject("content") ?: return Status.REJECTED
+        if (media.length() == 0) {
+            return if (saveContent(content)) Status.UPDATED else Status.OFFLINE_UNCHANGED
+        }
         val directory = File(context.cacheDir, "hotel-download-${System.nanoTime()}")
-        val downloaded = downloader.download(manifest, directory, mediaHost)
+        val downloaded = downloader.download(manifest, directory, mediaHost, deviceToken)
             ?: return Status.OFFLINE_UNCHANGED
         return try {
-            if (cache.activate(downloaded.manifest, downloaded.directory)) {
-                Status.UPDATED
-            } else {
-                Status.OFFLINE_UNCHANGED
-            }
-        } finally {
-            downloaded.directory.deleteRecursively()
-        }
+            if (cache.activate(downloaded.manifest, downloaded.directory) && saveContent(content))
+                Status.UPDATED else Status.OFFLINE_UNCHANGED
+        } finally { downloaded.directory.deleteRecursively() }
     }
 }
