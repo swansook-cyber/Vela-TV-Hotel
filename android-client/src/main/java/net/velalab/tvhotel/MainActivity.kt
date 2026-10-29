@@ -7,7 +7,6 @@ import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.view.Gravity
-import android.view.KeyEvent
 import android.view.View
 import android.widget.FrameLayout
 import java.io.File
@@ -27,41 +26,27 @@ class MainActivity : Activity() {
     private val appButtons = mutableListOf<Button>()
     private var selectedIndex = 0
 
-    /** Explicit horizontal navigation for TV remotes; preserve system Home and Back. */
-    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
-        if (event.action == KeyEvent.ACTION_DOWN && appButtons.isNotEmpty()) {
-            when (event.keyCode) {
-                KeyEvent.KEYCODE_DPAD_LEFT -> {
-                    focusApp((selectedIndex - 1).coerceAtLeast(0))
-                    return true
-                }
-                KeyEvent.KEYCODE_DPAD_RIGHT -> {
-                    focusApp((selectedIndex + 1).coerceAtMost(appButtons.lastIndex))
-                    return true
-                }
-                KeyEvent.KEYCODE_DPAD_CENTER,
-                KeyEvent.KEYCODE_ENTER,
-                KeyEvent.KEYCODE_NUMPAD_ENTER -> {
-                    val focused = (currentFocus as? Button)?.takeIf { it in appButtons }
-                        ?: appButtons[selectedIndex]
-                    focused.performClick()
-                    return true
-                }
-            }
+    /** Leave D-pad/OK/Back to Android native focus dispatch. */
+    private fun styleButton(button: Button, selected: Boolean) {
+        button.backgroundTintList = null
+        button.background = GradientDrawable().apply {
+            cornerRadius = 14f * resources.displayMetrics.density
+            setColor(if (selected) Color.rgb(235, 170, 28) else Color.rgb(45, 58, 77))
+            setStroke(
+                (if (selected) 5f else 2f).times(resources.displayMetrics.density).toInt(),
+                if (selected) Color.WHITE else Color.GRAY
+            )
         }
-        return super.dispatchKeyEvent(event)
-    }
-
-    private fun focusApp(index: Int) {
-        if (index !in appButtons.indices) return
-        selectedIndex = index
-        appButtons[index].requestFocus()
+        button.setTextColor(if (selected) Color.BLACK else Color.WHITE)
+        button.scaleX = if (selected) 1.08f else 1f
+        button.scaleY = if (selected) 1.08f else 1f
+        button.invalidate()
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
         if (hasFocus && appButtons.isNotEmpty() && appButtons.none { it.hasFocus() }) {
-            appButtons[selectedIndex].post { focusApp(selectedIndex) }
+            appButtons[selectedIndex].post { appButtons[selectedIndex].requestFocus() }
         }
     }
 
@@ -135,22 +120,12 @@ class MainActivity : Activity() {
                 text = app.loadLabel(packageManager).toString()
                 isFocusable = true
                 isFocusableInTouchMode = true
-                setTextColor(Color.WHITE)
-                backgroundTintList = null
-                background = GradientDrawable().apply {
-                    cornerRadius = 12f * resources.displayMetrics.density
-                    setColor(Color.rgb(53, 69, 90))
-                    setStroke((2f * resources.displayMetrics.density).toInt(), Color.LTGRAY)
-                }
+                id = View.generateViewId()
                 setOnFocusChangeListener { view, hasFocus ->
-                    (view.background as? GradientDrawable)?.apply {
-                        setColor(if (hasFocus) Color.rgb(23, 112, 118) else Color.rgb(53, 69, 90))
-                        setStroke(
-                            ((if (hasFocus) 4f else 2f) * resources.displayMetrics.density).toInt(),
-                            if (hasFocus) Color.WHITE else Color.LTGRAY
-                        )
-                    }
+                    if (hasFocus) selectedIndex = appButtons.indexOf(view).coerceAtLeast(0)
+                    styleButton(this, hasFocus)
                 }
+                styleButton(this, false)
                 setOnClickListener {
                     try {
                         startActivity(Intent(Intent.ACTION_MAIN)
@@ -167,6 +142,10 @@ class MainActivity : Activity() {
             appButtons.add(button)
             apps.addView(button)
         }
+        // QA marker makes an installed old APK distinguishable without ADB.
+        root.addView(line("REMOTE FOCUS QA · v0.1.1", 14f).apply {
+            setTextColor(Color.rgb(235, 170, 28))
+        }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = 14 })
         root.addView(apps, LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
         ).apply { topMargin = 36 })
@@ -179,7 +158,7 @@ class MainActivity : Activity() {
         slideshow = MediaSlideshow(this, slideshowHost!!)
         setContentView(container)
         if (appButtons.isNotEmpty()) {
-            apps.post { focusApp(0) }
+            apps.post { appButtons[0].requestFocus() }
         }
     }
 }
