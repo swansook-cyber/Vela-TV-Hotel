@@ -1,19 +1,21 @@
 package net.velalab.tvhotel
 
 import android.app.Activity
+import android.content.Intent
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.view.Gravity
+import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
 
 /**
- * Offline-first visual shell for one-device pilot.
- * Deliberately does NOT claim HOME until guest-TV behavior is tested.
- * Media playback, room enrollment and admin controls are future milestones.
+ * Offline guest welcome shell. Not a HOME replacement until real-TV QA.
+ * The hotel logo will be added as an original image asset after binary asset import.
  */
 class MainActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -36,13 +38,51 @@ class MainActivity : Activity() {
                 if (bold) setTypeface(null, Typeface.BOLD)
             }
         root.addView(line("AO NANG FIORE RESORT", 37f, true))
-        root.addView(line("Welcome to your peaceful escape in Krabi", 23f))
+        root.addView(line("Welcome to Ao Nang Fiore Resort", 23f))
         val hint = line("Hotel TV Pilot  •  Offline welcome screen", 15f)
         hint.setTextColor(Color.LTGRAY)
-        val params = LinearLayout.LayoutParams(
+        root.addView(hint, LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
-        ).apply { topMargin = 36 }
-        root.addView(hint, params)
+        ).apply { topMargin = 30 })
+
+        val launchable = packageManager.queryIntentActivities(
+            Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LEANBACK_LAUNCHER),
+            0
+        ).filter { it.activityInfo.packageName != packageName }
+            .sortedBy { it.loadLabel(packageManager).toString() }
+            .take(6)
+
+        val apps = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER
+        }
+        launchable.forEach { app ->
+            val target = app.activityInfo
+            val button = Button(this).apply {
+                text = app.loadLabel(packageManager).toString()
+                isFocusable = true
+                isFocusableInTouchMode = false
+                setOnClickListener {
+                    try {
+                        startActivity(Intent(Intent.ACTION_MAIN)
+                            .addCategory(Intent.CATEGORY_LEANBACK_LAUNCHER)
+                            .setClassName(target.packageName, target.name)
+                            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                    } catch (_: Exception) {
+                        android.widget.Toast.makeText(
+                            this@MainActivity, "Unable to open app", android.widget.Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
+            }
+            apps.addView(button)
+        }
+        root.addView(apps, LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
+        ).apply { topMargin = 36 })
         setContentView(root)
+        if (launchable.isNotEmpty()) {
+            apps.getChildAt(0).requestFocus()
+        }
     }
 }
