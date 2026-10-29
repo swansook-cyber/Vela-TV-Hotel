@@ -1,0 +1,26 @@
+name: Hotel Android Debug CI
+on:
+  push:
+    branches: [develop/hotel-v0.1-foundation]
+    paths: ['android-client/**', '*.gradle.kts', 'gradle.properties', '.github/workflows/android-debug-ci.yml']
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  debug:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - name: Build debug APK
+        run: gradle --no-daemon :android-client:assembleDebug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Vela-TV-Hotel-V0.1-DEBUG-UNSIGNED-PILOT
+          path: android-client/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
