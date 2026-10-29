@@ -1,71 +1,22 @@
 {
   "schema_version": 1,
-  "resort": {
-    "items": [
-      {
-        "title": "Welcome",
-        "description": "Welcome to Ao Nang Fiore Resort. Explore our resort information and enjoy your stay."
-      },
-      {
-        "title": "Resort Facilities",
-        "description": "Add verified opening times, facilities, photos and guest directions here."
-      },
-      {
-        "title": "Dining",
-        "description": "Add your verified restaurant menu, dining hours and booking details here."
-      },
-      {
-        "title": "Experiences",
-        "description": "Add your resort activities, offers and booking instructions here."
-      }
-    ]
-  },
-  "resort_entries_note": "Sample copy for testing. Replace with verified hotel information before guest use.",
-  "explore": {
-    "items": [
-      {
-        "title": "Ao Nang Beach",
-        "description": "Explore Ao Nang Beach. Add verified transport advice and current activity details."
-      },
-      {
-        "title": "Railay",
-        "description": "Explore Railay. Confirm boat schedules and conditions locally before sharing with guests."
-      },
-      {
-        "title": "Krabi Experiences",
-        "description": "Add your curated tours, activities, prices and verified operator contacts here."
-      }
-    ]
-  },
-  "guest": {
-    "items": [
-      {
-        "title": "Wi-Fi Information",
-        "description": "Add the approved guest Wi-Fi network and connection instructions here. Do not add passwords to a public repository."
-      },
-      {
-        "title": "Reception",
-        "description": "Add the hotel's verified contact and extension number here."
-      },
-      {
-        "title": "Check-in / Check-out",
-        "description": "Add verified check-in and check-out times here."
-      },
-      {
-        "title": "Guest Assistance",
-        "description": "Add safety and emergency procedures approved by resort management here."
-      }
-    ]
-  },
-  "quick_apps": [
-    "Netflix",
-    "Disney+",
-    "YouTube",
-    "Prime Video",
-    "iQIYI"
-  ],
-  "guest_welcome": {
-    "mode": "generic",
-    "value": ""
-  }
+  "hotel": {"name": "Ao Nang Fiore Resort"},
+  "guest_welcome": {"mode": "generic", "value": ""},
+  "quick_apps": ["Netflix", "Disney+", "YouTube", "Prime Video", "iQIYI"],
+  "resort": {"items": [
+    {"category": "Profile", "title": "About the resort", "description": "TEST DATA — Information pending verification by the resort.", "verified": false},
+    {"category": "Rooms", "title": "Rooms & amenities", "description": "TEST DATA — Room categories and amenities pending verification.", "verified": false},
+    {"category": "Dining", "title": "Restaurants & menus", "description": "TEST DATA — Menus and service hours pending verification.", "verified": false},
+    {"category": "Facilities", "title": "Spa, pool & activities", "description": "TEST DATA — Facilities and opening hours pending verification.", "verified": false},
+    {"category": "Promotions", "title": "Current offers", "description": "TEST DATA — No approved promotions have been provided.", "verified": false}
+  ]},
+  "explore": {"items": [
+    {"category": "Attractions", "title": "Explore Krabi", "description": "TEST DATA — Approved attractions and transport information pending verification.", "verified": false}
+  ]},
+  "guest": {"items": [
+    {"category": "Services", "title": "Guest services", "description": "TEST DATA — Guest service instructions pending verification.", "verified": false},
+    {"category": "Wi-Fi", "title": "Wi-Fi", "description": "TEST DATA — Guest Wi-Fi instructions pending secure admin entry.", "verified": false},
+    {"category": "Reception", "title": "Reception", "description": "TEST DATA — Contact details and service hours pending verification.", "verified": false},
+    {"category": "Safety", "title": "Safety information", "description": "TEST DATA — Approved safety instructions pending verification.", "verified": false}
+  ]}
 }
