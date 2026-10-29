@@ -4,6 +4,7 @@ on:
     branches:
       - develop/hotel-v0.1-foundation
       - fix/hotel-*
+      - feature/hotel-*
     paths: ['android-client/**', '*.gradle.kts', 'gradle.properties', '.github/workflows/android-debug-ci.yml']
   pull_request:
   workflow_dispatch:
@@ -33,6 +34,6 @@ jobs:
         run: gradle --no-daemon :android-client:assembleDebug
       - uses: actions/upload-artifact@v4
         with:
-          name: Vela-TV-Hotel-V0.1-DEBUG-PILOT
+          name: Vela-TV-Hotel-V0.2-DEBUG-PILOT
           path: android-client/build/outputs/apk/debug/*.apk
           if-no-files-found: error
