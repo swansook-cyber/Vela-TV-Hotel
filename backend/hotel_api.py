@@ -34,12 +34,12 @@ def authorized(header: str | None, token: str | None) -> bool:
 
 
 class Store:
-    def __init__(self, root: Path = ROOT):
-        self.root = root
+    def __init__(self, root: Path | None = None):
+        self.root = root if root is not None else ROOT
         self.root.mkdir(parents=True, exist_ok=True)
-        self.media_dir = root / "media"
+        self.media_dir = self.root / "media"
         self.media_dir.mkdir(exist_ok=True)
-        self.db = sqlite3.connect(root / "hotel.sqlite3")
+        self.db = sqlite3.connect(self.root / "hotel.sqlite3")
         self.db.row_factory = sqlite3.Row
         self.db.executescript("""
             CREATE TABLE IF NOT EXISTS revisions(
