@@ -23,9 +23,9 @@ import org.json.JSONObject
  * Guest copy is bundled in assets/hotel_content.json until an authenticated CMS is ready.
  */
 class MainActivity : Activity() {
-    private val navy = Color.rgb(7, 28, 42)
+    private val navy = Color.rgb(8, 35, 36)
     private val gold = Color.rgb(235, 170, 28)
-    private val cards = Color.rgb(42, 63, 76)
+    private val cards = Color.rgb(30, 73, 74)
     private var screen: LinearLayout? = null
     private var lastHomeIndex = 0
     private var page = "home"
@@ -72,7 +72,10 @@ class MainActivity : Activity() {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER_HORIZONTAL
             setPadding(dp(22), dp(8), dp(22), dp(10))
-            setBackgroundColor(navy)
+            background = GradientDrawable(
+                GradientDrawable.Orientation.TL_BR,
+                intArrayOf(Color.rgb(11, 46, 46), Color.rgb(6, 22, 37))
+            )
         }
         val scroll = ScrollView(this).apply {
             isFillViewport = true
@@ -91,7 +94,7 @@ class MainActivity : Activity() {
             contentDescription = "Ao Nang Fiore Resort"
         }
         root.addView(logo, LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT, dp(if (home) 116 else 80)
+            ViewGroup.LayoutParams.MATCH_PARENT, dp(if (home) 148 else 80)
         ))
     }
 
@@ -134,10 +137,10 @@ class MainActivity : Activity() {
                     }
                 }
             }
-            button.textSize = 12f
+            button.textSize = 13f
             if (found != null) {
                 val icon = found.loadIcon(packageManager)
-                icon.setBounds(0, 0, dp(29), dp(29))
+                icon.setBounds(0, 0, dp(36), dp(36))
                 button.setCompoundDrawables(null, icon, null, null)
                 button.compoundDrawablePadding = dp(3)
             } else {
@@ -146,7 +149,7 @@ class MainActivity : Activity() {
                 button.isFocusable = false
                 button.isFocusableInTouchMode = false
             }
-            row.addView(button, LinearLayout.LayoutParams(0, dp(74), 1f).apply {
+            row.addView(button, LinearLayout.LayoutParams(0, dp(86), 1f).apply {
                 setMargins(dp(3), dp(4), dp(3), dp(4))
             })
         }
@@ -198,7 +201,7 @@ class MainActivity : Activity() {
         page = "home"
         val root = newPage()
         addLogo(root, true)
-        root.addView(label("Welcome to Ao Nang Fiore Resort", 21f, true))
+        root.addView(label("Welcome to Ao Nang Fiore Resort", 22f, true))
         val greeting = content.optJSONObject("guest_welcome")
         val mode = greeting?.optString("mode", "generic") ?: "generic"
         val value = greeting?.optString("value", "")?.trim()?.take(50) ?: ""
@@ -209,50 +212,62 @@ class MainActivity : Activity() {
             else -> "Welcome, Guest"
         }
         if (welcomeLine.isNotEmpty()) {
-            root.addView(label(welcomeLine, 15f), LinearLayout.LayoutParams(-1, -2).apply {
-                bottomMargin = dp(5)
+            root.addView(label(welcomeLine, 16f), LinearLayout.LayoutParams(-1, -2).apply {
+                bottomMargin = dp(12)
             })
         }
+
+        // Hotel-first grid with D-pad-accessible icon tiles, titles and subtitles.
         val sections = listOf(
-            "entertainment" to "Entertainment",
-            "resort" to "Our Resort",
-            "explore" to "Explore Krabi",
-            "guest" to "Guest Information"
+            Triple("entertainment", "Entertainment", "Streaming & TV"),
+            Triple("resort", "Our Resort", "Dining & facilities"),
+            Triple("explore", "Explore Krabi", "Discover the area"),
+            Triple("guest", "Guest Information", "Your stay & services")
         )
         val buttons = mutableListOf<Button>()
         sections.chunked(2).forEach { pair ->
-            val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
-            pair.forEach { (id, title) ->
-                val button = action(title) { showSection(id, title) }
-                val iconRes = when (id) {
-                    "entertainment" -> android.R.drawable.ic_media_play
-                    "resort" -> android.R.drawable.ic_menu_myplaces
-                    "explore" -> android.R.drawable.ic_menu_compass
-                    else -> android.R.drawable.ic_menu_info_details
+            val row = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER
+            }
+            pair.forEach { (id, title, subtitle) ->
+                val button = action("$title\n$subtitle") { showSection(id, title) }.apply {
+                    textSize = 15f
+                    setLineSpacing(dp(2).toFloat(), 1f)
+                    val iconRes = when (id) {
+                        "entertainment" -> android.R.drawable.ic_media_play
+                        "resort" -> android.R.drawable.ic_menu_myplaces
+                        "explore" -> android.R.drawable.ic_menu_compass
+                        else -> android.R.drawable.ic_menu_info_details
+                    }
+                    getDrawable(iconRes)?.let { icon ->
+                        icon.mutate()
+                        icon.setTint(Color.WHITE)
+                        icon.setBounds(0, 0, dp(26), dp(26))
+                        setCompoundDrawables(null, icon, null, null)
+                        compoundDrawablePadding = dp(5)
+                    }
                 }
-                val icon = getDrawable(iconRes)
-                icon?.setBounds(0, 0, dp(20), dp(20))
-                button.setCompoundDrawables(icon, null, null, null)
-                button.compoundDrawablePadding = dp(8)
                 buttons.add(button)
-                row.addView(button, LinearLayout.LayoutParams(0, dp(54), 1f).apply {
+                row.addView(button, LinearLayout.LayoutParams(0, dp(74), 1f).apply {
                     setMargins(dp(6), dp(4), dp(6), dp(4))
                 })
             }
             root.addView(row, LinearLayout.LayoutParams(-1, -2))
         }
-        root.addView(label("Quick Apps", 17f, true), LinearLayout.LayoutParams(-1, -2).apply {
-            topMargin = dp(7)
+        root.addView(label("QUICK APPS", 15f, true), LinearLayout.LayoutParams(-1, -2).apply {
+            topMargin = dp(13)
+            bottomMargin = dp(2)
         })
         quickApps(root)
-        buttons.getOrNull(lastHomeIndex.coerceIn(0, buttons.lastIndex))?.let {
-            it.post { it.requestFocus() }
-        }
         buttons.forEachIndexed { index, btn ->
             btn.setOnFocusChangeListener { _, focused ->
                 style(btn, focused)
                 if (focused) lastHomeIndex = index
             }
+        }
+        buttons.getOrNull(lastHomeIndex.coerceIn(0, buttons.lastIndex))?.let {
+            it.post { it.requestFocus() }
         }
     }
 
