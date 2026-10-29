@@ -88,7 +88,20 @@ class VerifiedMediaCache(context: Context) {
         }
     }
 
+    /**
+     * Recover from interrupted active -> previous -> staging activation.
+     * Only restore previous when no active directory exists.
+     */
+    @Synchronized fun recoverInterruptedActivation(): Boolean {
+        if (active.isDirectory && File(active, "manifest.json").isFile) return true
+        if (active.exists()) return false
+        return previous.isDirectory &&
+            File(previous, "manifest.json").isFile &&
+            previous.renameTo(active)
+    }
+
     fun activeSlides(): List<MediaSlideshow.Slide> {
+        recoverInterruptedActivation()
         val manifestFile = File(active, "manifest.json")
         if (!manifestFile.isFile) return emptyList()
         return try {
