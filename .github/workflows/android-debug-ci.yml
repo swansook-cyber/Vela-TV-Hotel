@@ -17,10 +17,13 @@ jobs:
           distribution: temurin
           java-version: '17'
       - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
       - name: Build debug APK
         run: gradle --no-daemon :android-client:assembleDebug
       - uses: actions/upload-artifact@v4
         with:
-          name: Vela-TV-Hotel-V0.1-DEBUG-UNSIGNED-PILOT
+          name: Vela-TV-Hotel-V0.1-DEBUG-PILOT
           path: android-client/build/outputs/apk/debug/*.apk
           if-no-files-found: error
