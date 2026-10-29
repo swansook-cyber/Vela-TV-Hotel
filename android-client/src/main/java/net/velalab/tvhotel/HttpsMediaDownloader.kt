@@ -24,7 +24,8 @@ class HttpsMediaDownloader(
     ): DownloadResult? {
         if (manifest.optInt("schema_version", -1) != 1) return null
         val media = manifest.optJSONArray("media") ?: return null
-        if (media.length() > 30 || allowedHost.isBlank()) return null
+        // An empty remote playlist must never erase the last verified guest content.
+        if (media.length() !in 1..30 || allowedHost.isBlank()) return null
         if (destination.exists()) return null
         if (!destination.mkdirs()) return null
         var totalBytes = 0L

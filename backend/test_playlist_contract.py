@@ -49,6 +49,26 @@ class ContractTests(unittest.TestCase):
         self.data["media"].append(dict(self.data["media"][0]))
         self.assertFalse(valid_manifest(self.data, HOST))
 
+    def test_reject_empty_playlist(self):
+        self.data["media"] = []
+        self.assertFalse(valid_manifest(self.data, HOST))
+
+    def test_reject_query_string(self):
+        self.data["media"][0]["url"] += "?session=secret"
+        self.assertFalse(valid_manifest(self.data, HOST))
+
+    def test_reject_fragment(self):
+        self.data["media"][0]["url"] += "#fragment"
+        self.assertFalse(valid_manifest(self.data, HOST))
+
+    def test_reject_boolean_schema(self):
+        self.data["schema_version"] = True
+        self.assertFalse(valid_manifest(self.data, HOST))
+
+    def test_reject_empty_userinfo(self):
+        self.data["media"][0]["url"] = "https://@media.example.invalid/welcome.jpg"
+        self.assertFalse(valid_manifest(self.data, HOST))
+
 
 if __name__ == "__main__":
     unittest.main()

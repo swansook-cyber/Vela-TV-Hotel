@@ -25,8 +25,10 @@ class MediaSyncCoordinator(private val context: Context) {
             connection.readTimeout = 15000
             connection.instanceFollowRedirects = false
             connection.setRequestProperty("Authorization", "Bearer $deviceToken")
-            if (connection.responseCode != 200 ||
-                connection.contentLengthLong > 1024 * 1024) return Status.OFFLINE_UNCHANGED
+            val response = connection.responseCode
+            if (response == 401 || response == 403) return Status.REJECTED
+            if (response != 200) return Status.OFFLINE_UNCHANGED
+            if (connection.contentLengthLong > 1024 * 1024) return Status.REJECTED
             val bytes = connection.inputStream.use { input ->
                 val out = java.io.ByteArrayOutputStream()
                 val buffer = ByteArray(8192)
@@ -45,9 +47,11 @@ class MediaSyncCoordinator(private val context: Context) {
             connection.disconnect()
         }
 
+        val media = manifest.optJSONArray("media")
         if (manifest.optInt("schema_version", -1) != 1 ||
             manifest.optString("revision").isBlank() ||
-            manifest.optJSONObject("hotel")?.optString("name").isNullOrBlank()) {
+            manifest.optJSONObject("hotel")?.optString("name").isNullOrBlank() ||
+            media == null || media.length() !in 1..30) {
             return Status.REJECTED
         }
         val directory = File(context.cacheDir, "hotel-download-${System.nanoTime()}")

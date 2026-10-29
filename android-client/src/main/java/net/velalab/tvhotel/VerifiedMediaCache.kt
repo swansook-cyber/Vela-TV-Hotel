@@ -29,7 +29,8 @@ class VerifiedMediaCache(context: Context) {
         val revision = manifest.optString("revision")
         if (revision.isBlank()) return false
         val media = manifest.optJSONArray("media") ?: return false
-        if (media.length() > 30) return false
+        // Refuse empty sets so a placeholder API cannot blank a functioning TV.
+        if (media.length() !in 1..30) return false
         val items = mutableListOf<Item>()
         val seen = mutableSetOf<String>()
         for (i in 0 until media.length()) {
