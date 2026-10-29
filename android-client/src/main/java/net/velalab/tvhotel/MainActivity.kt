@@ -36,6 +36,7 @@ class MainActivity : Activity() {
     private var content = JSONObject()
     private var syncStatus = "Offline guide"
     private var assignedRoom = ""
+    private var slideshow: MediaSlideshow? = null
     private val credentials by lazy { DeviceCredentials(this) }
 
     private fun dp(n: Int): Int = (n * resources.displayMetrics.density).toInt()
@@ -203,6 +204,8 @@ class MainActivity : Activity() {
     }
 
     private fun showHome() {
+        slideshow?.stop()
+        slideshow = null
         page = "home"
         val root = newPage()
         val hero = LinearLayout(this).apply {
@@ -294,6 +297,10 @@ class MainActivity : Activity() {
             gravity = Gravity.CENTER_VERTICAL
         }
         footer.addView(label(syncStatus, 13f), LinearLayout.LayoutParams(0, dp(42), 1f))
+        val media = action("Resort Media") { showMedia() }.apply { textSize = 13f }
+        footer.addView(media, LinearLayout.LayoutParams(dp(150), dp(44)).apply {
+            rightMargin = dp(8)
+        })
         val settings = action("Connect / Sync") { showSetup() }.apply { textSize = 13f }
         footer.addView(settings, LinearLayout.LayoutParams(dp(190), dp(44)))
         root.addView(footer, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(8) })
@@ -309,6 +316,8 @@ class MainActivity : Activity() {
     }
 
     private fun showSection(id: String, title: String) {
+        slideshow?.stop()
+        slideshow = null
         page = id
         val root = newPage()
         addLogo(root, false)
@@ -361,6 +370,7 @@ class MainActivity : Activity() {
     @Deprecated("Legacy Back handling preserves native OK/D-pad")
     override fun onBackPressed() {
         if (page == "home") super.onBackPressed()
+        else if (page == "media") showHome()
         else if (page.startsWith("detail:")) {
             val id = page.substringAfter(":")
             val title = when (id) {
@@ -388,6 +398,36 @@ class MainActivity : Activity() {
                 .format(java.util.Date(last))
         showHome()
         syncInBackground()
+    }
+
+    override fun onStop() {
+        slideshow?.stop()
+        super.onStop()
+    }
+
+    private fun showMedia() {
+        page = "media"
+        val root = newPage()
+        root.addView(label("Resort Media", 27f, true))
+        root.addView(label("Checking saved media…", 17f))
+        Thread {
+            val slides = VerifiedMediaCache(this).activeSlides()
+            runOnUiThread {
+                if (page != "media") return@runOnUiThread
+                val view = newPage()
+                view.addView(label("Resort Media", 27f, true))
+                val back = action("Back to Welcome") { showHome() }
+                view.addView(back, LinearLayout.LayoutParams(dp(250), dp(54)))
+                if (slides.isEmpty()) {
+                    view.addView(label("No verified media has been published yet.", 18f))
+                } else {
+                    val host = FrameLayout(this)
+                    view.addView(host, LinearLayout.LayoutParams(-1, dp(350)))
+                    slideshow = MediaSlideshow(this, host).also { it.start(slides) }
+                }
+                back.requestFocus()
+            }
+        }.start()
     }
 
     private fun syncInBackground() {

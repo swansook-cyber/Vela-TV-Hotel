@@ -101,24 +101,48 @@ class VerifiedMediaCache(context: Context) {
             previous.renameTo(active)
     }
 
-    fun activeSlides(): List<MediaSlideshow.Slide> {
-        recoverInterruptedActivation()
-        val manifestFile = File(active, "manifest.json")
-        if (!manifestFile.isFile) return emptyList()
+    private fun verifiedSlides(directory: File): List<MediaSlideshow.Slide>? {
+        val manifestFile = File(directory, "manifest.json")
+        if (!manifestFile.isFile) return null
         return try {
-            val media = JSONObject(manifestFile.readText()).getJSONArray("media")
-            (0 until media.length()).mapNotNull { i ->
+            val manifest = JSONObject(manifestFile.readText())
+            if (manifest.optInt("schema_version", -1) != 1) return null
+            val media = manifest.getJSONArray("media")
+            if (media.length() !in 1..30) return null
+            var total = 0L
+            (0 until media.length()).map { i ->
                 val item = media.getJSONObject(i)
                 val id = item.getString("id")
                 val ext = item.getString("extension")
+                val digest = item.getString("sha256")
                 if (!id.matches(Regex("[A-Za-z0-9_-]{1,64}")) ||
-                    ext !in setOf("jpg", "jpeg", "png", "mp4")) return@mapNotNull null
-                val file = File(active, "$id.$ext")
-                if (!file.isFile) null else MediaSlideshow.Slide(
-                    file, ext == "mp4", item.getLong("duration_seconds") * 1000L)
+                    ext !in setOf("jpg", "jpeg", "png", "mp4") ||
+                    !digest.matches(Regex("[a-f0-9]{64}"))) return null
+                val file = File(directory, "$id.$ext")
+                if (!file.isFile || file.canonicalFile.parentFile != directory.canonicalFile) return null
+                val hash = MessageDigest.getInstance("SHA-256")
+                FileInputStream(file).use { stream ->
+                    val buffer = ByteArray(65536)
+                    while (true) {
+                        val n = stream.read(buffer)
+                        if (n < 0) break
+                        total += n
+                        if (total > maxBytes) return null
+                        hash.update(buffer, 0, n)
+                    }
+                }
+                if (hash.digest().joinToString("") { "%02x".format(it) } != digest) return null
+                MediaSlideshow.Slide(file, ext == "mp4",
+                    item.getLong("duration_seconds") * 1000L)
             }
         } catch (_: Exception) {
-            emptyList()
+            null
         }
+    }
+
+    /** Call on a worker thread. A corrupted active set falls back to the prior verified set. */
+    @Synchronized fun activeSlides(): List<MediaSlideshow.Slide> {
+        recoverInterruptedActivation()
+        return verifiedSlides(active) ?: verifiedSlides(previous) ?: emptyList()
     }
 }

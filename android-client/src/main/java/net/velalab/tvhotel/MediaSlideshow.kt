@@ -55,7 +55,19 @@ class MediaSlideshow(private val activity: Activity, private val host: FrameLayo
             }
             video.setVideoPath(slide.file.absolutePath)
         } else {
-            val bitmap = BitmapFactory.decodeFile(slide.file.absolutePath)
+            val bitmap = try {
+                val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+                BitmapFactory.decodeFile(slide.file.absolutePath, bounds)
+                if (bounds.outWidth <= 0 || bounds.outHeight <= 0 ||
+                    bounds.outWidth > 16000 || bounds.outHeight > 16000) null
+                else {
+                    var sample = 1
+                    while (bounds.outWidth / sample > 1920 || bounds.outHeight / sample > 1080)
+                        sample *= 2
+                    BitmapFactory.decodeFile(slide.file.absolutePath,
+                        BitmapFactory.Options().apply { inSampleSize = sample })
+                }
+            } catch (_: OutOfMemoryError) { null }
             if (bitmap != null) {
                 val image = ImageView(activity).apply {
                     scaleType = ImageView.ScaleType.CENTER_CROP
@@ -65,6 +77,9 @@ class MediaSlideshow(private val activity: Activity, private val host: FrameLayo
                     ViewGroup.LayoutParams.MATCH_PARENT,
                     ViewGroup.LayoutParams.MATCH_PARENT
                 ))
+            } else {
+                handler.postDelayed(next, 1000)
+                return
             }
         }
         handler.removeCallbacks(next)
