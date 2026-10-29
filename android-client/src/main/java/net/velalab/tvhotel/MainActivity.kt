@@ -25,7 +25,7 @@ class MainActivity : Activity() {
 
     override fun onStart() {
         super.onStart()
-        // Only previously validated, local files can be displayed.
+        // Pilot-only local directory. Do not populate from network until digest verification is implemented.
         val mediaDir = File(filesDir, "active-media")
         val slides = mediaDir.listFiles()?.filter { it.isFile }?.sortedBy { it.name }
             ?.mapNotNull { file ->
