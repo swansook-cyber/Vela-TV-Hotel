@@ -11,9 +11,22 @@ class ContractTests(unittest.TestCase):
                      "hotel": {"name": "Ao Nang Fiore Resort"},
                      "media": [{"id": "welcome", "type": "image",
                                 "url": "https://media.example.invalid/welcome.jpg",
-                                "sha256": SHA, "duration_seconds": 10}]}
+                                "sha256": SHA, "extension": "jpg", "duration_seconds": 10}]}
 
     def test_valid(self):
+        self.assertTrue(valid_manifest(self.data, HOST))
+
+    def test_reject_missing_extension(self):
+        self.data["media"][0].pop("extension")
+        self.assertFalse(valid_manifest(self.data, HOST))
+
+    def test_reject_mismatched_extension(self):
+        self.data["media"][0]["extension"] = "mp4"
+        self.assertFalse(valid_manifest(self.data, HOST))
+
+    def test_accept_video_mp4(self):
+        self.data["media"][0]["type"] = "video"
+        self.data["media"][0]["extension"] = "mp4"
         self.assertTrue(valid_manifest(self.data, HOST))
 
     def test_reject_http(self):
