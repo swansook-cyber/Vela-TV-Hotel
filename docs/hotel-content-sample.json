@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "hotel": {"name": "Ao Nang Fiore Resort"},
+  "guest_welcome": {"mode": "generic", "value": ""},
+  "quick_apps": ["Netflix", "Disney+", "YouTube", "Prime Video", "iQIYI"],
+  "resort": {"items": [
+    {"category": "Profile", "title": "About the resort", "description": "TEST DATA — Information pending verification by the resort.", "verified": false},
+    {"category": "Rooms", "title": "Rooms & amenities", "description": "TEST DATA — Room categories and amenities pending verification.", "verified": false},
+    {"category": "Dining", "title": "Restaurants & menus", "description": "TEST DATA — Menus and service hours pending verification.", "verified": false},
+    {"category": "Facilities", "title": "Spa, pool & activities", "description": "TEST DATA — Facilities and opening hours pending verification.", "verified": false},
+    {"category": "Promotions", "title": "Current offers", "description": "TEST DATA — No approved promotions have been provided.", "verified": false}
+  ]},
+  "explore": {"items": [
+    {"category": "Attractions", "title": "Explore Krabi", "description": "TEST DATA — Approved attractions and transport information pending verification.", "verified": false}
+  ]},
+  "guest": {"items": [
+    {"category": "Services", "title": "Guest services", "description": "TEST DATA — Guest service instructions pending verification.", "verified": false},
+    {"category": "Wi-Fi", "title": "Wi-Fi", "description": "TEST DATA — Guest Wi-Fi instructions pending secure admin entry.", "verified": false},
+    {"category": "Reception", "title": "Reception", "description": "TEST DATA — Contact details and service hours pending verification.", "verified": false},
+    {"category": "Safety", "title": "Safety information", "description": "TEST DATA — Approved safety instructions pending verification.", "verified": false}
+  ]}
+}
