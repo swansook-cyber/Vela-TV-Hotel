@@ -28,6 +28,10 @@ def valid_manifest(manifest: dict, allowed_media_host: str) -> bool:
             return False
         if not isinstance(item.get("sha256"), str) or not _SHA256.fullmatch(item["sha256"]):
             return False
+        extension = item.get("extension")
+        allowed = {"image": {"jpg", "jpeg", "png"}, "video": {"mp4"}}
+        if extension not in allowed[item["type"]]:
+            return False
         duration = item.get("duration_seconds")
         if type(duration) is not int or not 1 <= duration <= 120:
             return False
