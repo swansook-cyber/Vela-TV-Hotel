@@ -29,6 +29,7 @@ class HttpsMediaDownloader(
         if (!destination.mkdirs()) return null
         var totalBytes = 0L
         val seen = mutableSetOf<String>()
+        var success = false
         try {
             for (i in 0 until media.length()) {
                 val item = media.optJSONObject(i) ?: return null
@@ -48,7 +49,7 @@ class HttpsMediaDownloader(
 
                 val uri = URI(item.optString("url"))
                 if (uri.scheme != "https" || uri.host != allowedHost ||
-                    uri.userInfo != null || uri.fragment != null ||
+                    uri.userInfo != null || uri.fragment != null || uri.rawQuery != null ||
                     uri.port !in listOf(-1, 443)) return null
                 val connection = URL(uri.toString()).openConnection() as HttpURLConnection
                 try {
@@ -81,11 +82,12 @@ class HttpsMediaDownloader(
                     connection.disconnect()
                 }
             }
+            success = true
             return DownloadResult(manifest, destination)
         } catch (_: Exception) {
             return null
         } finally {
-            // Caller owns successful directory; failures are removed below by explicit result handling.
+            if (!success) destination.deleteRecursively()
         }
     }
 }
