@@ -12,6 +12,8 @@ import java.net.URL
  */
 class MediaSyncCoordinator(private val context: Context) {
     enum class Status { UPDATED, OFFLINE_UNCHANGED, REJECTED }
+    var assignedRoom: String = ""
+        private set
     private val cache = VerifiedMediaCache(context)
     private val downloader = HttpsMediaDownloader()
 
@@ -78,6 +80,9 @@ class MediaSyncCoordinator(private val context: Context) {
             return Status.REJECTED
         }
         val content = manifest.optJSONObject("content") ?: return Status.REJECTED
+        assignedRoom = manifest.optString("room", "").takeIf {
+            it.matches(Regex("[A-Za-z0-9 -]{0,30}"))
+        } ?: ""
         if (media.length() == 0) {
             return if (saveContent(content)) Status.UPDATED else Status.OFFLINE_UNCHANGED
         }

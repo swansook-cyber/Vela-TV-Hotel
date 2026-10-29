@@ -227,7 +227,9 @@ class Handler(BaseHTTPRequestHandler):
                 store.db.execute("UPDATE devices SET last_seen=? WHERE id=?", (int(time.time()), device["id"]))
                 store.db.commit()
                 try:
-                    return self.respond(200, store.manifest())
+                    manifest = store.manifest()
+                    manifest["room"] = device["room"]
+                    return self.respond(200, manifest)
                 except ValueError:
                     return self.respond(503, {"error": "unpublished"})
             if path.startswith("/api/v1/media/"):

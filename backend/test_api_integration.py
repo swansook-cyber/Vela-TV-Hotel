@@ -37,8 +37,16 @@ class ApiIntegrationTests(unittest.TestCase):
                     request("/api/v1/device/manifest")
                 self.assertEqual(error.exception.code, 401)
                 enrolled = json.load(request("/api/v1/device/enroll", "POST", {"code": code}))
-                self.assertEqual(json.load(request("/api/v1/device/manifest",
-                                                  token=enrolled["token"]))["revision"], "1")
+                manifest = json.load(request("/api/v1/device/manifest", token=enrolled["token"]))
+                self.assertEqual(manifest["revision"], "1")
+                self.assertEqual(manifest["room"], "")
+                store = hotel_api.Store()
+                store.db.execute("UPDATE devices SET room=? WHERE id=?",
+                                 ("101", enrolled["device_id"]))
+                store.db.commit()
+                store.db.close()
+                manifest = json.load(request("/api/v1/device/manifest", token=enrolled["token"]))
+                self.assertEqual(manifest["room"], "101")
                 with self.assertRaises(urllib.error.HTTPError) as error:
                     request("/api/v1/device/enroll", "POST", {"code": code})
                 self.assertEqual(error.exception.code, 403)

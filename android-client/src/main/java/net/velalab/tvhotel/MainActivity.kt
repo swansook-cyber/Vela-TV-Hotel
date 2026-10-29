@@ -35,6 +35,7 @@ class MainActivity : Activity() {
     private var page = "home"
     private var content = JSONObject()
     private var syncStatus = "Offline guide"
+    private var assignedRoom = ""
     private val credentials by lazy { DeviceCredentials(this) }
 
     private fun dp(n: Int): Int = (n * resources.displayMetrics.density).toInt()
@@ -237,7 +238,7 @@ class MainActivity : Activity() {
             "hidden" -> ""
             "room" -> if (value.isNotBlank()) "Welcome, Room $value" else "Welcome, Guest"
             "name" -> if (value.isNotBlank()) "Welcome, $value" else "Welcome, Guest"
-            else -> "Welcome, Guest"
+            else -> if (assignedRoom.isNotBlank()) "Welcome, Room $assignedRoom" else "Welcome, Guest"
         }
         if (welcomeLine.isNotEmpty()) {
             root.addView(label(welcomeLine, 18f), LinearLayout.LayoutParams(-1, -2).apply {
@@ -394,8 +395,11 @@ class MainActivity : Activity() {
         val token = credentials.token() ?: return
         Thread {
             val host = java.net.URI(endpoint.normalizedHttpsUrl()).host
-            val result = MediaSyncCoordinator(this).sync(endpoint, token, host)
+            val coordinator = MediaSyncCoordinator(this)
+            val result = coordinator.sync(endpoint, token, host)
             runOnUiThread {
+                assignedRoom = if (result == MediaSyncCoordinator.Status.UPDATED)
+                    coordinator.assignedRoom else ""
                 syncStatus = when (result) {
                     MediaSyncCoordinator.Status.UPDATED -> {
                         content = try { JSONObject(File(filesDir, "published-content.json").readText()) }
