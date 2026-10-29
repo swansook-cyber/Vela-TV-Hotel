@@ -41,13 +41,13 @@ jobs:
           AAPT="$(find "${ANDROID_HOME}/build-tools" -name aapt -type f | sort -V | tail -n 1)"
           test -x "$AAPT"
           "$AAPT" dump badging "$APK" | grep '^package:'
-          "$AAPT" dump badging "$APK" | grep -E "^package: name='net.velalab.tvhotel' versionCode='6' versionName='0.3.2'"
+          "$AAPT" dump badging "$APK" | grep -E "^package: name='net.velalab.tvhotel' versionCode='7' versionName='0.3.3'"
           mkdir -p dist
-          cp "$APK" dist/Vela-TV-Hotel-v0.3.2-code6-${GITHUB_SHA:0:7}-debug.apk
+          cp "$APK" dist/Vela-TV-Hotel-v0.3.3-code7-${GITHUB_SHA:0:7}-debug.apk
           sha256sum dist/*.apk | tee dist/SHA256SUMS.txt
-          printf 'source_commit=%s\\nversion_name=0.3.2\\nversion_code=6\\n' "$GITHUB_SHA" > dist/BUILD-IDENTITY.txt
+          printf 'source_commit=%s\\nversion_name=0.3.3\\nversion_code=7\\n' "$GITHUB_SHA" > dist/BUILD-IDENTITY.txt
       - uses: actions/upload-artifact@v4
         with:
-          name: Vela-TV-Hotel-V0.3.2-VERIFIED-${{ github.run_number }}
+          name: Vela-TV-Hotel-V0.3.3-VERIFIED-${{ github.run_number }}
           path: dist/
           if-no-files-found: error
