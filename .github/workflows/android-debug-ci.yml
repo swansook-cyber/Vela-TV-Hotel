@@ -23,6 +23,8 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
+      - name: Verify original resort logo bytes
+        run: echo "3a1c4b7459df4555b1953cf54514462983bd2ec86453f21e153786df1d3c5c54  android-client/src/main/res/drawable-nodpi/aonang_fiore_logo.png" | sha256sum --check
       - name: Validate Android manifest XML
         run: python3 -c "import xml.etree.ElementTree as ET; ET.parse('android-client/src/main/AndroidManifest.xml')"
       - name: Run backend contract tests

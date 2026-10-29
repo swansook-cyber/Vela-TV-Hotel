@@ -13,11 +13,12 @@ import java.io.File
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.LinearLayout
+import android.widget.ImageView
 import android.widget.TextView
 
 /**
  * Offline guest welcome shell. Not a HOME replacement until real-TV QA.
- * The hotel logo will be added as an original image asset after binary asset import.
+ * Shows the original hotel logo from a bundled, byte-for-byte source PNG asset.
  */
 class MainActivity : Activity() {
     private var slideshow: MediaSlideshow? = null
@@ -53,7 +54,21 @@ class MainActivity : Activity() {
                 gravity = Gravity.CENTER
                 if (bold) setTypeface(null, Typeface.BOLD)
             }
-        root.addView(line("AO NANG FIORE RESORT", 37f, true))
+        // Preserve the source artwork aspect ratio. The ImageView never center-crops.
+        val metrics = resources.displayMetrics
+        val logo = ImageView(this).apply {
+            setImageResource(R.drawable.aonang_fiore_logo)
+            scaleType = ImageView.ScaleType.FIT_CENTER
+            adjustViewBounds = true
+            contentDescription = "Ao Nang Fiore Resort"
+        }
+        root.addView(logo, LinearLayout.LayoutParams(
+            (metrics.widthPixels * 0.78f).toInt(),
+            (metrics.heightPixels * 0.38f).toInt()
+        ).apply {
+            gravity = Gravity.CENTER_HORIZONTAL
+            bottomMargin = (12f * metrics.density).toInt()
+        })
         root.addView(line("Welcome to Ao Nang Fiore Resort", 23f))
         val hint = line("Hotel TV Pilot  •  Offline welcome screen", 15f)
         hint.setTextColor(Color.LTGRAY)
