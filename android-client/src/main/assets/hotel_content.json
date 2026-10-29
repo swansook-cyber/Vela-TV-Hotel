@@ -56,5 +56,16 @@
         "description": "Add safety and emergency procedures approved by resort management here."
       }
     ]
+  },
+  "quick_apps": [
+    "Netflix",
+    "Disney+",
+    "YouTube",
+    "Prime Video",
+    "iQIYI"
+  ],
+  "guest_welcome": {
+    "mode": "generic",
+    "value": ""
   }
 }

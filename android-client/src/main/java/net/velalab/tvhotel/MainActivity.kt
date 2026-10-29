@@ -91,12 +91,67 @@ class MainActivity : Activity() {
             contentDescription = "Ao Nang Fiore Resort"
         }
         root.addView(logo, LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT, dp(if (home) 86 else 80)
+            ViewGroup.LayoutParams.MATCH_PARENT, dp(if (home) 116 else 80)
         ))
     }
 
     private fun section(id: String): JSONObject = content.optJSONObject(id) ?: JSONObject()
     private fun entries(id: String) = section(id).optJSONArray("items")
+
+    /** A fixed, admin-configurable list of five shortcuts. Missing apps never get substituted. */
+    private fun quickApps(root: LinearLayout) {
+        val names = content.optJSONArray("quick_apps")
+        val requested = if (names != null && names.length() == 5)
+            (0 until 5).map { names.optString(it).trim() }
+        else listOf("Netflix", "Disney+", "YouTube", "Prime Video", "iQIYI")
+        val available = packageManager.queryIntentActivities(
+            Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LEANBACK_LAUNCHER), 0
+        ).filter { it.activityInfo.packageName != packageName }
+        val row = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER
+        }
+        val aliases = mapOf(
+            "Prime Video" to listOf("Prime Video", "Amazon Prime Video"),
+            "iQIYI" to listOf("iQIYI", "iQIYI Video"),
+            "Disney+" to listOf("Disney+", "Disney Plus")
+        )
+        requested.forEach { name ->
+            val labels = aliases[name] ?: listOf(name)
+            val found = available.firstOrNull { candidate ->
+                labels.any { it.equals(candidate.loadLabel(packageManager).toString(), ignoreCase = true) }
+            }
+            val button = action(if (found == null) "$name (not installed)" else name) {
+                val target = found?.activityInfo
+                if (target != null) {
+                    try {
+                        startActivity(Intent(Intent.ACTION_MAIN)
+                            .addCategory(Intent.CATEGORY_LEANBACK_LAUNCHER)
+                            .setClassName(target.packageName, target.name)
+                            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                    } catch (_: Exception) {
+                        Toast.makeText(this, "Unable to open $name", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+            button.textSize = 12f
+            if (found != null) {
+                val icon = found.loadIcon(packageManager)
+                icon.setBounds(0, 0, dp(29), dp(29))
+                button.setCompoundDrawables(null, icon, null, null)
+                button.compoundDrawablePadding = dp(3)
+            } else {
+                button.isEnabled = false
+                button.alpha = 0.65f
+                button.isFocusable = false
+                button.isFocusableInTouchMode = false
+            }
+            row.addView(button, LinearLayout.LayoutParams(0, dp(74), 1f).apply {
+                setMargins(dp(3), dp(4), dp(3), dp(4))
+            })
+        }
+        root.addView(row, LinearLayout.LayoutParams(-1, -2))
+    }
 
     private fun addAppButtons(root: LinearLayout, limit: Int = 8, compact: Boolean = false) {
         val available = packageManager.queryIntentActivities(
@@ -144,9 +199,20 @@ class MainActivity : Activity() {
         val root = newPage()
         addLogo(root, true)
         root.addView(label("Welcome to Ao Nang Fiore Resort", 21f, true))
-        root.addView(label("Discover your stay", 14f), LinearLayout.LayoutParams(-1, -2).apply {
-            bottomMargin = dp(7)
-        })
+        val greeting = content.optJSONObject("guest_welcome")
+        val mode = greeting?.optString("mode", "generic") ?: "generic"
+        val value = greeting?.optString("value", "")?.trim()?.take(50) ?: ""
+        val welcomeLine = when (mode) {
+            "hidden" -> ""
+            "room" -> if (value.isNotBlank()) "Welcome, Room $value" else "Welcome, Guest"
+            "name" -> if (value.isNotBlank()) "Welcome, $value" else "Welcome, Guest"
+            else -> "Welcome, Guest"
+        }
+        if (welcomeLine.isNotEmpty()) {
+            root.addView(label(welcomeLine, 15f), LinearLayout.LayoutParams(-1, -2).apply {
+                bottomMargin = dp(5)
+            })
+        }
         val sections = listOf(
             "entertainment" to "Entertainment",
             "resort" to "Our Resort",
@@ -178,7 +244,7 @@ class MainActivity : Activity() {
         root.addView(label("Quick Apps", 17f, true), LinearLayout.LayoutParams(-1, -2).apply {
             topMargin = dp(7)
         })
-        addAppButtons(root, 4, compact = true)
+        quickApps(root)
         buttons.getOrNull(lastHomeIndex.coerceIn(0, buttons.lastIndex))?.let {
             it.post { it.requestFocus() }
         }
