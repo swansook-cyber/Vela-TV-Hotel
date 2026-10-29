@@ -7,6 +7,7 @@ import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.view.Gravity
+import android.view.KeyEvent
 import android.view.View
 import android.widget.FrameLayout
 import java.io.File
@@ -23,6 +24,46 @@ import android.widget.TextView
 class MainActivity : Activity() {
     private var slideshow: MediaSlideshow? = null
     private var slideshowHost: FrameLayout? = null
+    private val appButtons = mutableListOf<Button>()
+    private var selectedIndex = 0
+
+    /** Explicit horizontal navigation for TV remotes; preserve system Home and Back. */
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        if (event.action == KeyEvent.ACTION_DOWN && appButtons.isNotEmpty()) {
+            when (event.keyCode) {
+                KeyEvent.KEYCODE_DPAD_LEFT -> {
+                    focusApp((selectedIndex - 1).coerceAtLeast(0))
+                    return true
+                }
+                KeyEvent.KEYCODE_DPAD_RIGHT -> {
+                    focusApp((selectedIndex + 1).coerceAtMost(appButtons.lastIndex))
+                    return true
+                }
+                KeyEvent.KEYCODE_DPAD_CENTER,
+                KeyEvent.KEYCODE_ENTER,
+                KeyEvent.KEYCODE_NUMPAD_ENTER -> {
+                    val focused = (currentFocus as? Button)?.takeIf { it in appButtons }
+                        ?: appButtons[selectedIndex]
+                    focused.performClick()
+                    return true
+                }
+            }
+        }
+        return super.dispatchKeyEvent(event)
+    }
+
+    private fun focusApp(index: Int) {
+        if (index !in appButtons.indices) return
+        selectedIndex = index
+        appButtons[index].requestFocus()
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus && appButtons.isNotEmpty() && appButtons.none { it.hasFocus() }) {
+            appButtons[selectedIndex].post { focusApp(selectedIndex) }
+        }
+    }
 
     override fun onStart() {
         super.onStart()
@@ -87,12 +128,29 @@ class MainActivity : Activity() {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER
         }
+        appButtons.clear()
         launchable.forEach { app ->
             val target = app.activityInfo
             val button = Button(this).apply {
                 text = app.loadLabel(packageManager).toString()
                 isFocusable = true
-                isFocusableInTouchMode = false
+                isFocusableInTouchMode = true
+                setTextColor(Color.WHITE)
+                backgroundTintList = null
+                background = GradientDrawable().apply {
+                    cornerRadius = 12f * resources.displayMetrics.density
+                    setColor(Color.rgb(53, 69, 90))
+                    setStroke((2f * resources.displayMetrics.density).toInt(), Color.LTGRAY)
+                }
+                setOnFocusChangeListener { view, hasFocus ->
+                    (view.background as? GradientDrawable)?.apply {
+                        setColor(if (hasFocus) Color.rgb(23, 112, 118) else Color.rgb(53, 69, 90))
+                        setStroke(
+                            ((if (hasFocus) 4f else 2f) * resources.displayMetrics.density).toInt(),
+                            if (hasFocus) Color.WHITE else Color.LTGRAY
+                        )
+                    }
+                }
                 setOnClickListener {
                     try {
                         startActivity(Intent(Intent.ACTION_MAIN)
@@ -106,6 +164,7 @@ class MainActivity : Activity() {
                     }
                 }
             }
+            appButtons.add(button)
             apps.addView(button)
         }
         root.addView(apps, LinearLayout.LayoutParams(
@@ -119,8 +178,8 @@ class MainActivity : Activity() {
         container.addView(root, FrameLayout.LayoutParams(-1, -1))
         slideshow = MediaSlideshow(this, slideshowHost!!)
         setContentView(container)
-        if (launchable.isNotEmpty()) {
-            apps.getChildAt(0).requestFocus()
+        if (appButtons.isNotEmpty()) {
+            apps.post { focusApp(0) }
         }
     }
 }
