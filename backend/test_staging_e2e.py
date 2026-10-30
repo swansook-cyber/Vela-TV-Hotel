@@ -77,6 +77,8 @@ class StagingEndToEndTests(unittest.TestCase):
 
     def test_complete_local_cms_device_media_offline_rollback(self):
         self.assertEqual(self.request("/api/v1/admin/draft")[0], 401)
+        self.assertEqual(self.request("/api/v1/admin/publish", "POST", b"{}",
+                                      role="publisher", headers={"Content-Type": "text/plain"})[0], 400)
         status, draft = self.request("/api/v1/admin/draft", role="editor")
         self.assertEqual(status, 200)
         draft["resort"]["items"][0]["description"] = "TEST DATA — staging tour"

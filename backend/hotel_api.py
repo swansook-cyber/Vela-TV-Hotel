@@ -219,6 +219,8 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(payload)
 
     def body_json(self) -> dict:
+        if self.headers.get_content_type() != "application/json":
+            raise ValueError("application/json required")
         size = int(self.headers.get("Content-Length", "0"))
         if size < 1 or size > MAX_JSON:
             raise ValueError("invalid body size")
