@@ -4,6 +4,8 @@ import android.app.Activity
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.Typeface
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.view.Gravity
@@ -83,25 +85,46 @@ class MainActivity : Activity() {
             setOnClickListener { onClick() }
         }
 
-    private fun newPage(): LinearLayout {
+    private fun newPage(heroBackdrop: Boolean = false): LinearLayout {
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER_HORIZONTAL
-            setPadding(dp(48), dp(28), dp(48), dp(30))
+            val safeInset = maxOf(48, (resources.displayMetrics.widthPixels /
+                resources.displayMetrics.density / 20f).toInt())
+            setPadding(dp(safeInset), dp(28), dp(safeInset), dp(30))
             clipChildren = false
-            background = GradientDrawable(
+            background = if (heroBackdrop) null else GradientDrawable(
                 GradientDrawable.Orientation.TL_BR,
                 intArrayOf(Color.rgb(9, 48, 50), Color.rgb(5, 18, 31))
             )
         }
         val scroll = ScrollView(this).apply {
             isFillViewport = true
+            clipChildren = false
             clipToPadding = false
             isSmoothScrollingEnabled = true
             descendantFocusability = ViewGroup.FOCUS_AFTER_DESCENDANTS
             addView(root)
         }
-        setContentView(scroll)
+        if (heroBackdrop) {
+            val frame = FrameLayout(this)
+            frame.addView(ImageView(this).apply {
+                setImageResource(R.drawable.fiore_concept_hero)
+                scaleType = ImageView.ScaleType.CENTER_CROP
+                contentDescription = "Illustrative tropical resort backdrop; not a hotel photograph"
+            }, FrameLayout.LayoutParams(-1, -1))
+            frame.addView(View(this).apply {
+                background = GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT,
+                    intArrayOf(Color.argb(235, 4, 20, 25), Color.argb(190, 4, 20, 25),
+                        Color.argb(145, 4, 20, 25)))
+            }, FrameLayout.LayoutParams(-1, -1))
+            frame.addView(View(this).apply {
+                background = GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
+                    intArrayOf(Color.argb(55, 5, 18, 27), Color.argb(235, 5, 18, 27)))
+            }, FrameLayout.LayoutParams(-1, -1))
+            frame.addView(scroll, FrameLayout.LayoutParams(-1, -1))
+            setContentView(frame)
+        } else setContentView(scroll)
         screen = root
         activeScroll = scroll
         return root
@@ -136,6 +159,7 @@ class MainActivity : Activity() {
             view.background = panel(focused, accent)
             view.animate().scaleX(if (focused) 1.035f else 1f)
                 .scaleY(if (focused) 1.035f else 1f).setDuration(110).start()
+            view.elevation = dp(if (focused) 12 else 0).toFloat()
         }
     }
 
@@ -216,16 +240,17 @@ class MainActivity : Activity() {
     private fun shortcutStyle(view: LinearLayout, focused: Boolean, present: Boolean) {
         view.background = GradientDrawable(
             GradientDrawable.Orientation.TOP_BOTTOM,
-            if (focused) intArrayOf(Color.rgb(55, 89, 100), Color.rgb(24, 46, 60))
-            else intArrayOf(Color.rgb(38, 75, 84), Color.rgb(17, 42, 57))
+            if (focused) intArrayOf(Color.rgb(39, 62, 66), Color.rgb(17, 33, 43))
+            else intArrayOf(Color.rgb(23, 48, 54), Color.rgb(10, 29, 39))
         ).apply {
             cornerRadius = dp(18).toFloat()
-            setStroke(dp(if (focused) 4 else 2),
-                if (focused) Color.WHITE else Color.rgb(88, 130, 143))
+            setStroke(dp(if (focused) 3 else 1),
+                if (focused) Color.rgb(255, 239, 206) else Color.rgb(98, 128, 131))
         }
         view.alpha = if (present || focused) 1f else 0.7f
-        view.scaleX = if (focused) 1.015f else 1f
-        view.scaleY = if (focused) 1.015f else 1f
+        view.animate().scaleX(if (focused) 1.035f else 1f)
+            .scaleY(if (focused) 1.035f else 1f).setDuration(110).start()
+        view.elevation = dp(if (focused) 12 else 0).toFloat()
     }
 
     /** Prefer the TV application's wide banner, just like Vela TV Launcher.
@@ -258,7 +283,7 @@ class MainActivity : Activity() {
             val tile = LinearLayout(this).apply {
                 orientation = LinearLayout.VERTICAL
                 gravity = Gravity.CENTER
-                setPadding(dp(6), dp(6), dp(6), dp(4))
+                setPadding(dp(10), dp(7), dp(10), dp(5))
                 isFocusable = true
                 isFocusableInTouchMode = true
                 clipChildren = false
@@ -273,7 +298,7 @@ class MainActivity : Activity() {
                 alpha = if (found == null) 0.38f else 1f
                 contentDescription = title
             }
-            tile.addView(image, LinearLayout.LayoutParams(-1, dp(fitHeight(73, 53))))
+            tile.addView(image, LinearLayout.LayoutParams(-1, dp(fitHeight(88, 65))))
             // Banner artwork carries its own app identity; keep a short label below.
             tile.addView(label(title, 12f, true).apply {
                 maxLines = 1
@@ -290,8 +315,8 @@ class MainActivity : Activity() {
                 if (found != null) launchApp(found) else showQuickAppsEditor(slot)
             }
             tile.setOnLongClickListener { showQuickAppsEditor(slot); true }
-            row.addView(tile, LinearLayout.LayoutParams(0, dp(fitHeight(122, 98)), 1f).apply {
-                setMargins(dp(4), dp(5), dp(4), dp(5))
+            row.addView(tile, LinearLayout.LayoutParams(0, dp(fitHeight(139, 112)), 1f).apply {
+                setMargins(dp(6), dp(6), dp(6), dp(6))
             })
         }
         root.addView(row, LinearLayout.LayoutParams(-1, -2))
@@ -301,7 +326,7 @@ class MainActivity : Activity() {
         slideshow?.stop()
         slideshow = null
         page = "home"
-        val root = newPage()
+        val root = newPage(heroBackdrop = true)
         val hero = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
         val logo = ImageView(this).apply {
             setImageResource(R.drawable.aonang_fiore_logo)
@@ -322,12 +347,12 @@ class MainActivity : Activity() {
         words.addView(textLine("Ao Nang Fiore Resort", 29f, true))
         if (welcome.isNotBlank()) words.addView(textLine(welcome, 16f).apply { setTextColor(muted) })
         hero.addView(words, LinearLayout.LayoutParams(0, -1, 1f))
-        root.addView(hero, LinearLayout.LayoutParams(-1, dp(fitHeight(116, 94))).apply { bottomMargin = dp(20) })
+        root.addView(hero, LinearLayout.LayoutParams(-1, dp(fitHeight(154, 108))).apply { bottomMargin = dp(16) })
         root.addView(textLine("DISCOVER YOUR STAY", 13f, true).apply { setTextColor(muted); letterSpacing = 0.13f },
             LinearLayout.LayoutParams(-1, dp(25)))
         val sections = listOf(
             Triple("entertainment", "Entertainment", "Streaming & TV"),
-            Triple("resort", "Our Resort", "Dining & facilities"),
+            Triple("resort", "Our Resort", "Rooms, dining & wellbeing"),
             Triple("explore", "Explore Krabi", "Discover the area"),
             Triple("guest", "Guest Information", "Your stay & services")
         )
@@ -342,7 +367,7 @@ class MainActivity : Activity() {
                 setMargins(dp(5), dp(5), dp(5), dp(5))
             })
         }
-        root.addView(row, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(15) })
+        root.addView(row, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(11) })
         val quickHeading = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
         quickHeading.addView(textLine("QUICK APPS", 13f, true).apply { setTextColor(muted); letterSpacing = 0.13f },
             LinearLayout.LayoutParams(0, dp(27), 1f))
@@ -351,18 +376,10 @@ class MainActivity : Activity() {
         }, LinearLayout.LayoutParams(0, dp(27), 1f))
         root.addView(quickHeading)
         quickApps(root)
-        val footer = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
-        footer.addView(textLine(syncStatus, 12f).apply { setTextColor(muted) }, LinearLayout.LayoutParams(0, dp(42), 1f))
-        val buttons = listOf(
-            Pair("Edit Apps") { showQuickAppsEditor(lastQuickSlot) },
-            Pair("Resort Media") { showMedia() },
-            Pair("Connect / Sync") { showSetup() }
-        )
-        buttons.forEach { (name, callback) ->
-            footer.addView(action(name, callback).apply { textSize = 13f },
-                LinearLayout.LayoutParams(dp(142), dp(42)).apply { leftMargin = dp(9) })
-        }
-        root.addView(footer, LinearLayout.LayoutParams(-1, dp(48)).apply { topMargin = dp(14) })
+        root.addView(textLine("$syncStatus   ·   CONCEPT IMAGERY — NOT HOTEL PHOTOGRAPHY", 11f).apply {
+            setTextColor(Color.rgb(192, 206, 198))
+        }, LinearLayout.LayoutParams(-1, dp(28)).apply { topMargin = dp(5) })
+        cards[3].setOnLongClickListener { showStaffTools(); true }
         cards.getOrNull(lastHomeIndex.coerceIn(0, 3))?.post { cards[lastHomeIndex.coerceIn(0, 3)].requestFocus() }
     }
 
@@ -383,6 +400,10 @@ class MainActivity : Activity() {
             emptyState(root, "No information has been published yet.",
                 "Resort content will appear after it is reviewed and published.")
             back.post { back.requestFocus() }
+            return
+        }
+        if (id == "resort") {
+            showResortContent(root, items)
             return
         }
         root.addView(textLine("EXPLORE", 13f, true).apply { setTextColor(muted) },
@@ -415,6 +436,179 @@ class MainActivity : Activity() {
         cards.getOrNull(lastSectionIndex.coerceIn(0, cards.lastIndex))?.post {
             cards[lastSectionIndex.coerceIn(0, cards.lastIndex)].requestFocus()
         }
+    }
+
+    private val resortConceptPhotos: List<Bitmap> by lazy {
+        val sheet = BitmapFactory.decodeResource(resources, R.drawable.fiore_concept_resort_grid)
+        val halfWidth = sheet.width / 2
+        val halfHeight = sheet.height / 2
+        listOf(
+            Bitmap.createBitmap(sheet, 0, 0, halfWidth, halfHeight),
+            Bitmap.createBitmap(sheet, halfWidth, 0, halfWidth, halfHeight),
+            Bitmap.createBitmap(sheet, 0, halfHeight, halfWidth, halfHeight),
+            Bitmap.createBitmap(sheet, halfWidth, halfHeight, halfWidth, halfHeight)
+        )
+    }
+
+    private fun resortPhotoCard(title: String, caption: String, photoIndex: Int,
+                                onClick: () -> Unit): View {
+        val frame = FrameLayout(this).apply {
+            isFocusable = true
+            isFocusableInTouchMode = true
+            contentDescription = "$title. Concept image. $caption"
+            background = GradientDrawable().apply {
+                setColor(Color.rgb(20, 49, 51))
+                cornerRadius = dp(17).toFloat()
+            }
+            clipToOutline = true
+            setOnClickListener { onClick() }
+        }
+        frame.addView(ImageView(this).apply {
+            setImageBitmap(resortConceptPhotos[photoIndex])
+            scaleType = ImageView.ScaleType.CENTER_CROP
+            contentDescription = null
+        }, FrameLayout.LayoutParams(-1, -1))
+        frame.addView(View(this).apply {
+            background = GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
+                intArrayOf(Color.TRANSPARENT, Color.argb(225, 4, 22, 27)))
+        }, FrameLayout.LayoutParams(-1, -1))
+        frame.addView(textLine("CONCEPT IMAGE", 10f, true).apply {
+            setPadding(dp(13), 0, 0, 0)
+            letterSpacing = 0.11f
+        }, FrameLayout.LayoutParams(-1, dp(28), Gravity.TOP))
+        val captionBox = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(15), 0, dp(12), dp(12))
+        }
+        captionBox.addView(textLine(title, if (compactTv()) 16f else 19f, true).apply {
+            maxLines = 2
+            ellipsize = android.text.TextUtils.TruncateAt.END
+        })
+        captionBox.addView(textLine(caption, 12f).apply {
+            setTextColor(Color.rgb(218, 226, 218))
+            maxLines = 1
+            ellipsize = android.text.TextUtils.TruncateAt.END
+        })
+        frame.addView(captionBox, FrameLayout.LayoutParams(-1, -2, Gravity.BOTTOM))
+        fun outline(focused: Boolean) = GradientDrawable().apply {
+            setColor(Color.TRANSPARENT)
+            cornerRadius = dp(17).toFloat()
+            setStroke(dp(if (focused) 3 else 1),
+                if (focused) Color.rgb(255, 239, 206) else Color.rgb(138, 161, 151))
+        }
+        frame.foreground = outline(false)
+        frame.setOnFocusChangeListener { _, focused ->
+            frame.foreground = outline(focused)
+            frame.animate().scaleX(if (focused) 1.035f else 1f)
+                .scaleY(if (focused) 1.035f else 1f).setDuration(110).start()
+            frame.elevation = dp(if (focused) 12 else 0).toFloat()
+        }
+        return frame
+    }
+
+    private fun showResortContent(root: LinearLayout, items: org.json.JSONArray) {
+        val aboutIndex = (0 until items.length()).firstOrNull {
+            items.optJSONObject(it)?.optString("category")?.equals("Profile", true) == true
+        }
+        if (aboutIndex != null) {
+            val about = items.optJSONObject(aboutIndex)
+            val description = about?.optString("description", "TEST DATA — Resort information pending.")
+                ?: "TEST DATA — Resort information pending."
+            val box = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                background = panel(false, Color.rgb(24, 60, 58))
+                setPadding(dp(24), dp(15), dp(24), dp(15))
+                isFocusable = true
+                contentDescription = "About the Resort. $description"
+                setOnClickListener {
+                    lastSectionIndex = aboutIndex
+                    showDetail("resort", "Our Resort", "About the Resort", description)
+                }
+            }
+            box.addView(textLine("ABOUT THE RESORT", 13f, true).apply {
+                letterSpacing = 0.12f
+                setTextColor(Color.rgb(236, 210, 158))
+            })
+            box.addView(textLine(description, 16f).apply {
+                maxLines = 2
+                ellipsize = android.text.TextUtils.TruncateAt.END
+            })
+            focusCard(box, Color.rgb(24, 60, 58))
+            root.addView(box, LinearLayout.LayoutParams(-1, dp(fitHeight(100, 82))).apply {
+                bottomMargin = dp(15)
+            })
+        }
+        root.addView(textLine("EXPLORE OUR RESORT  ·  ILLUSTRATIVE PHOTOS", 13f, true).apply {
+            setTextColor(muted)
+            letterSpacing = 0.1f
+        }, LinearLayout.LayoutParams(-1, dp(32)))
+        val cardIndices = (0 until items.length()).filter { it != aboutIndex }
+        val cards = mutableMapOf<Int, View>()
+        cardIndices.chunked(4).forEach { group ->
+            val row = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                clipChildren = false
+                clipToPadding = false
+            }
+            group.forEach { index ->
+                val item = items.optJSONObject(index) ?: return@forEach
+                val title = item.optString("title", "Resort")
+                val category = item.optString("category", "Resort")
+                val details = if (item.optBoolean("verified", false)) item.optString("description", "")
+                    else "Information pending • " + item.optString("description", "TEST DATA")
+                val photo = when (category.lowercase(java.util.Locale.ROOT)) {
+                    "rooms" -> 0
+                    "dining" -> 1
+                    "facilities" -> 2
+                    "promotions" -> 3
+                    else -> index % 4
+                }
+                val displayTitle = when (category.lowercase(java.util.Locale.ROOT)) {
+                    "rooms" -> "Rooms & Amenities"
+                    "dining" -> "Restaurants & Dining"
+                    "facilities" -> "Spa, Pool & Activities"
+                    "promotions" -> "Special Offers"
+                    else -> title
+                }
+                val card = resortPhotoCard(displayTitle, category, photo) {
+                    lastSectionIndex = index
+                    showDetail("resort", "Our Resort", title, details)
+                }
+                cards[index] = card
+                row.addView(card, LinearLayout.LayoutParams(0, dp(fitHeight(205, 158)), 1f).apply {
+                    setMargins(dp(6), dp(7), dp(6), dp(7))
+                })
+            }
+            repeat(4 - row.childCount) {
+                row.addView(View(this), LinearLayout.LayoutParams(0, 1, 1f))
+            }
+            root.addView(row)
+        }
+        (cards[lastSectionIndex] ?: cards.values.firstOrNull())?.post {
+            (cards[lastSectionIndex] ?: cards.values.firstOrNull())?.requestFocus()
+        }
+    }
+
+    private fun showStaffTools() {
+        page = "staff_tools"
+        val root = newPage()
+        header(root, "Staff Tools") { showHome() }
+        root.addView(textLine("Hotel device controls", 24f, true),
+            LinearLayout.LayoutParams(-1, dp(70)))
+        root.addView(textLine("Use the remote to manage this TV. Resort content is managed in the secure CMS.", 16f).apply {
+            setTextColor(muted)
+        }, LinearLayout.LayoutParams(-1, dp(52)))
+        val options = listOf(
+            Pair("Edit Apps") { showQuickAppsEditor(lastQuickSlot) },
+            Pair("Resort Media") { showMedia() },
+            Pair("Connect / Sync") { showSetup() }
+        )
+        options.forEach { (title, callback) ->
+            root.addView(action(title, callback), LinearLayout.LayoutParams(dp(340), dp(65)).apply {
+                bottomMargin = dp(14)
+            })
+        }
+        root.getChildAt(3)?.post { root.getChildAt(3)?.requestFocus() }
     }
 
     private fun emptyState(root: LinearLayout, title: String, subtitle: String) {
@@ -549,6 +743,7 @@ class MainActivity : Activity() {
     @Deprecated("Legacy Back handling preserves native OK/D-pad")
     override fun onBackPressed() {
         if (page == "home") super.onBackPressed()
+        else if (page == "staff_tools") showHome()
         else if (page == "media") showHome()
         else if (page.startsWith("quick_picker:")) showQuickAppsEditor(page.substringAfter(":").toIntOrNull() ?: 0)
         else if (page == "quick_apps") showHome()
