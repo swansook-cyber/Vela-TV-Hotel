@@ -1,0 +1,2 @@
+# Runtime: Debian 12 python3.11 (security updates from Debian).
+# The hotel backend uses only Python's standard library; no PyPI packages.

@@ -9,6 +9,8 @@ import json
 import os
 import secrets
 import sqlite3
+import re
+import sys
 import time
 from http.cookies import SimpleCookie
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -22,6 +24,7 @@ ROOT = Path(os.getenv("HOTEL_DATA_DIR", Path(__file__).parent / ".hotel-data"))
 SAMPLE = Path(__file__).parent.parent / "docs" / "hotel-content-sample.json"
 MAX_JSON = 256 * 1024
 MAX_MEDIA = 50 * 1024 * 1024
+MEDIA_NAME = re.compile(r"^[a-f0-9]{64}\.(?:jpg|jpeg|png|mp4)$")
 
 
 def digest(token: str) -> str:
@@ -126,15 +129,26 @@ class Store:
         return code
 
     def enroll(self, code: str) -> tuple[str, str] | None:
-        row = self.db.execute("SELECT * FROM enrollments WHERE code_hash=?", (digest(code),)).fetchone()
-        if not row or row["expires_at"] < time.time():
-            return None
-        token = secrets.token_urlsafe(32)
-        device_id = secrets.token_hex(12)
-        self.db.execute("DELETE FROM enrollments WHERE code_hash=?", (digest(code),))
-        self.db.execute("INSERT INTO devices(id,label,token_hash) VALUES (?,?,?)",
-                        (device_id, row["label"], digest(token)))
-        self.db.commit()
+        # A request has its own SQLite connection. Lock before reading so two
+        # concurrent enrollment requests cannot consume the same code.
+        code_hash = digest(code)
+        self.db.execute("BEGIN IMMEDIATE")
+        try:
+            row = self.db.execute(
+                "SELECT label,expires_at FROM enrollments WHERE code_hash=?", (code_hash,)
+            ).fetchone()
+            if not row or row["expires_at"] <= int(time.time()):
+                self.db.rollback()
+                return None
+            token = secrets.token_urlsafe(32)
+            device_id = secrets.token_hex(12)
+            self.db.execute("DELETE FROM enrollments WHERE code_hash=?", (code_hash,))
+            self.db.execute("INSERT INTO devices(id,label,token_hash) VALUES (?,?,?)",
+                            (device_id, row["label"], digest(token)))
+            self.db.commit()
+        except Exception:
+            self.db.rollback()
+            raise
         self.log("device", "enroll", device_id)
         return device_id, token
 
@@ -205,6 +219,8 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(payload)
 
     def body_json(self) -> dict:
+        if self.headers.get_content_type() != "application/json":
+            raise ValueError("application/json required")
         size = int(self.headers.get("Content-Length", "0"))
         if size < 1 or size > MAX_JSON:
             raise ValueError("invalid body size")
@@ -237,14 +253,17 @@ class Handler(BaseHTTPRequestHandler):
                 if not store.device(token):
                     return self.respond(401, {"error": "unauthorized"})
                 filename = path.rsplit("/", 1)[-1]
-                if not filename or filename != Path(filename).name:
+                if path != "/api/v1/media/" + filename or not MEDIA_NAME.fullmatch(filename):
                     return self.respond(404, {"error": "not_found"})
                 row = store.published()
                 allowed = {item["sha256"] + "." + item["extension"]
                            for item in json.loads(row["media"])} if row else set()
                 if filename not in allowed:
                     return self.respond(404, {"error": "not_found"})
-                data = (store.media_dir / filename).read_bytes()
+                file = store.media_dir / filename
+                if file.is_symlink() or not file.is_file():
+                    return self.respond(404, {"error": "not_found"})
+                data = file.read_bytes()
                 self.send_response(200)
                 self.send_header("Content-Type", "application/octet-stream")
                 self.send_header("Cache-Control", "private, no-store")
@@ -271,11 +290,13 @@ class Handler(BaseHTTPRequestHandler):
                                           "revisions": revisions, "audit": audit})
             if path.startswith("/api/v1/admin/media-file/"):
                 filename = path.rsplit("/", 1)[-1]
+                if path != "/api/v1/admin/media-file/" + filename:
+                    return self.respond(404, {"error": "not_found"})
                 stem, dot, extension = filename.partition(".")
                 if dot != "." or len(stem) != 64 or any(c not in "0123456789abcdef" for c in stem) or extension not in ("jpg", "jpeg", "png", "mp4"):
                     return self.respond(404, {"error": "not_found"})
                 file = store.media_dir / filename
-                if not file.is_file():
+                if file.is_symlink() or not file.is_file():
                     return self.respond(404, {"error": "not_found"})
                 data = file.read_bytes()
                 self.send_response(200)
@@ -427,6 +448,31 @@ document.getElementById('mediaPreview').replaceChildren(view)}}}}</script></html
             store.db.close()
 
 
+def validate_staging_config() -> None:
+    editor = os.getenv("HOTEL_EDITOR_TOKEN", "")
+    publisher = os.getenv("HOTEL_PUBLISHER_TOKEN", "")
+    host = os.getenv("HOTEL_PUBLIC_MEDIA_HOST", "")
+    data_dir = os.getenv("HOTEL_DATA_DIR", "")
+    if min(len(editor), len(publisher)) < 32 or hmac.compare_digest(editor, publisher):
+        raise ValueError("distinct admin tokens of at least 32 characters are required")
+    labels = host.split(".")
+    if (len(host) > 253 or len(labels) < 2 or
+            any(not re.fullmatch(r"[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?", label)
+                for label in labels)):
+        raise ValueError("HOTEL_PUBLIC_MEDIA_HOST must be a hostname without scheme or port")
+    if not data_dir or not Path(data_dir).is_absolute():
+        raise ValueError("HOTEL_DATA_DIR must be an absolute private path")
+
+
 if __name__ == "__main__":
-    # TLS termination must be configured before a TV can connect.
-    ThreadingHTTPServer(("127.0.0.1", 8131), Handler).serve_forever()
+    try:
+        validate_staging_config()
+    except ValueError as exc:
+        raise SystemExit(f"Staging configuration invalid: {exc}")
+    if sys.argv[1:] == ["--check-config"]:
+        print("Staging configuration valid")
+    elif sys.argv[1:]:
+        raise SystemExit("Usage: hotel_api.py [--check-config]")
+    else:
+        # TLS termination must be configured before a TV can connect.
+        ThreadingHTTPServer(("127.0.0.1", 8131), Handler).serve_forever()

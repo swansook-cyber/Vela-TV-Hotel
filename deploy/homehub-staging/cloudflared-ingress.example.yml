@@ -1,0 +1,7 @@
+# Merge into the EXISTING locally managed tunnel configuration only after approval.
+# Preserve all existing ingress rules and the existing final catch-all rule.
+# DNS hostname routing and Cloudflare Access policies are separate operator actions.
+ingress:
+  - hostname: hotel.velalab.net
+    service: http://127.0.0.1:8131
+  - service: http_status:404

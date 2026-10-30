@@ -1,0 +1,7 @@
+# Copy manually to /etc/vela-tv-hotel-staging.env, owned root:vela-hotel-stg, mode 0640.
+# Generate each token independently: python3 -c 'import secrets; print(secrets.token_urlsafe(48))'
+# Placeholder values deliberately fail the startup configuration check.
+HOTEL_DATA_DIR=/var/lib/vela-tv-hotel-staging
+HOTEL_PUBLIC_MEDIA_HOST=hotel.velalab.net
+HOTEL_EDITOR_TOKEN=REPLACE_WITH_INDEPENDENT_RANDOM_SECRET
+HOTEL_PUBLISHER_TOKEN=REPLACE_WITH_ANOTHER_INDEPENDENT_RANDOM_SECRET
