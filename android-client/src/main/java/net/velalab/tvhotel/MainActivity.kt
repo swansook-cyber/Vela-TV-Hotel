@@ -48,6 +48,15 @@ class MainActivity : Activity() {
     private var assignedRoom = ""
     private var slideshow: MediaSlideshow? = null
     private val credentials by lazy { DeviceCredentials(this) }
+    private val internalPhotoSeedAvailable: Boolean by lazy {
+        runCatching {
+            val names = assets.list("fiore_internal")?.toSet().orEmpty()
+            names.contains("hero.webp") && names.contains("resort_grid.webp")
+        }.getOrDefault(false)
+    }
+    private fun internalPhoto(name: String): Bitmap? = runCatching {
+        assets.open("fiore_internal/$name").use { BitmapFactory.decodeStream(it) }
+    }.getOrNull()
 
     private fun dp(n: Int): Int = (n * resources.displayMetrics.density).toInt()
     private fun label(text: String, size: Float, bold: Boolean = false): TextView =
@@ -109,9 +118,12 @@ class MainActivity : Activity() {
         if (heroBackdrop) {
             val frame = FrameLayout(this)
             frame.addView(ImageView(this).apply {
-                setImageResource(R.drawable.fiore_concept_hero)
+                val photo = if (internalPhotoSeedAvailable) internalPhoto("hero.webp") else null
+                if (photo != null) setImageBitmap(photo)
+                else setImageResource(R.drawable.fiore_concept_hero)
                 scaleType = ImageView.ScaleType.CENTER_CROP
-                contentDescription = "Illustrative tropical resort backdrop; not a hotel photograph"
+                contentDescription = if (photo != null) "Ao Nang Fiore Resort website photo, internal QA only"
+                    else "Illustrative tropical resort backdrop; not a hotel photograph"
             }, FrameLayout.LayoutParams(-1, -1))
             frame.addView(View(this).apply {
                 background = GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT,
@@ -376,7 +388,9 @@ class MainActivity : Activity() {
         }, LinearLayout.LayoutParams(0, dp(27), 1f))
         root.addView(quickHeading)
         quickApps(root)
-        root.addView(textLine("$syncStatus   ·   CONCEPT IMAGERY — NOT HOTEL PHOTOGRAPHY", 11f).apply {
+        val imageNotice = if (internalPhotoSeedAvailable) "OFFICIAL WEBSITE PHOTOS · INTERNAL QA ONLY"
+            else "ILLUSTRATIVE FALLBACK · NO HOTEL PHOTOS"
+        root.addView(textLine("$syncStatus   ·   $imageNotice", 11f).apply {
             setTextColor(Color.rgb(192, 206, 198))
         }, LinearLayout.LayoutParams(-1, dp(28)).apply { topMargin = dp(5) })
         cards[3].setOnLongClickListener { showStaffTools(); true }
@@ -438,8 +452,10 @@ class MainActivity : Activity() {
         }
     }
 
-    private val resortConceptPhotos: List<Bitmap> by lazy {
-        val sheet = BitmapFactory.decodeResource(resources, R.drawable.fiore_concept_resort_grid)
+    private val resortSeedPhotos: List<Bitmap> by lazy {
+        val sheet = if (internalPhotoSeedAvailable) internalPhoto("resort_grid.webp")
+            ?: BitmapFactory.decodeResource(resources, R.drawable.fiore_concept_resort_grid)
+            else BitmapFactory.decodeResource(resources, R.drawable.fiore_concept_resort_grid)
         val halfWidth = sheet.width / 2
         val halfHeight = sheet.height / 2
         listOf(
@@ -455,7 +471,7 @@ class MainActivity : Activity() {
         val frame = FrameLayout(this).apply {
             isFocusable = true
             isFocusableInTouchMode = true
-            contentDescription = "$title. Concept image. $caption"
+            contentDescription = "$title. ${if (internalPhotoSeedAvailable) "Ao Nang Fiore Resort website photo" else "Illustrative image"}. $caption"
             background = GradientDrawable().apply {
                 setColor(Color.rgb(20, 49, 51))
                 cornerRadius = dp(17).toFloat()
@@ -464,7 +480,7 @@ class MainActivity : Activity() {
             setOnClickListener { onClick() }
         }
         frame.addView(ImageView(this).apply {
-            setImageBitmap(resortConceptPhotos[photoIndex])
+            setImageBitmap(resortSeedPhotos[photoIndex])
             scaleType = ImageView.ScaleType.CENTER_CROP
             contentDescription = null
         }, FrameLayout.LayoutParams(-1, -1))
@@ -472,7 +488,7 @@ class MainActivity : Activity() {
             background = GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
                 intArrayOf(Color.TRANSPARENT, Color.argb(225, 4, 22, 27)))
         }, FrameLayout.LayoutParams(-1, -1))
-        frame.addView(textLine("CONCEPT IMAGE", 10f, true).apply {
+        frame.addView(textLine(if (internalPhotoSeedAvailable) "OFFICIAL SITE · QA ONLY" else "ILLUSTRATIVE IMAGE", 10f, true).apply {
             setPadding(dp(13), 0, 0, 0)
             letterSpacing = 0.11f
         }, FrameLayout.LayoutParams(-1, dp(28), Gravity.TOP))
@@ -540,7 +556,8 @@ class MainActivity : Activity() {
             })
             aboutView = box
         }
-        root.addView(textLine("EXPLORE OUR RESORT  ·  ILLUSTRATIVE PHOTOS", 13f, true).apply {
+        root.addView(textLine(if (internalPhotoSeedAvailable) "EXPLORE OUR RESORT  ·  OFFICIAL SITE PHOTOS"
+            else "EXPLORE OUR RESORT  ·  ILLUSTRATIVE PHOTOS", 13f, true).apply {
             setTextColor(muted)
             letterSpacing = 0.1f
         }, LinearLayout.LayoutParams(-1, dp(32)))

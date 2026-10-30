@@ -4,3 +4,4 @@ backend/.hotel-data/
 .gradle/
 local.properties
 *.apk
+android-client/src/main/assets/fiore_internal/

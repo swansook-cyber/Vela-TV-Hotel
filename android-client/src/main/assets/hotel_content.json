@@ -1,22 +1,89 @@
 {
   "schema_version": 1,
-  "hotel": {"name": "Ao Nang Fiore Resort"},
-  "guest_welcome": {"mode": "generic", "value": ""},
-  "quick_apps": ["Netflix", "Disney+", "YouTube", "Prime Video", "iQIYI"],
-  "resort": {"items": [
-    {"category": "Profile", "title": "About the resort", "description": "TEST DATA — Information pending verification by the resort.", "verified": false},
-    {"category": "Rooms", "title": "Rooms & amenities", "description": "TEST DATA — Room categories and amenities pending verification.", "verified": false},
-    {"category": "Dining", "title": "Restaurants & menus", "description": "TEST DATA — Menus and service hours pending verification.", "verified": false},
-    {"category": "Facilities", "title": "Spa, pool & activities", "description": "TEST DATA — Facilities and opening hours pending verification.", "verified": false},
-    {"category": "Promotions", "title": "Current offers", "description": "TEST DATA — No approved promotions have been provided.", "verified": false}
-  ]},
-  "explore": {"items": [
-    {"category": "Attractions", "title": "Explore Krabi", "description": "TEST DATA — Approved attractions and transport information pending verification.", "verified": false}
-  ]},
-  "guest": {"items": [
-    {"category": "Services", "title": "Guest services", "description": "TEST DATA — Guest service instructions pending verification.", "verified": false},
-    {"category": "Wi-Fi", "title": "Wi-Fi", "description": "TEST DATA — Guest Wi-Fi instructions pending secure admin entry.", "verified": false},
-    {"category": "Reception", "title": "Reception", "description": "TEST DATA — Contact details and service hours pending verification.", "verified": false},
-    {"category": "Safety", "title": "Safety information", "description": "TEST DATA — Approved safety instructions pending verification.", "verified": false}
-  ]}
+  "hotel": {
+    "name": "Ao Nang Fiore Resort"
+  },
+  "guest_welcome": {
+    "mode": "generic",
+    "value": ""
+  },
+  "quick_apps": [
+    "Netflix",
+    "Disney+",
+    "YouTube",
+    "Prime Video",
+    "iQIYI"
+  ],
+  "resort": {
+    "items": [
+      {
+        "category": "Profile",
+        "title": "About the resort",
+        "description": "A tropical forest retreat near Ao Nang Beach, with villas set among lush greenery and mountain views. Source: official website home page, checked 2026-10-30.",
+        "verified": true
+      },
+      {
+        "category": "Rooms",
+        "title": "Rooms & amenities",
+        "description": "Deluxe Cottages, Jacuzzi Villas, Tree Top Villas and Premium Jacuzzi Villas are listed on the resort website. Rooms include free Wi-Fi. Source: Accommodation, checked 2026-10-30.",
+        "verified": true
+      },
+      {
+        "category": "Dining",
+        "title": "Restaurants & dining",
+        "description": "De’fish Seafood Restaurant serves seafood, Thai and European food, including halal options. The site also lists Fiore Coffee and a Pool Bar. Confirm current hours with reception. Source: Dining, checked 2026-10-30.",
+        "verified": true
+      },
+      {
+        "category": "Facilities",
+        "title": "Spa, pool & activities",
+        "description": "The resort website lists a pool with a view, massage, and an on-site zipline adventure. Confirm availability and current hours with reception. Source: Facilities and Activities, checked 2026-10-30.",
+        "verified": true
+      },
+      {
+        "category": "Promotions",
+        "title": "Special offers",
+        "description": "For current offers and booking terms, ask reception or visit the official resort website. Offers change and are not stored in this offline guide. Source: Offers, checked 2026-10-30.",
+        "verified": true
+      }
+    ]
+  },
+  "explore": {
+    "items": [
+      {
+        "category": "Attractions",
+        "title": "Explore Krabi",
+        "description": "The resort website highlights Ao Nang Beach, Poda Island and zipline activities. Ask the tour desk for current transport and excursion details. Source: Facilities and Activities, checked 2026-10-30.",
+        "verified": true
+      }
+    ]
+  },
+  "guest": {
+    "items": [
+      {
+        "category": "Services",
+        "title": "Guest services",
+        "description": "The resort lists a 24-hour front desk, concierge, room service, laundry, luggage storage and a tour desk. Source: Facilities, checked 2026-10-30.",
+        "verified": true
+      },
+      {
+        "category": "Wi-Fi",
+        "title": "Wi-Fi",
+        "description": "Complimentary Wi-Fi is listed for guest rooms. Ask reception for the current network and password. Source: Facilities and FAQ, checked 2026-10-30.",
+        "verified": true
+      },
+      {
+        "category": "Reception",
+        "title": "Reception",
+        "description": "24-hour front desk. Tel: +66 75 695522-3. Email: info@aonangfiore.com. Source: Facilities and Contact, checked 2026-10-30.",
+        "verified": true
+      },
+      {
+        "category": "Safety",
+        "title": "Check-in and check-out",
+        "description": "The FAQ lists check-in from 2:00 PM and check-out until 11:00 AM. Confirm exceptions with reception. Source: FAQ, checked 2026-10-30.",
+        "verified": true
+      }
+    ]
+  }
 }
