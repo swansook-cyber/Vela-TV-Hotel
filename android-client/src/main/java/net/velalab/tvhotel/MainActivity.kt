@@ -144,22 +144,31 @@ class MainActivity : Activity() {
     private fun shortcutStyle(view: LinearLayout, focused: Boolean, present: Boolean) {
         view.background = GradientDrawable(
             GradientDrawable.Orientation.TOP_BOTTOM,
-            if (focused) intArrayOf(Color.rgb(254, 193, 58), gold)
-            else intArrayOf(Color.rgb(31, 73, 75), Color.rgb(13, 43, 55))
+            if (focused) intArrayOf(Color.rgb(55, 89, 100), Color.rgb(24, 46, 60))
+            else intArrayOf(Color.rgb(38, 75, 84), Color.rgb(17, 42, 57))
         ).apply {
-            cornerRadius = dp(17).toFloat()
-            setStroke(dp(if (focused) 4 else 2), if (focused) Color.WHITE else Color.rgb(115, 151, 153))
+            cornerRadius = dp(18).toFloat()
+            setStroke(dp(if (focused) 4 else 2),
+                if (focused) Color.WHITE else Color.rgb(88, 130, 143))
         }
-        view.alpha = if (present || focused) 1f else 0.65f
-        view.scaleX = if (focused) 1.04f else 1f
-        view.scaleY = if (focused) 1.04f else 1f
-        (0 until view.childCount).map { view.getChildAt(it) }
-            .filterIsInstance<TextView>().forEach {
-                it.setTextColor(if (focused) Color.BLACK else Color.WHITE)
-            }
+        view.alpha = if (present || focused) 1f else 0.7f
+        view.scaleX = if (focused) 1.045f else 1f
+        view.scaleY = if (focused) 1.045f else 1f
     }
 
-    /** Five launcher-like shortcuts. Configuration is local per TV, never committed with guest data. */
+    /** Prefer the TV application's wide banner, just like Vela TV Launcher.
+     *  Some apps supply only a square icon, so retain a generous-sized icon fallback.
+     */
+    private fun quickAppArtwork(info: android.content.pm.ResolveInfo): Pair<android.graphics.drawable.Drawable, Boolean> {
+        val banner = try {
+            info.activityInfo.loadBanner(packageManager)
+                ?: info.activityInfo.applicationInfo.loadBanner(packageManager)
+        } catch (_: Exception) { null }
+        return if (banner != null) Pair(banner, true)
+        else Pair(info.loadIcon(packageManager), false)
+    }
+
+    /** Five editable local launcher-style shortcuts; real banner artwork where provided by installed apps. */
     private fun quickApps(root: LinearLayout) {
         val available = installedTvApps()
         val row = LinearLayout(this).apply {
@@ -175,25 +184,29 @@ class MainActivity : Activity() {
             val tile = LinearLayout(this).apply {
                 orientation = LinearLayout.VERTICAL
                 gravity = Gravity.CENTER
-                setPadding(dp(6), dp(7), dp(6), dp(5))
+                setPadding(dp(6), dp(6), dp(6), dp(4))
                 isFocusable = true
                 isFocusableInTouchMode = true
+                clipChildren = false
                 contentDescription = "$title, shortcut ${slot + 1}"
             }
-            val iconView = ImageView(this).apply {
-                if (found != null) setImageDrawable(found.loadIcon(packageManager))
+            val art = found?.let { quickAppArtwork(it) }
+            val image = ImageView(this).apply {
+                if (art != null) setImageDrawable(art.first)
                 else setImageResource(android.R.drawable.sym_def_app_icon)
                 scaleType = ImageView.ScaleType.FIT_CENTER
-                alpha = if (found == null) 0.5f else 1f
+                adjustViewBounds = false
+                alpha = if (found == null) 0.38f else 1f
                 contentDescription = title
             }
-            tile.addView(iconView, LinearLayout.LayoutParams(-1, dp(52)))
-            tile.addView(label(title, 13f, true).apply {
+            tile.addView(image, LinearLayout.LayoutParams(-1, dp(73)))
+            // Banner artwork carries its own app identity; keep a short label below.
+            tile.addView(label(title, 12f, true).apply {
                 maxLines = 1
                 ellipsize = android.text.TextUtils.TruncateAt.END
-            }, LinearLayout.LayoutParams(-1, dp(23)))
+            }, LinearLayout.LayoutParams(-1, dp(21)))
             if (found == null) {
-                tile.addView(label("Not installed", 10f), LinearLayout.LayoutParams(-1, dp(17)))
+                tile.addView(label("Not installed", 10f), LinearLayout.LayoutParams(-1, dp(16)))
             }
             tile.setOnFocusChangeListener { _, focused ->
                 shortcutStyle(tile, focused, found != null)
@@ -203,7 +216,7 @@ class MainActivity : Activity() {
                 if (found != null) launchApp(found) else showQuickAppsEditor(slot)
             }
             tile.setOnLongClickListener { showQuickAppsEditor(slot); true }
-            row.addView(tile, LinearLayout.LayoutParams(0, dp(111), 1f).apply {
+            row.addView(tile, LinearLayout.LayoutParams(0, dp(122), 1f).apply {
                 setMargins(dp(4), dp(5), dp(4), dp(5))
             })
         }
