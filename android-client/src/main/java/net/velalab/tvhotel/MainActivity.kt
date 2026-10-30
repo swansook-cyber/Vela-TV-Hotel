@@ -31,6 +31,10 @@ class MainActivity : Activity() {
     private val gold = Color.rgb(235, 170, 28)
     private val cards = Color.rgb(30, 73, 74)
     private var screen: LinearLayout? = null
+    private var activeScroll: ScrollView? = null
+    private fun viewportHeightDp(): Int = (resources.displayMetrics.heightPixels / resources.displayMetrics.density).toInt()
+    private fun compactTv(): Boolean = viewportHeightDp() < 650
+    private fun fitHeight(normal: Int, compact: Int): Int = if (compactTv()) compact else normal
     private var lastHomeIndex = 0
     private var page = "home"
     private var content = JSONObject()
@@ -57,8 +61,8 @@ class MainActivity : Activity() {
             setStroke(dp(if (focused) 4 else 2), if (focused) Color.WHITE else Color.GRAY)
         }
         button.setTextColor(if (focused) Color.BLACK else Color.WHITE)
-        button.scaleX = if (focused) 1.055f else 1f
-        button.scaleY = if (focused) 1.055f else 1f
+        button.scaleX = if (focused) 1.015f else 1f
+        button.scaleY = if (focused) 1.015f else 1f
         button.invalidate()
     }
 
@@ -79,7 +83,8 @@ class MainActivity : Activity() {
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER_HORIZONTAL
-            setPadding(dp(22), dp(8), dp(22), dp(10))
+            setPadding(dp(22), dp(6), dp(22), dp(14))
+            clipChildren = false
             background = GradientDrawable(
                 GradientDrawable.Orientation.TL_BR,
                 intArrayOf(Color.rgb(11, 46, 46), Color.rgb(6, 22, 37))
@@ -87,11 +92,14 @@ class MainActivity : Activity() {
         }
         val scroll = ScrollView(this).apply {
             isFillViewport = true
+            clipToPadding = false
+            isSmoothScrollingEnabled = true
             descendantFocusability = ViewGroup.FOCUS_AFTER_DESCENDANTS
             addView(root)
         }
         setContentView(scroll)
         screen = root
+        activeScroll = scroll
         return root
     }
 
@@ -102,7 +110,7 @@ class MainActivity : Activity() {
             contentDescription = "Ao Nang Fiore Resort"
         }
         root.addView(logo, LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT, dp(if (home) 148 else 80)
+            ViewGroup.LayoutParams.MATCH_PARENT, dp(if (home) 100 else fitHeight(62, 42))
         ))
     }
 
@@ -152,8 +160,8 @@ class MainActivity : Activity() {
                 if (focused) Color.WHITE else Color.rgb(88, 130, 143))
         }
         view.alpha = if (present || focused) 1f else 0.7f
-        view.scaleX = if (focused) 1.045f else 1f
-        view.scaleY = if (focused) 1.045f else 1f
+        view.scaleX = if (focused) 1.015f else 1f
+        view.scaleY = if (focused) 1.015f else 1f
     }
 
     /** Prefer the TV application's wide banner, just like Vela TV Launcher.
@@ -199,7 +207,7 @@ class MainActivity : Activity() {
                 alpha = if (found == null) 0.38f else 1f
                 contentDescription = title
             }
-            tile.addView(image, LinearLayout.LayoutParams(-1, dp(73)))
+            tile.addView(image, LinearLayout.LayoutParams(-1, dp(fitHeight(73, 53))))
             // Banner artwork carries its own app identity; keep a short label below.
             tile.addView(label(title, 12f, true).apply {
                 maxLines = 1
@@ -216,7 +224,7 @@ class MainActivity : Activity() {
                 if (found != null) launchApp(found) else showQuickAppsEditor(slot)
             }
             tile.setOnLongClickListener { showQuickAppsEditor(slot); true }
-            row.addView(tile, LinearLayout.LayoutParams(0, dp(122), 1f).apply {
+            row.addView(tile, LinearLayout.LayoutParams(0, dp(fitHeight(122, 98)), 1f).apply {
                 setMargins(dp(4), dp(5), dp(4), dp(5))
             })
         }
@@ -234,7 +242,7 @@ class MainActivity : Activity() {
             val info = installedTvApps().firstOrNull { it.activityInfo.packageName == pkg }
             val name = info?.loadLabel(packageManager)?.toString() ?: if (pkg.isBlank()) "Empty" else defaultAppNames.getOrElse(slot) { "Missing" }
             val button = action("${slot + 1}\n$name") { showQuickAppPicker(slot) }.apply { textSize = 12f }
-            slots.addView(button, LinearLayout.LayoutParams(0, dp(90), 1f).apply {
+            slots.addView(button, LinearLayout.LayoutParams(0, dp(fitHeight(90, 65)), 1f).apply {
                 setMargins(dp(4), dp(8), dp(4), dp(8))
             })
             if (slot == selectedSlot) button.post { button.requestFocus() }
@@ -317,7 +325,7 @@ class MainActivity : Activity() {
                 icon.setBounds(0, 0, iconSize, iconSize)
                 button.setCompoundDrawables(null, icon, null, null)
                 button.compoundDrawablePadding = dp(if (compact) 3 else 8)
-                row.addView(button, LinearLayout.LayoutParams(0, dp(if (compact) 74 else 108), 1f).apply {
+                row.addView(button, LinearLayout.LayoutParams(0, dp(if (compact) 74 else fitHeight(108, 90)), 1f).apply {
                     val gap = dp(if (compact) 4 else 7)
                     setMargins(gap, gap, gap, gap)
                 })
@@ -334,7 +342,7 @@ class MainActivity : Activity() {
         val hero = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
-            setPadding(dp(24), dp(10), dp(24), dp(10))
+            setPadding(dp(16), dp(4), dp(16), dp(4))
             background = GradientDrawable(
                 GradientDrawable.Orientation.LEFT_RIGHT,
                 intArrayOf(Color.rgb(16, 67, 66), Color.rgb(5, 32, 46))
@@ -345,7 +353,7 @@ class MainActivity : Activity() {
             scaleType = ImageView.ScaleType.FIT_CENTER
             contentDescription = "Ao Nang Fiore Resort"
         }
-        hero.addView(logo, LinearLayout.LayoutParams(0, dp(126), 1f))
+        hero.addView(logo, LinearLayout.LayoutParams(0, dp(fitHeight(126, 80)), 1f))
         val greetingBlock = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER
@@ -354,8 +362,8 @@ class MainActivity : Activity() {
         greetingBlock.addView(label("Ao Nang Fiore Resort", 25f, true))
         hero.addView(greetingBlock, LinearLayout.LayoutParams(0, -2, 1f))
         root.addView(hero, LinearLayout.LayoutParams(-1, -2).apply {
-            topMargin = dp(12)
-            bottomMargin = dp(12)
+            topMargin = dp(4)
+            bottomMargin = dp(5)
         })
         val greeting = content.optJSONObject("guest_welcome")
         val mode = greeting?.optString("mode", "generic") ?: "generic"
@@ -368,7 +376,7 @@ class MainActivity : Activity() {
         }
         if (welcomeLine.isNotEmpty()) {
             root.addView(label(welcomeLine, 18f), LinearLayout.LayoutParams(-1, -2).apply {
-                bottomMargin = dp(10)
+                bottomMargin = dp(4)
             })
         }
 
@@ -405,30 +413,30 @@ class MainActivity : Activity() {
                 }
                 buttons.add(button)
                 row.addView(button, LinearLayout.LayoutParams(0, dp(90), 1f).apply {
-                    setMargins(dp(7), dp(5), dp(7), dp(5))
+                    setMargins(dp(7), dp(3), dp(7), dp(3))
                 })
             }
             root.addView(row, LinearLayout.LayoutParams(-1, -2))
         }
         root.addView(label("QUICK APPS", 15f, true), LinearLayout.LayoutParams(-1, -2).apply {
-            topMargin = dp(13)
-            bottomMargin = dp(2)
+            topMargin = dp(5)
+            bottomMargin = dp(1)
         })
         quickApps(root)
         val footer = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
         }
-        footer.addView(label(syncStatus, 13f), LinearLayout.LayoutParams(0, dp(42), 1f))
+        footer.addView(label(syncStatus, 12f), LinearLayout.LayoutParams(0, dp(36), 1f))
         val customize = action("Edit Apps") { showQuickAppsEditor() }.apply { textSize = 13f }
-        footer.addView(customize, LinearLayout.LayoutParams(dp(125), dp(44)).apply { rightMargin = dp(6) })
+        footer.addView(customize, LinearLayout.LayoutParams(dp(125), dp(36)).apply { rightMargin = dp(6) })
         val media = action("Resort Media") { showMedia() }.apply { textSize = 13f }
-        footer.addView(media, LinearLayout.LayoutParams(dp(135), dp(44)).apply {
+        footer.addView(media, LinearLayout.LayoutParams(dp(135), dp(36)).apply {
             rightMargin = dp(8)
         })
         val settings = action("Connect / Sync") { showSetup() }.apply { textSize = 13f }
-        footer.addView(settings, LinearLayout.LayoutParams(dp(165), dp(44)))
-        root.addView(footer, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(8) })
+        footer.addView(settings, LinearLayout.LayoutParams(dp(165), dp(36)))
+        root.addView(footer, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(3) })
         buttons.forEachIndexed { index, btn ->
             btn.setOnFocusChangeListener { _, focused ->
                 style(btn, focused)
@@ -446,15 +454,15 @@ class MainActivity : Activity() {
         page = id
         val root = newPage()
         addLogo(root, false)
-        root.addView(label(title, 27f, true))
+        root.addView(label(title, 25f, true))
         val back = action("← Back to Welcome") { showHome() }
-        root.addView(back, LinearLayout.LayoutParams(dp(250), dp(52)).apply {
-            topMargin = dp(12)
-            bottomMargin = dp(16)
+        root.addView(back, LinearLayout.LayoutParams(dp(250), dp(fitHeight(52, 40))).apply {
+            topMargin = dp(4)
+            bottomMargin = dp(8)
         })
         if (id == "entertainment") {
-            root.addView(label("Available Apps", 19f, true))
-            addAppButtons(root, 12)
+            root.addView(label("Available Apps", 17f, true))
+            addAppButtons(root, 80, compact = true)
             back.post { back.requestFocus() }
             return
         }
@@ -470,8 +478,8 @@ class MainActivity : Activity() {
                     "Information pending • " + item.optString("description", "TEST DATA")
                 val button = action(name) { showDetail(id, title, name, details) }
                 root.addView(button, LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT, dp(64)
-                ).apply { setMargins(dp(10), dp(6), dp(10), dp(6)) })
+                    ViewGroup.LayoutParams.MATCH_PARENT, dp(fitHeight(64, 56))
+                ).apply { setMargins(dp(10), dp(4), dp(10), dp(4)) })
             }
         }
         back.post { back.requestFocus() }
