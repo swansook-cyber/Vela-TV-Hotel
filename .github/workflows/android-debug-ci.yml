@@ -43,14 +43,14 @@ jobs:
           AAPT="$(find "${ANDROID_HOME}/build-tools" -name aapt -type f | sort -V | tail -n 1)"
           test -x "$AAPT"
           "$AAPT" dump badging "$APK" | grep '^package:'
-          "$AAPT" dump badging "$APK" | grep -E "^package: name='net.velalab.tvhotel' versionCode='8' versionName='1.0.0'"
+          "$AAPT" dump badging "$APK" | grep -E "^package: name='net.velalab.tvhotel' versionCode='9' versionName='1.0.1'"
           mkdir -p dist
           SOURCE_SHA="${{ github.event.pull_request.head.sha || github.sha }}"
-          cp "$APK" dist/Vela-TV-Hotel-v1.0.0-code8-${SOURCE_SHA:0:7}-debug.apk
+          cp "$APK" dist/Vela-TV-Hotel-v1.0.1-code9-${SOURCE_SHA:0:7}-debug.apk
           sha256sum dist/*.apk | tee dist/SHA256SUMS.txt
-          printf 'source_commit=%s\\nversion_name=1.0.0\\nversion_code=8\\n' "$SOURCE_SHA" > dist/BUILD-IDENTITY.txt
+          printf 'source_commit=%s\\nversion_name=1.0.1\\nversion_code=9\\n' "$SOURCE_SHA" > dist/BUILD-IDENTITY.txt
       - uses: actions/upload-artifact@v4
         with:
-          name: Vela-TV-Hotel-V1.0.0-VERIFIED-${{ github.run_number }}
+          name: Vela-TV-Hotel-V1.0.1-VERIFIED-${{ github.run_number }}
           path: dist/
           if-no-files-found: error
