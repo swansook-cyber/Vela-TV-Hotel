@@ -30,12 +30,16 @@ class MainActivity : Activity() {
     private val navy = Color.rgb(8, 35, 36)
     private val gold = Color.rgb(235, 170, 28)
     private val cards = Color.rgb(30, 73, 74)
+    private val sea = Color.rgb(22, 112, 115)
+    private val muted = Color.rgb(178, 202, 205)
     private var screen: LinearLayout? = null
     private var activeScroll: ScrollView? = null
     private fun viewportHeightDp(): Int = (resources.displayMetrics.heightPixels / resources.displayMetrics.density).toInt()
     private fun compactTv(): Boolean = viewportHeightDp() < 650
     private fun fitHeight(normal: Int, compact: Int): Int = if (compactTv()) compact else normal
     private var lastHomeIndex = 0
+    private var lastSectionIndex = 0
+    private var lastQuickSlot = 0
     private var page = "home"
     private var content = JSONObject()
     private var syncStatus = "Offline guide"
@@ -57,12 +61,12 @@ class MainActivity : Activity() {
         button.backgroundTintList = null
         button.background = GradientDrawable().apply {
             cornerRadius = dp(14).toFloat()
-            setColor(if (focused) gold else cards)
-            setStroke(dp(if (focused) 4 else 2), if (focused) Color.WHITE else Color.GRAY)
+            setColor(if (focused) Color.rgb(35, 83, 87) else cards)
+            setStroke(dp(if (focused) 3 else 1), if (focused) Color.WHITE else Color.rgb(82, 126, 129))
         }
-        button.setTextColor(if (focused) Color.BLACK else Color.WHITE)
-        button.scaleX = if (focused) 1.015f else 1f
-        button.scaleY = if (focused) 1.015f else 1f
+        button.setTextColor(Color.WHITE)
+        button.scaleX = if (focused) 1.035f else 1f
+        button.scaleY = if (focused) 1.035f else 1f
         button.invalidate()
     }
 
@@ -83,11 +87,11 @@ class MainActivity : Activity() {
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER_HORIZONTAL
-            setPadding(dp(22), dp(6), dp(22), dp(14))
+            setPadding(dp(48), dp(28), dp(48), dp(30))
             clipChildren = false
             background = GradientDrawable(
                 GradientDrawable.Orientation.TL_BR,
-                intArrayOf(Color.rgb(11, 46, 46), Color.rgb(6, 22, 37))
+                intArrayOf(Color.rgb(9, 48, 50), Color.rgb(5, 18, 31))
             )
         }
         val scroll = ScrollView(this).apply {
@@ -112,6 +116,67 @@ class MainActivity : Activity() {
         root.addView(logo, LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, dp(if (home) 100 else fitHeight(62, 42))
         ))
+    }
+
+    private fun textLine(text: String, size: Float, bold: Boolean = false): TextView =
+        label(text, size, bold).apply { gravity = Gravity.START or Gravity.CENTER_VERTICAL }
+
+    private fun panel(focused: Boolean, accent: Int = sea): GradientDrawable =
+        GradientDrawable(GradientDrawable.Orientation.TL_BR,
+            intArrayOf(if (focused) Color.rgb(35, 83, 87) else accent, Color.rgb(15, 42, 55)))
+            .apply {
+                cornerRadius = dp(16).toFloat()
+                setStroke(dp(if (focused) 3 else 1),
+                    if (focused) Color.WHITE else Color.rgb(79, 125, 128))
+            }
+
+    private fun focusCard(view: View, accent: Int = sea) {
+        view.background = panel(false, accent)
+        view.setOnFocusChangeListener { _, focused ->
+            view.background = panel(focused, accent)
+            view.animate().scaleX(if (focused) 1.035f else 1f)
+                .scaleY(if (focused) 1.035f else 1f).setDuration(110).start()
+        }
+    }
+
+    private fun header(root: LinearLayout, title: String, onBack: () -> Unit): View {
+        val bar = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+        val back = action("‹  Welcome", onBack).apply { textSize = 14f }
+        bar.addView(back, LinearLayout.LayoutParams(dp(150), dp(46)))
+        val logo = ImageView(this).apply {
+            setImageResource(R.drawable.aonang_fiore_logo)
+            scaleType = ImageView.ScaleType.FIT_CENTER
+            contentDescription = "Ao Nang Fiore Resort"
+        }
+        bar.addView(logo, LinearLayout.LayoutParams(0, dp(54), 1f))
+        bar.addView(textLine(title, 24f, true), LinearLayout.LayoutParams(0, dp(54), 2f))
+        root.addView(bar, LinearLayout.LayoutParams(-1, dp(58)).apply { bottomMargin = dp(22) })
+        return back
+    }
+
+    private fun sectionCard(title: String, subtitle: String, icon: Int, onClick: () -> Unit): View {
+        val card = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(dp(18), dp(12), dp(14), dp(12))
+            isFocusable = true
+            contentDescription = "$title. $subtitle"
+            setOnClickListener { onClick() }
+        }
+        val glyph = ImageView(this).apply {
+            setImageResource(icon)
+            setColorFilter(Color.rgb(232, 198, 129))
+            scaleType = ImageView.ScaleType.FIT_CENTER
+        }
+        card.addView(glyph, LinearLayout.LayoutParams(dp(32), dp(32)).apply { bottomMargin = dp(12) })
+        card.addView(textLine(title, 18f, true), LinearLayout.LayoutParams(-1, dp(29)))
+        card.addView(textLine(subtitle, 12f).apply { setTextColor(muted); maxLines = 2 },
+            LinearLayout.LayoutParams(-1, dp(30)))
+        focusCard(card)
+        return card
     }
 
     private fun section(id: String): JSONObject = content.optJSONObject(id) ?: JSONObject()
@@ -142,8 +207,7 @@ class MainActivity : Activity() {
             val target = info.activityInfo
             startActivity(Intent(Intent.ACTION_MAIN)
                 .addCategory(Intent.CATEGORY_LEANBACK_LAUNCHER)
-                .setClassName(target.packageName, target.name)
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                .setClassName(target.packageName, target.name))
         } catch (_: Exception) {
             Toast.makeText(this, "Unable to open this app", Toast.LENGTH_SHORT).show()
         }
@@ -172,7 +236,9 @@ class MainActivity : Activity() {
             info.activityInfo.loadBanner(packageManager)
                 ?: info.activityInfo.applicationInfo.loadBanner(packageManager)
         } catch (_: Exception) { null }
-        return if (banner != null) Pair(banner, true)
+        val wide = banner != null && banner.intrinsicWidth > 0 && banner.intrinsicHeight > 0 &&
+            banner.intrinsicWidth.toFloat() / banner.intrinsicHeight >= 1.4f
+        return if (wide) Pair(banner!!, true)
         else Pair(info.loadIcon(packageManager), false)
     }
 
@@ -231,221 +297,73 @@ class MainActivity : Activity() {
         root.addView(row, LinearLayout.LayoutParams(-1, -2))
     }
 
-    private fun showQuickAppsEditor(selectedSlot: Int = 0) {
-        page = "quick_apps"
-        val root = newPage()
-        root.addView(label("Customize Quick Apps", 26f, true))
-        root.addView(label("Choose a shortcut slot, then select an installed TV app.", 15f))
-        val slots = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
-        repeat(5) { slot ->
-            val pkg = quickAppPackage(slot)
-            val info = installedTvApps().firstOrNull { it.activityInfo.packageName == pkg }
-            val name = info?.loadLabel(packageManager)?.toString() ?: if (pkg.isBlank()) "Empty" else defaultAppNames.getOrElse(slot) { "Missing" }
-            val button = action("${slot + 1}\n$name") { showQuickAppPicker(slot) }.apply { textSize = 12f }
-            slots.addView(button, LinearLayout.LayoutParams(0, dp(fitHeight(90, 65)), 1f).apply {
-                setMargins(dp(4), dp(8), dp(4), dp(8))
-            })
-            if (slot == selectedSlot) button.post { button.requestFocus() }
-        }
-        root.addView(slots, LinearLayout.LayoutParams(-1, -2))
-        val reset = action("Restore default five apps") {
-            quickAppPrefs.edit().clear().apply()
-            showQuickAppsEditor()
-        }
-        root.addView(reset, LinearLayout.LayoutParams(dp(340), dp(55)))
-        val back = action("Back to Welcome") { showHome() }
-        root.addView(back, LinearLayout.LayoutParams(dp(300), dp(55)))
-    }
-
-    private fun showQuickAppPicker(slot: Int) {
-        page = "quick_picker"
-        val root = newPage()
-        root.addView(label("Choose app for slot ${slot + 1}", 25f, true))
-        root.addView(label("Only installed TV apps are listed. Other slots will not change.", 15f))
-        val apps = installedTvApps()
-        val usedByOtherSlots = (0 until 5).filter { it != slot }.map { quickAppPackage(it) }.toSet()
-        apps.forEach { info ->
-            val pkg = info.activityInfo.packageName
-            val name = info.loadLabel(packageManager).toString()
-            val button = action(if (pkg in usedByOtherSlots) "$name (already selected)" else name) {
-                if (pkg in usedByOtherSlots) {
-                    Toast.makeText(this, "Already used in another slot", Toast.LENGTH_SHORT).show()
-                } else {
-                    quickAppPrefs.edit().putString("slot_$slot", pkg).apply()
-                    showQuickAppsEditor(slot)
-                }
-            }
-            val icon = info.loadIcon(packageManager).apply { setBounds(0, 0, dp(40), dp(40)) }
-            button.setCompoundDrawables(icon, null, null, null)
-            button.compoundDrawablePadding = dp(18)
-            root.addView(button, LinearLayout.LayoutParams(-1, dp(65)).apply {
-                setMargins(dp(8), dp(4), dp(8), dp(4))
-            })
-        }
-        if (apps.isEmpty()) root.addView(label("No installed TV apps found.", 17f))
-        val clear = action("Clear this slot") {
-            quickAppPrefs.edit().putString("slot_$slot", "").apply()
-            showQuickAppsEditor(slot)
-        }
-        root.addView(clear, LinearLayout.LayoutParams(dp(300), dp(55)))
-        val back = action("Back to shortcuts") { showQuickAppsEditor(slot) }
-        root.addView(back, LinearLayout.LayoutParams(dp(300), dp(55)))
-        back.post { back.requestFocus() }
-    }
-
-    private fun addAppButtons(root: LinearLayout, limit: Int = 8, compact: Boolean = false) {
-        val available = packageManager.queryIntentActivities(
-            Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LEANBACK_LAUNCHER), 0
-        ).filter { it.activityInfo.packageName != packageName }
-            .sortedBy { it.loadLabel(packageManager).toString() }.take(limit)
-        if (available.isEmpty()) {
-            root.addView(label("No streaming apps are installed on this device.", 17f))
-            return
-        }
-        available.chunked(4).forEach { group ->
-            val row = LinearLayout(this).apply {
-                orientation = LinearLayout.HORIZONTAL
-                gravity = Gravity.CENTER
-            }
-            group.forEach { info ->
-                val target = info.activityInfo
-                val button = action(info.loadLabel(packageManager).toString()) {
-                    try {
-                        startActivity(Intent(Intent.ACTION_MAIN)
-                            .addCategory(Intent.CATEGORY_LEANBACK_LAUNCHER)
-                            .setClassName(target.packageName, target.name)
-                            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
-                    } catch (_: Exception) {
-                        Toast.makeText(this, "Unable to open this app", Toast.LENGTH_SHORT).show()
-                    }
-                }
-                button.textSize = if (compact) 12f else 16f
-                val icon = info.loadIcon(packageManager)
-                val iconSize = dp(if (compact) 30 else 40)
-                icon.setBounds(0, 0, iconSize, iconSize)
-                button.setCompoundDrawables(null, icon, null, null)
-                button.compoundDrawablePadding = dp(if (compact) 3 else 8)
-                row.addView(button, LinearLayout.LayoutParams(0, dp(if (compact) 74 else fitHeight(108, 90)), 1f).apply {
-                    val gap = dp(if (compact) 4 else 7)
-                    setMargins(gap, gap, gap, gap)
-                })
-            }
-            root.addView(row, LinearLayout.LayoutParams(-1, -2))
-        }
-    }
-
     private fun showHome() {
         slideshow?.stop()
         slideshow = null
         page = "home"
         val root = newPage()
-        val hero = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
-            setPadding(dp(16), dp(4), dp(16), dp(4))
-            background = GradientDrawable(
-                GradientDrawable.Orientation.LEFT_RIGHT,
-                intArrayOf(Color.rgb(16, 67, 66), Color.rgb(5, 32, 46))
-            ).apply { cornerRadius = dp(24).toFloat() }
-        }
+        val hero = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
         val logo = ImageView(this).apply {
             setImageResource(R.drawable.aonang_fiore_logo)
             scaleType = ImageView.ScaleType.FIT_CENTER
             contentDescription = "Ao Nang Fiore Resort"
         }
-        hero.addView(logo, LinearLayout.LayoutParams(0, dp(fitHeight(126, 80)), 1f))
-        val greetingBlock = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            gravity = Gravity.CENTER
-        }
-        greetingBlock.addView(label("WELCOME TO", 14f, true))
-        greetingBlock.addView(label("Ao Nang Fiore Resort", 25f, true))
-        hero.addView(greetingBlock, LinearLayout.LayoutParams(0, -2, 1f))
-        root.addView(hero, LinearLayout.LayoutParams(-1, -2).apply {
-            topMargin = dp(4)
-            bottomMargin = dp(5)
-        })
+        hero.addView(logo, LinearLayout.LayoutParams(dp(300), dp(fitHeight(105, 84))))
         val greeting = content.optJSONObject("guest_welcome")
-        val mode = greeting?.optString("mode", "generic") ?: "generic"
         val value = greeting?.optString("value", "")?.trim()?.take(50) ?: ""
-        val welcomeLine = when (mode) {
+        val welcome = when (greeting?.optString("mode", "generic")) {
             "hidden" -> ""
             "room" -> if (value.isNotBlank()) "Welcome, Room $value" else "Welcome, Guest"
             "name" -> if (value.isNotBlank()) "Welcome, $value" else "Welcome, Guest"
             else -> if (assignedRoom.isNotBlank()) "Welcome, Room $assignedRoom" else "Welcome, Guest"
         }
-        if (welcomeLine.isNotEmpty()) {
-            root.addView(label(welcomeLine, 18f), LinearLayout.LayoutParams(-1, -2).apply {
-                bottomMargin = dp(4)
-            })
-        }
-
-        // Hotel-first grid with D-pad-accessible icon tiles, titles and subtitles.
+        val words = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; gravity = Gravity.CENTER_VERTICAL; setPadding(dp(30), 0, 0, 0) }
+        words.addView(textLine("WELCOME TO", 13f, true).apply { setTextColor(muted); letterSpacing = 0.16f })
+        words.addView(textLine("Ao Nang Fiore Resort", 29f, true))
+        if (welcome.isNotBlank()) words.addView(textLine(welcome, 16f).apply { setTextColor(muted) })
+        hero.addView(words, LinearLayout.LayoutParams(0, -1, 1f))
+        root.addView(hero, LinearLayout.LayoutParams(-1, dp(fitHeight(116, 94))).apply { bottomMargin = dp(20) })
+        root.addView(textLine("DISCOVER YOUR STAY", 13f, true).apply { setTextColor(muted); letterSpacing = 0.13f },
+            LinearLayout.LayoutParams(-1, dp(25)))
         val sections = listOf(
             Triple("entertainment", "Entertainment", "Streaming & TV"),
             Triple("resort", "Our Resort", "Dining & facilities"),
             Triple("explore", "Explore Krabi", "Discover the area"),
             Triple("guest", "Guest Information", "Your stay & services")
         )
-        val buttons = mutableListOf<Button>()
-        sections.chunked(2).forEach { pair ->
-            val row = LinearLayout(this).apply {
-                orientation = LinearLayout.HORIZONTAL
-                gravity = Gravity.CENTER
-            }
-            pair.forEach { (id, title, subtitle) ->
-                val button = action("$title\n$subtitle") { showSection(id, title) }.apply {
-                    textSize = 18f
-                    setLineSpacing(dp(2).toFloat(), 1f)
-                    val iconRes = when (id) {
-                        "entertainment" -> android.R.drawable.ic_media_play
-                        "resort" -> android.R.drawable.ic_menu_myplaces
-                        "explore" -> android.R.drawable.ic_menu_compass
-                        else -> android.R.drawable.ic_menu_info_details
-                    }
-                    getDrawable(iconRes)?.let { icon ->
-                        icon.mutate()
-                        icon.setTint(Color.WHITE)
-                        icon.setBounds(0, 0, dp(26), dp(26))
-                        setCompoundDrawables(null, icon, null, null)
-                        compoundDrawablePadding = dp(5)
-                    }
-                }
-                buttons.add(button)
-                row.addView(button, LinearLayout.LayoutParams(0, dp(90), 1f).apply {
-                    setMargins(dp(7), dp(3), dp(7), dp(3))
-                })
-            }
-            root.addView(row, LinearLayout.LayoutParams(-1, -2))
+        val icons = listOf(android.R.drawable.ic_media_play, android.R.drawable.ic_menu_myplaces,
+            android.R.drawable.ic_menu_compass, android.R.drawable.ic_menu_info_details)
+        val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; clipChildren = false; clipToPadding = false }
+        val cards = mutableListOf<View>()
+        sections.forEachIndexed { index, (id, title, subtitle) ->
+            val card = sectionCard(title, subtitle, icons[index]) { lastHomeIndex = index; showSection(id, title) }
+            cards.add(card)
+            row.addView(card, LinearLayout.LayoutParams(0, dp(fitHeight(165, 140)), 1f).apply {
+                setMargins(dp(5), dp(5), dp(5), dp(5))
+            })
         }
-        root.addView(label("QUICK APPS", 15f, true), LinearLayout.LayoutParams(-1, -2).apply {
-            topMargin = dp(5)
-            bottomMargin = dp(1)
-        })
+        root.addView(row, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(15) })
+        val quickHeading = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
+        quickHeading.addView(textLine("QUICK APPS", 13f, true).apply { setTextColor(muted); letterSpacing = 0.13f },
+            LinearLayout.LayoutParams(0, dp(27), 1f))
+        quickHeading.addView(textLine("Hold OK to change an app", 12f).apply {
+            setTextColor(muted); gravity = Gravity.END or Gravity.CENTER_VERTICAL
+        }, LinearLayout.LayoutParams(0, dp(27), 1f))
+        root.addView(quickHeading)
         quickApps(root)
-        val footer = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
+        val footer = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
+        footer.addView(textLine(syncStatus, 12f).apply { setTextColor(muted) }, LinearLayout.LayoutParams(0, dp(42), 1f))
+        val buttons = listOf(
+            Pair("Edit Apps") { showQuickAppsEditor(lastQuickSlot) },
+            Pair("Resort Media") { showMedia() },
+            Pair("Connect / Sync") { showSetup() }
+        )
+        buttons.forEach { (name, callback) ->
+            footer.addView(action(name, callback).apply { textSize = 13f },
+                LinearLayout.LayoutParams(dp(142), dp(42)).apply { leftMargin = dp(9) })
         }
-        footer.addView(label(syncStatus, 12f), LinearLayout.LayoutParams(0, dp(36), 1f))
-        val customize = action("Edit Apps") { showQuickAppsEditor() }.apply { textSize = 13f }
-        footer.addView(customize, LinearLayout.LayoutParams(dp(125), dp(36)).apply { rightMargin = dp(6) })
-        val media = action("Resort Media") { showMedia() }.apply { textSize = 13f }
-        footer.addView(media, LinearLayout.LayoutParams(dp(135), dp(36)).apply {
-            rightMargin = dp(8)
-        })
-        val settings = action("Connect / Sync") { showSetup() }.apply { textSize = 13f }
-        footer.addView(settings, LinearLayout.LayoutParams(dp(165), dp(36)))
-        root.addView(footer, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(3) })
-        buttons.forEachIndexed { index, btn ->
-            btn.setOnFocusChangeListener { _, focused ->
-                style(btn, focused)
-                if (focused) lastHomeIndex = index
-            }
-        }
-        buttons.getOrNull(lastHomeIndex.coerceIn(0, buttons.lastIndex))?.let {
-            it.post { it.requestFocus() }
-        }
+        root.addView(footer, LinearLayout.LayoutParams(-1, dp(48)).apply { topMargin = dp(14) })
+        cards.getOrNull(lastHomeIndex.coerceIn(0, 3))?.post { cards[lastHomeIndex.coerceIn(0, 3)].requestFocus() }
     }
 
     private fun showSection(id: String, title: String) {
@@ -453,58 +371,186 @@ class MainActivity : Activity() {
         slideshow = null
         page = id
         val root = newPage()
-        addLogo(root, false)
-        root.addView(label(title, 25f, true))
-        val back = action("← Back to Welcome") { showHome() }
-        root.addView(back, LinearLayout.LayoutParams(dp(250), dp(fitHeight(52, 40))).apply {
-            topMargin = dp(4)
-            bottomMargin = dp(8)
-        })
+        val back = header(root, title) { showHome() }
         if (id == "entertainment") {
-            root.addView(label("Available Apps", 17f, true))
-            addAppButtons(root, 80, compact = true)
+            root.addView(textLine("AVAILABLE ON THIS TV", 13f, true).apply { setTextColor(muted) })
+            addAppCards(root)
             back.post { back.requestFocus() }
             return
         }
         val items = entries(id)
         if (items == null || items.length() == 0) {
-            root.addView(label("No information has been published yet.", 18f))
-        } else {
-            for (i in 0 until items.length()) {
+            emptyState(root, "No information has been published yet.",
+                "Resort content will appear after it is reviewed and published.")
+            back.post { back.requestFocus() }
+            return
+        }
+        root.addView(textLine("EXPLORE", 13f, true).apply { setTextColor(muted) },
+            LinearLayout.LayoutParams(-1, dp(34)))
+        val cards = mutableListOf<View>()
+        for (start in 0 until items.length() step 3) {
+            val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; clipChildren = false }
+            for (i in start until minOf(start + 3, items.length())) {
                 val item = items.optJSONObject(i) ?: continue
                 val name = item.optString("title", "Information")
-                val details = if (item.optBoolean("verified", false))
-                    item.optString("description", "") else
-                    "Information pending • " + item.optString("description", "TEST DATA")
-                val button = action(name) { showDetail(id, title, name, details) }
-                root.addView(button, LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.MATCH_PARENT, dp(fitHeight(64, 56))
-                ).apply { setMargins(dp(10), dp(4), dp(10), dp(4)) })
+                val details = if (item.optBoolean("verified", false)) item.optString("description", "")
+                    else "Information pending • " + item.optString("description", "TEST DATA")
+                val icon = when (id) {
+                    "resort" -> android.R.drawable.ic_menu_myplaces
+                    "explore" -> android.R.drawable.ic_menu_compass
+                    else -> android.R.drawable.ic_menu_info_details
+                }
+                val card = sectionCard(name, details.take(85), icon) {
+                    lastSectionIndex = i
+                    showDetail(id, title, name, details)
+                }
+                cards.add(card)
+                row.addView(card, LinearLayout.LayoutParams(0, dp(fitHeight(165, 142)), 1f).apply {
+                    setMargins(dp(6), dp(6), dp(6), dp(6))
+                })
             }
+            repeat(3 - row.childCount) { row.addView(View(this), LinearLayout.LayoutParams(0, 1, 1f)) }
+            root.addView(row)
         }
-        back.post { back.requestFocus() }
+        cards.getOrNull(lastSectionIndex.coerceIn(0, cards.lastIndex))?.post {
+            cards[lastSectionIndex.coerceIn(0, cards.lastIndex)].requestFocus()
+        }
+    }
+
+    private fun emptyState(root: LinearLayout, title: String, subtitle: String) {
+        val box = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL; gravity = Gravity.CENTER
+            background = panel(false); setPadding(dp(35), dp(28), dp(35), dp(28))
+        }
+        box.addView(label(title, 22f, true))
+        box.addView(label(subtitle, 15f).apply { setTextColor(muted) })
+        root.addView(box, LinearLayout.LayoutParams(-1, dp(210)).apply { topMargin = dp(24) })
     }
 
     private fun showDetail(id: String, sectionTitle: String, title: String, description: String) {
         page = "detail:$id"
         val root = newPage()
-        addLogo(root, false)
-        root.addView(label(title, 25f, true))
-        val info = label(description, 18f).apply {
-            gravity = Gravity.START
-            setPadding(dp(18), dp(22), dp(18), dp(22))
+        header(root, sectionTitle) { showSection(id, sectionTitle) }
+        val box = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL; background = panel(false)
+            setPadding(dp(34), dp(28), dp(34), dp(30))
         }
-        root.addView(info, LinearLayout.LayoutParams(-1, -2))
-        val back = action("← Back to $sectionTitle") { showSection(id, sectionTitle) }
-        root.addView(back, LinearLayout.LayoutParams(dp(300), dp(64)))
+        box.addView(textLine(title, 27f, true), LinearLayout.LayoutParams(-1, dp(54)))
+        box.addView(textLine(description, 18f).apply { setTextColor(muted) })
+        root.addView(box, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(18) })
+        val back = action("‹  Back to $sectionTitle") { showSection(id, sectionTitle) }
+        root.addView(back, LinearLayout.LayoutParams(dp(260), dp(48)).apply { topMargin = dp(22) })
         back.post { back.requestFocus() }
+    }
+
+    private fun addAppCards(root: LinearLayout) {
+        val apps = installedTvApps()
+        if (apps.isEmpty()) {
+            emptyState(root, "No TV apps installed", "Install a TV app to see it here.")
+            return
+        }
+        apps.chunked(4).forEach { group ->
+            val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; clipChildren = false }
+            group.forEach { info ->
+                row.addView(appCard(info.loadLabel(packageManager).toString(), info) { launchApp(info) },
+                    LinearLayout.LayoutParams(0, dp(fitHeight(155, 130)), 1f).apply {
+                        setMargins(dp(6), dp(6), dp(6), dp(6))
+                    })
+            }
+            repeat(4 - group.size) { row.addView(View(this), LinearLayout.LayoutParams(0, 1, 1f)) }
+            root.addView(row)
+        }
+    }
+
+    private fun appCard(name: String, info: android.content.pm.ResolveInfo?, onClick: () -> Unit): View {
+        val card = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL; gravity = Gravity.CENTER
+            setPadding(dp(8), dp(7), dp(8), dp(5))
+            isFocusable = true
+            contentDescription = if (info == null) "$name, Not installed" else name
+            setOnClickListener { onClick() }
+        }
+        val art = info?.let { quickAppArtwork(it) }
+        val image = ImageView(this).apply {
+            if (art != null) setImageDrawable(art.first) else setImageResource(android.R.drawable.sym_def_app_icon)
+            scaleType = ImageView.ScaleType.FIT_CENTER
+            alpha = if (info == null) 0.35f else 1f
+        }
+        card.addView(image, LinearLayout.LayoutParams(-1, 0, 1f))
+        card.addView(label(name, 13f, true).apply {
+            maxLines = 1; ellipsize = android.text.TextUtils.TruncateAt.END
+        }, LinearLayout.LayoutParams(-1, dp(23)))
+        if (info == null) card.addView(label("Not installed", 11f).apply { setTextColor(muted) },
+            LinearLayout.LayoutParams(-1, dp(19)))
+        focusCard(card, Color.rgb(28, 68, 75))
+        return card
+    }
+
+    private fun showQuickAppsEditor(selectedSlot: Int = 0) {
+        page = "quick_apps"
+        lastQuickSlot = selectedSlot
+        val root = newPage()
+        header(root, "Customize Quick Apps") { showHome() }
+        root.addView(textLine("Select a slot with the remote, then choose an installed TV app.", 16f),
+            LinearLayout.LayoutParams(-1, dp(54)))
+        val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; clipChildren = false }
+        val slots = mutableListOf<View>()
+        repeat(5) { slot ->
+            val pkg = quickAppPackage(slot)
+            val info = installedTvApps().firstOrNull { it.activityInfo.packageName == pkg }
+            val name = info?.loadLabel(packageManager)?.toString()
+                ?: if (pkg.isBlank()) "Empty slot" else defaultAppNames.getOrElse(slot) { "Unavailable" }
+            val card = appCard(name, info) { showQuickAppPicker(slot) }
+            slots.add(card)
+            row.addView(card, LinearLayout.LayoutParams(0, dp(150), 1f).apply {
+                setMargins(dp(5), dp(5), dp(5), dp(5))
+            })
+        }
+        root.addView(row)
+        val reset = action("Restore default five apps") {
+            quickAppPrefs.edit().clear().apply()
+            showQuickAppsEditor()
+        }
+        root.addView(reset, LinearLayout.LayoutParams(dp(260), dp(46)).apply { topMargin = dp(25) })
+        slots[selectedSlot.coerceIn(0, 4)].post { slots[selectedSlot.coerceIn(0, 4)].requestFocus() }
+    }
+
+    private fun showQuickAppPicker(slot: Int) {
+        page = "quick_picker:$slot"
+        val root = newPage()
+        header(root, "Choose app for slot " + (slot + 1)) { showQuickAppsEditor(slot) }
+        val apps = installedTvApps()
+        val used = (0 until 5).filter { it != slot }.map { quickAppPackage(it) }.toSet()
+        if (apps.isEmpty()) emptyState(root, "No TV apps found", "Install an app to add it to Quick Apps.")
+        apps.chunked(4).forEach { group ->
+            val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; clipChildren = false }
+            group.forEach { info ->
+                val pkg = info.activityInfo.packageName
+                val card = appCard(info.loadLabel(packageManager).toString(), info) {
+                    if (pkg in used) Toast.makeText(this, "Already used in another slot", Toast.LENGTH_SHORT).show()
+                    else {
+                        quickAppPrefs.edit().putString("slot_$slot", pkg).apply()
+                        showQuickAppsEditor(slot)
+                    }
+                }
+                row.addView(card, LinearLayout.LayoutParams(0, dp(145), 1f).apply {
+                    setMargins(dp(6), dp(6), dp(6), dp(6))
+                })
+            }
+            repeat(4 - group.size) { row.addView(View(this), LinearLayout.LayoutParams(0, 1, 1f)) }
+            root.addView(row)
+        }
+        root.addView(action("Clear this slot") {
+            quickAppPrefs.edit().putString("slot_$slot", "").apply()
+            showQuickAppsEditor(slot)
+        }, LinearLayout.LayoutParams(dp(220), dp(46)).apply { topMargin = dp(16) })
     }
 
     @Deprecated("Legacy Back handling preserves native OK/D-pad")
     override fun onBackPressed() {
         if (page == "home") super.onBackPressed()
         else if (page == "media") showHome()
-        else if (page == "quick_picker") showQuickAppsEditor()
+        else if (page.startsWith("quick_picker:")) showQuickAppsEditor(page.substringAfter(":").toIntOrNull() ?: 0)
         else if (page == "quick_apps") showHome()
         else if (page.startsWith("detail:")) {
             val id = page.substringAfter(":")
@@ -543,18 +589,17 @@ class MainActivity : Activity() {
     private fun showMedia() {
         page = "media"
         val root = newPage()
-        root.addView(label("Resort Media", 27f, true))
-        root.addView(label("Checking saved media…", 17f))
+        header(root, "Resort Media") { showHome() }
+        root.addView(textLine("Checking saved media…", 17f).apply { setTextColor(muted) })
         Thread {
             val slides = VerifiedMediaCache(this).activeSlides()
             runOnUiThread {
                 if (page != "media") return@runOnUiThread
                 val view = newPage()
-                view.addView(label("Resort Media", 27f, true))
-                val back = action("Back to Welcome") { showHome() }
-                view.addView(back, LinearLayout.LayoutParams(dp(250), dp(54)))
+                val back = header(view, "Resort Media") { showHome() }
                 if (slides.isEmpty()) {
-                    view.addView(label("No verified media has been published yet.", 18f))
+                    emptyState(view, "No verified media yet",
+                        "Approved resort photos and videos will appear here after sync.")
                 } else {
                     val host = FrameLayout(this)
                     view.addView(host, LinearLayout.LayoutParams(-1, dp(350)))
@@ -595,8 +640,9 @@ class MainActivity : Activity() {
     private fun showSetup() {
         page = "setup"
         val root = newPage()
-        root.addView(label("TV connection", 27f, true))
-        root.addView(label("Enter the HTTPS server and one-time code from the admin CMS.", 16f))
+        header(root, "TV connection") { showHome() }
+        root.addView(textLine("Enter the HTTPS server and one-time code from the admin CMS.", 16f),
+            LinearLayout.LayoutParams(-1, dp(48)))
         val server = EditText(this).apply {
             hint = "https://hotel-staging.example.com"
             setSingleLine(true)
@@ -610,8 +656,8 @@ class MainActivity : Activity() {
             setTextColor(Color.WHITE)
             setHintTextColor(Color.LTGRAY)
         }
-        root.addView(server, LinearLayout.LayoutParams(-1, dp(58)))
-        root.addView(code, LinearLayout.LayoutParams(-1, dp(58)))
+        root.addView(server, LinearLayout.LayoutParams(-1, dp(58)).apply { bottomMargin = dp(12) })
+        root.addView(code, LinearLayout.LayoutParams(-1, dp(58)).apply { bottomMargin = dp(16) })
         val connect = action("Enroll this TV") {
             val endpoint = ServerEndpoint(server.text.toString())
             val base = endpoint.normalizedHttpsUrl()
@@ -634,8 +680,6 @@ class MainActivity : Activity() {
             }
         }
         root.addView(connect, LinearLayout.LayoutParams(dp(280), dp(58)))
-        val back = action("Back to Welcome") { showHome() }
-        root.addView(back, LinearLayout.LayoutParams(dp(280), dp(54)))
         server.requestFocus()
     }
 
