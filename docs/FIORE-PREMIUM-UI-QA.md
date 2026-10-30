@@ -27,8 +27,8 @@ The 4K AVD exposes a 3840×2160 physical display but Android TV applies a 1920×
 
 Performed with `adb shell input keyevent` and `uiautomator dump` on the 4K AVD:
 
-1. Home Right focused Our Resort; OK opened Our Resort and focused Rooms & amenities.
-2. Right focused Restaurants & Dining; OK opened its detail. Back returned focus to Restaurants & Dining. Another Back returned Home with Our Resort focused.
+1. Home Right focused Our Resort; OK opened Our Resort and focused About the Resort. OK opened About; Back restored focus to About.
+2. Down reached the photo-card row; D-pad navigation reached Restaurants & Dining. OK opened its detail. Back returned focus to Restaurants & Dining. Another Back returned Home with Our Resort focused.
 3. Home Down reached Quick Apps. Holding OK on Disney+ opened Customize Quick Apps with the same slot focused.
 4. Holding OK on Guest Information opened Staff Tools with Edit Apps focused. Back returned Home.
 

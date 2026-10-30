@@ -510,6 +510,7 @@ class MainActivity : Activity() {
         val aboutIndex = (0 until items.length()).firstOrNull {
             items.optJSONObject(it)?.optString("category")?.equals("Profile", true) == true
         }
+        var aboutView: View? = null
         if (aboutIndex != null) {
             val about = items.optJSONObject(aboutIndex)
             val description = about?.optString("description", "TEST DATA — Resort information pending.")
@@ -537,6 +538,7 @@ class MainActivity : Activity() {
             root.addView(box, LinearLayout.LayoutParams(-1, dp(fitHeight(100, 82))).apply {
                 bottomMargin = dp(15)
             })
+            aboutView = box
         }
         root.addView(textLine("EXPLORE OUR RESORT  ·  ILLUSTRATIVE PHOTOS", 13f, true).apply {
             setTextColor(muted)
@@ -584,9 +586,9 @@ class MainActivity : Activity() {
             }
             root.addView(row)
         }
-        (cards[lastSectionIndex] ?: cards.values.firstOrNull())?.post {
-            (cards[lastSectionIndex] ?: cards.values.firstOrNull())?.requestFocus()
-        }
+        val target = if (lastSectionIndex == aboutIndex) aboutView
+            else cards[lastSectionIndex] ?: cards.values.firstOrNull() ?: aboutView
+        target?.let { focus -> focus.post { focus.requestFocus() } }
     }
 
     private fun showStaffTools() {
