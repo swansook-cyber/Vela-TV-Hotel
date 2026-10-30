@@ -402,22 +402,19 @@ class MainActivity : Activity() {
             bottomMargin = dp(2)
         })
         quickApps(root)
-        val customize = action("Edit Quick Apps") { showQuickAppsEditor() }.apply { textSize = 13f }
-        root.addView(customize, LinearLayout.LayoutParams(dp(190), dp(45)).apply {
-            topMargin = dp(2)
-            bottomMargin = dp(2)
-        })
         val footer = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
         }
         footer.addView(label(syncStatus, 13f), LinearLayout.LayoutParams(0, dp(42), 1f))
+        val customize = action("Edit Apps") { showQuickAppsEditor() }.apply { textSize = 13f }
+        footer.addView(customize, LinearLayout.LayoutParams(dp(125), dp(44)).apply { rightMargin = dp(6) })
         val media = action("Resort Media") { showMedia() }.apply { textSize = 13f }
-        footer.addView(media, LinearLayout.LayoutParams(dp(150), dp(44)).apply {
+        footer.addView(media, LinearLayout.LayoutParams(dp(135), dp(44)).apply {
             rightMargin = dp(8)
         })
         val settings = action("Connect / Sync") { showSetup() }.apply { textSize = 13f }
-        footer.addView(settings, LinearLayout.LayoutParams(dp(190), dp(44)))
+        footer.addView(settings, LinearLayout.LayoutParams(dp(165), dp(44)))
         root.addView(footer, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(8) })
         buttons.forEachIndexed { index, btn ->
             btn.setOnFocusChangeListener { _, focused ->
