@@ -109,57 +109,167 @@ class MainActivity : Activity() {
     private fun section(id: String): JSONObject = content.optJSONObject(id) ?: JSONObject()
     private fun entries(id: String) = section(id).optJSONArray("items")
 
-    /** A fixed, admin-configurable list of five shortcuts. Missing apps never get substituted. */
-    private fun quickApps(root: LinearLayout) {
-        val requested = listOf("Netflix", "Disney+", "YouTube", "Prime Video", "iQIYI")
-        val available = packageManager.queryIntentActivities(
+    private val defaultQuickApps = listOf(
+        "com.netflix.ninja",
+        "com.disney.disneyplus",
+        "com.google.android.youtube.tv",
+        "com.amazon.amazonvideo.livingroom",
+        "com.iqiyi.i18n.tv"
+    )
+    private val defaultAppNames = listOf("Netflix", "Disney+", "YouTube", "Prime Video", "iQIYI")
+    private val quickAppPrefs by lazy { getSharedPreferences("quick_apps_v1", MODE_PRIVATE) }
+
+    private fun installedTvApps(): List<android.content.pm.ResolveInfo> =
+        packageManager.queryIntentActivities(
             Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LEANBACK_LAUNCHER), 0
         ).filter { it.activityInfo.packageName != packageName }
+            .distinctBy { it.activityInfo.packageName }
+            .sortedBy { it.loadLabel(packageManager).toString().lowercase(java.util.Locale.ROOT) }
+
+    private fun quickAppPackage(slot: Int): String =
+        quickAppPrefs.getString("slot_$slot", defaultQuickApps[slot]) ?: ""
+
+    private fun launchApp(info: android.content.pm.ResolveInfo) {
+        try {
+            val target = info.activityInfo
+            startActivity(Intent(Intent.ACTION_MAIN)
+                .addCategory(Intent.CATEGORY_LEANBACK_LAUNCHER)
+                .setClassName(target.packageName, target.name)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+        } catch (_: Exception) {
+            Toast.makeText(this, "Unable to open this app", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun shortcutStyle(view: LinearLayout, focused: Boolean, present: Boolean) {
+        view.background = GradientDrawable(
+            GradientDrawable.Orientation.TOP_BOTTOM,
+            if (focused) intArrayOf(Color.rgb(254, 193, 58), gold)
+            else intArrayOf(Color.rgb(31, 73, 75), Color.rgb(13, 43, 55))
+        ).apply {
+            cornerRadius = dp(17).toFloat()
+            setStroke(dp(if (focused) 4 else 2), if (focused) Color.WHITE else Color.rgb(115, 151, 153))
+        }
+        view.alpha = if (present || focused) 1f else 0.65f
+        view.scaleX = if (focused) 1.04f else 1f
+        view.scaleY = if (focused) 1.04f else 1f
+        (0 until view.childCount).map { view.getChildAt(it) }
+            .filterIsInstance<TextView>().forEach {
+                it.setTextColor(if (focused) Color.BLACK else Color.WHITE)
+            }
+    }
+
+    /** Five launcher-like shortcuts. Configuration is local per TV, never committed with guest data. */
+    private fun quickApps(root: LinearLayout) {
+        val available = installedTvApps()
         val row = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER
         }
-        val packages = mapOf(
-            "Netflix" to setOf("com.netflix.ninja"),
-            "Disney+" to setOf("com.disney.disneyplus"),
-            "YouTube" to setOf("com.google.android.youtube.tv"),
-            "Prime Video" to setOf("com.amazon.amazonvideo.livingroom", "com.amazon.avod.thirdpartyclient"),
-            "iQIYI" to setOf("com.iqiyi.i18n.tv", "com.qiyi.video.tv")
-        )
-        requested.forEach { name ->
-            val found = available.firstOrNull { candidate ->
-                candidate.activityInfo.packageName in (packages[name] ?: emptySet())
+        repeat(5) { slot ->
+            val pkg = quickAppPackage(slot)
+            val found = available.firstOrNull { it.activityInfo.packageName == pkg }
+            val title = found?.loadLabel(packageManager)?.toString()
+                ?: if (pkg == defaultQuickApps[slot]) defaultAppNames[slot]
+                   else if (pkg.isBlank()) "Empty slot" else "App unavailable"
+            val tile = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL
+                gravity = Gravity.CENTER
+                setPadding(dp(6), dp(7), dp(6), dp(5))
+                isFocusable = true
+                isFocusableInTouchMode = true
+                contentDescription = "$title, shortcut ${slot + 1}"
             }
-            val button = action(if (found == null) "$name\nNot Installed" else name) {
-                val target = found?.activityInfo
-                if (target != null) {
-                    try {
-                        startActivity(Intent(Intent.ACTION_MAIN)
-                            .addCategory(Intent.CATEGORY_LEANBACK_LAUNCHER)
-                            .setClassName(target.packageName, target.name)
-                            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
-                    } catch (_: Exception) {
-                        Toast.makeText(this, "Unable to open $name", Toast.LENGTH_SHORT).show()
-                    }
-                }
+            val iconView = ImageView(this).apply {
+                if (found != null) setImageDrawable(found.loadIcon(packageManager))
+                else setImageResource(android.R.drawable.sym_def_app_icon)
+                scaleType = ImageView.ScaleType.FIT_CENTER
+                alpha = if (found == null) 0.5f else 1f
+                contentDescription = title
             }
-            button.textSize = 13f
-            if (found != null) {
-                val icon = found.loadIcon(packageManager)
-                icon.setBounds(0, 0, dp(36), dp(36))
-                button.setCompoundDrawables(null, icon, null, null)
-                button.compoundDrawablePadding = dp(3)
-            } else {
-                button.isEnabled = false
-                button.alpha = 0.65f
-                button.isFocusable = false
-                button.isFocusableInTouchMode = false
+            tile.addView(iconView, LinearLayout.LayoutParams(-1, dp(52)))
+            tile.addView(label(title, 13f, true).apply {
+                maxLines = 1
+                ellipsize = android.text.TextUtils.TruncateAt.END
+            }, LinearLayout.LayoutParams(-1, dp(23)))
+            if (found == null) {
+                tile.addView(label("Not installed", 10f), LinearLayout.LayoutParams(-1, dp(17)))
             }
-            row.addView(button, LinearLayout.LayoutParams(0, dp(86), 1f).apply {
-                setMargins(dp(3), dp(4), dp(3), dp(4))
+            tile.setOnFocusChangeListener { _, focused ->
+                shortcutStyle(tile, focused, found != null)
+            }
+            shortcutStyle(tile, false, found != null)
+            tile.setOnClickListener {
+                if (found != null) launchApp(found) else showQuickAppsEditor(slot)
+            }
+            tile.setOnLongClickListener { showQuickAppsEditor(slot); true }
+            row.addView(tile, LinearLayout.LayoutParams(0, dp(111), 1f).apply {
+                setMargins(dp(4), dp(5), dp(4), dp(5))
             })
         }
         root.addView(row, LinearLayout.LayoutParams(-1, -2))
+    }
+
+    private fun showQuickAppsEditor(selectedSlot: Int = 0) {
+        page = "quick_apps"
+        val root = newPage()
+        root.addView(label("Customize Quick Apps", 26f, true))
+        root.addView(label("Choose a shortcut slot, then select an installed TV app.", 15f))
+        val slots = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
+        repeat(5) { slot ->
+            val pkg = quickAppPackage(slot)
+            val info = installedTvApps().firstOrNull { it.activityInfo.packageName == pkg }
+            val name = info?.loadLabel(packageManager)?.toString() ?: if (pkg.isBlank()) "Empty" else defaultAppNames.getOrElse(slot) { "Missing" }
+            val button = action("${slot + 1}\n$name") { showQuickAppPicker(slot) }.apply { textSize = 12f }
+            slots.addView(button, LinearLayout.LayoutParams(0, dp(90), 1f).apply {
+                setMargins(dp(4), dp(8), dp(4), dp(8))
+            })
+            if (slot == selectedSlot) button.post { button.requestFocus() }
+        }
+        root.addView(slots, LinearLayout.LayoutParams(-1, -2))
+        val reset = action("Restore default five apps") {
+            quickAppPrefs.edit().clear().apply()
+            showQuickAppsEditor()
+        }
+        root.addView(reset, LinearLayout.LayoutParams(dp(340), dp(55)))
+        val back = action("Back to Welcome") { showHome() }
+        root.addView(back, LinearLayout.LayoutParams(dp(300), dp(55)))
+    }
+
+    private fun showQuickAppPicker(slot: Int) {
+        page = "quick_picker"
+        val root = newPage()
+        root.addView(label("Choose app for slot ${slot + 1}", 25f, true))
+        root.addView(label("Only installed TV apps are listed. Other slots will not change.", 15f))
+        val apps = installedTvApps()
+        val usedByOtherSlots = (0 until 5).filter { it != slot }.map { quickAppPackage(it) }.toSet()
+        apps.forEach { info ->
+            val pkg = info.activityInfo.packageName
+            val name = info.loadLabel(packageManager).toString()
+            val button = action(if (pkg in usedByOtherSlots) "$name (already selected)" else name) {
+                if (pkg in usedByOtherSlots) {
+                    Toast.makeText(this, "Already used in another slot", Toast.LENGTH_SHORT).show()
+                } else {
+                    quickAppPrefs.edit().putString("slot_$slot", pkg).apply()
+                    showQuickAppsEditor(slot)
+                }
+            }
+            val icon = info.loadIcon(packageManager).apply { setBounds(0, 0, dp(40), dp(40)) }
+            button.setCompoundDrawables(icon, null, null, null)
+            button.compoundDrawablePadding = dp(18)
+            root.addView(button, LinearLayout.LayoutParams(-1, dp(65)).apply {
+                setMargins(dp(8), dp(4), dp(8), dp(4))
+            })
+        }
+        if (apps.isEmpty()) root.addView(label("No installed TV apps found.", 17f))
+        val clear = action("Clear this slot") {
+            quickAppPrefs.edit().putString("slot_$slot", "").apply()
+            showQuickAppsEditor(slot)
+        }
+        root.addView(clear, LinearLayout.LayoutParams(dp(300), dp(55)))
+        val back = action("Back to shortcuts") { showQuickAppsEditor(slot) }
+        root.addView(back, LinearLayout.LayoutParams(dp(300), dp(55)))
+        back.post { back.requestFocus() }
     }
 
     private fun addAppButtons(root: LinearLayout, limit: Int = 8, compact: Boolean = false) {
@@ -292,6 +402,11 @@ class MainActivity : Activity() {
             bottomMargin = dp(2)
         })
         quickApps(root)
+        val customize = action("Edit Quick Apps") { showQuickAppsEditor() }.apply { textSize = 13f }
+        root.addView(customize, LinearLayout.LayoutParams(dp(190), dp(45)).apply {
+            topMargin = dp(2)
+            bottomMargin = dp(2)
+        })
         val footer = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
@@ -371,6 +486,8 @@ class MainActivity : Activity() {
     override fun onBackPressed() {
         if (page == "home") super.onBackPressed()
         else if (page == "media") showHome()
+        else if (page == "quick_picker") showQuickAppsEditor()
+        else if (page == "quick_apps") showHome()
         else if (page.startsWith("detail:")) {
             val id = page.substringAfter(":")
             val title = when (id) {
