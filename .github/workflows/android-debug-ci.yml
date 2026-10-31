@@ -33,7 +33,7 @@ jobs:
       - name: Run backend contract tests
         run: python3 -m unittest discover -s backend -p 'test_*.py' -v
       - name: Build debug APK
-        run: gradle --no-daemon :android-client:assembleDebug
+        run: gradle --no-daemon :android-client:testDebugUnitTest :android-client:assembleDebug
       - name: Verify actual APK identity, version and unique filename
         shell: bash
         run: |
@@ -43,14 +43,14 @@ jobs:
           AAPT="$(find "${ANDROID_HOME}/build-tools" -name aapt -type f | sort -V | tail -n 1)"
           test -x "$AAPT"
           "$AAPT" dump badging "$APK" | grep '^package:'
-          "$AAPT" dump badging "$APK" | grep -E "^package: name='net.velalab.tvhotel' versionCode='11' versionName='1.0.3'"
+          "$AAPT" dump badging "$APK" | grep -E "^package: name='net.velalab.tvhotel' versionCode='12' versionName='1.0.4'"
           mkdir -p dist
           SOURCE_SHA="${{ github.event.pull_request.head.sha || github.sha }}"
-          cp "$APK" dist/Vela-TV-Hotel-v1.0.3-code11-${SOURCE_SHA:0:7}-debug.apk
+          cp "$APK" dist/Vela-TV-Hotel-v1.0.4-code12-${SOURCE_SHA:0:7}-debug.apk
           sha256sum dist/*.apk | tee dist/SHA256SUMS.txt
-          printf 'source_commit=%s\nversion_name=1.0.3\nversion_code=11\nasset_profile=public_fallback_no_licensed_photos\n' "$SOURCE_SHA" > dist/BUILD-IDENTITY.txt
+          printf 'source_commit=%s\nversion_name=1.0.4\nversion_code=12\nasset_profile=public_fallback_no_licensed_photos\n' "$SOURCE_SHA" > dist/BUILD-IDENTITY.txt
       - uses: actions/upload-artifact@v4
         with:
-          name: Vela-TV-Hotel-V1.0.3-PUBLIC-FALLBACK-${{ github.run_number }}
+          name: Vela-TV-Hotel-V1.0.4-PUBLIC-FALLBACK-${{ github.run_number }}
           path: dist/
           if-no-files-found: error
