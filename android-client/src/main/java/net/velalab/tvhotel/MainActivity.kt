@@ -1,6 +1,7 @@
 package net.velalab.tvhotel
 
 import android.app.Activity
+import android.content.pm.ApplicationInfo
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.Typeface
@@ -13,6 +14,7 @@ import android.os.Looper
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.DecelerateInterpolator
 import android.widget.Button
 import android.widget.EditText
 import android.widget.FrameLayout
@@ -48,9 +50,13 @@ class MainActivity : Activity() {
     private var lastQuickSlot = 0
     private var page = "home"
     private var content = JSONObject()
+    private var contentFromOfflineSeed = false
     private var syncStatus = "Offline guide"
     private var assignedRoom = ""
     private var slideshow: MediaSlideshow? = null
+    private val isInternalQaBuild: Boolean by lazy {
+        applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0
+    }
     private val credentials by lazy { DeviceCredentials(this) }
     private val weatherWorker = Executors.newSingleThreadExecutor()
     private val weatherHandler = Handler(Looper.getMainLooper())
@@ -100,20 +106,28 @@ class MainActivity : Activity() {
             }
             contentDescription = "Ao Nang Krabi weather forecast. Data: MET Norway, CC BY 4.0."
         }
-        card.addView(textLine("AO NANG · KRABI", 11f, true).apply {
+        card.addView(textLine("AO NANG · KRABI", 13f, true).apply {
             letterSpacing = 0.12f; setTextColor(Color.rgb(222, 233, 229))
         })
         val weatherRow = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
-        weatherTemperature = textLine("— °C", 23f, true)
+        weatherTemperature = textLine("— °C", if (compactTv()) 23f else 26f, true)
         weatherRow.addView(weatherTemperature, LinearLayout.LayoutParams(0, -2, 1f))
-        weatherCondition = textLine("Weather unavailable", 11f).apply { gravity = Gravity.END }
+        weatherCondition = textLine("Weather unavailable", if (compactTv()) 11f else 13f).apply {
+            gravity = Gravity.END
+            maxLines = 1
+            ellipsize = android.text.TextUtils.TruncateAt.END
+        }
         weatherRow.addView(weatherCondition, LinearLayout.LayoutParams(-2, -2))
         card.addView(weatherRow)
-        weatherTime = textLine("--:--", 12f, true).apply { setTextColor(Color.rgb(244, 219, 168)) }
+        weatherTime = textLine("--:--", 13f, true).apply { setTextColor(Color.rgb(244, 219, 168)) }
         card.addView(weatherTime)
-        weatherUpdated = textLine("MET Norway · CC BY 4.0", 9f).apply { setTextColor(Color.rgb(191, 209, 205)) }
+        weatherUpdated = textLine("MET Norway · CC BY 4.0", 11f).apply {
+            setTextColor(Color.rgb(191, 209, 205))
+            maxLines = 1
+            ellipsize = android.text.TextUtils.TruncateAt.END
+        }
         card.addView(weatherUpdated)
-        card.addView(textLine("MET Norway · CC BY 4.0", 9f).apply {
+        card.addView(textLine("MET Norway · CC BY 4.0", 10f).apply {
             setTextColor(Color.rgb(191, 209, 205))
         })
         updateWeatherWidget()
@@ -128,6 +142,10 @@ class MainActivity : Activity() {
     private fun internalPhoto(name: String): Bitmap? = runCatching {
         assets.open("fiore_internal/$name").use { BitmapFactory.decodeStream(it) }
     }.getOrNull()
+    private val heroSeedPhoto: Bitmap by lazy {
+        (if (internalPhotoSeedAvailable) internalPhoto("hero.webp") else null)
+            ?: BitmapFactory.decodeResource(resources, R.drawable.fiore_concept_hero)
+    }
 
     private fun dp(n: Int): Int = (n * resources.displayMetrics.density).toInt()
     private fun label(text: String, size: Float, bold: Boolean = false): TextView =
@@ -189,11 +207,9 @@ class MainActivity : Activity() {
         if (heroBackdrop) {
             val frame = FrameLayout(this)
             frame.addView(ImageView(this).apply {
-                val photo = if (internalPhotoSeedAvailable) internalPhoto("hero.webp") else null
-                if (photo != null) setImageBitmap(photo)
-                else setImageResource(R.drawable.fiore_concept_hero)
+                setImageBitmap(heroSeedPhoto)
                 scaleType = ImageView.ScaleType.CENTER_CROP
-                contentDescription = if (photo != null) "Ao Nang Fiore Resort website photo, internal QA only"
+                contentDescription = if (internalPhotoSeedAvailable) "Ao Nang Fiore Resort"
                     else "Illustrative tropical resort backdrop; not a hotel photograph"
             }, FrameLayout.LayoutParams(-1, -1))
             frame.addView(View(this).apply {
@@ -264,6 +280,73 @@ class MainActivity : Activity() {
         return back
     }
 
+    private fun homeImageCard(title: String, subtitle: String, photo: Bitmap, onClick: () -> Unit): View {
+        val card = FrameLayout(this).apply {
+            isFocusable = true
+            isFocusableInTouchMode = true
+            contentDescription = "$title. $subtitle"
+            background = GradientDrawable().apply {
+                setColor(Color.rgb(16, 45, 47))
+                cornerRadius = dp(18).toFloat()
+            }
+            clipToOutline = true
+            setOnClickListener { onClick() }
+        }
+        card.addView(ImageView(this).apply {
+            setImageBitmap(photo)
+            scaleType = ImageView.ScaleType.CENTER_CROP
+            contentDescription = null
+        }, FrameLayout.LayoutParams(-1, -1))
+        card.addView(View(this).apply {
+            background = GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
+                intArrayOf(Color.argb(15, 5, 24, 27), Color.argb(80, 5, 24, 27),
+                    Color.argb(225, 4, 22, 27)))
+        }, FrameLayout.LayoutParams(-1, -1))
+        val glass = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(dp(15), dp(5), dp(12), dp(7))
+            background = GradientDrawable().apply {
+                setColor(Color.argb(178, 8, 34, 40))
+                cornerRadius = dp(13).toFloat()
+                setStroke(dp(1), Color.argb(115, 220, 237, 226))
+            }
+        }
+        glass.addView(textLine(title, if (compactTv()) 16f else 19f, true).apply {
+            maxLines = 1
+            ellipsize = android.text.TextUtils.TruncateAt.END
+        })
+        glass.addView(textLine(subtitle, if (compactTv()) 11f else 12f).apply {
+            setTextColor(Color.rgb(224, 234, 229))
+            maxLines = 1
+            ellipsize = android.text.TextUtils.TruncateAt.END
+        })
+        card.addView(glass, FrameLayout.LayoutParams(-1, dp(fitHeight(68, 57)), Gravity.BOTTOM).apply {
+            setMargins(dp(9), 0, dp(9), dp(9))
+        })
+        premiumPhotoFocus(card)
+        return card
+    }
+
+    private fun premiumPhotoFocus(card: FrameLayout) {
+        fun outline(focused: Boolean) = GradientDrawable().apply {
+            setColor(Color.TRANSPARENT)
+            cornerRadius = dp(18).toFloat()
+            setStroke(dp(if (focused) 3 else 1),
+                if (focused) Color.rgb(255, 245, 220) else Color.argb(155, 214, 229, 220))
+        }
+        card.foreground = outline(false)
+        card.setOnFocusChangeListener { _, focused ->
+            card.foreground = outline(focused)
+            card.animate().cancel()
+            card.animate().scaleX(if (focused) 1.045f else 1f)
+                .scaleY(if (focused) 1.045f else 1f)
+                .setInterpolator(DecelerateInterpolator())
+                .setDuration(150).start()
+            card.elevation = dp(if (focused) 14 else 2).toFloat()
+        }
+    }
+
     private fun sectionCard(title: String, subtitle: String, icon: Int, onClick: () -> Unit): View {
         val card = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -288,6 +371,9 @@ class MainActivity : Activity() {
 
     private fun section(id: String): JSONObject = content.optJSONObject(id) ?: JSONObject()
     private fun entries(id: String) = section(id).optJSONArray("items")
+    // Keep source notes in the bundled seed for audit without altering CMS-published copy.
+    private fun guestCopy(description: String): String =
+        if (contentFromOfflineSeed) description.substringBefore(" Source:").trim() else description
 
     private val defaultQuickApps = listOf(
         "com.netflix.ninja",
@@ -441,15 +527,19 @@ class MainActivity : Activity() {
             Triple("explore", "Explore Krabi", "Discover the area"),
             Triple("guest", "Guest Information", "Your stay & services")
         )
-        val icons = listOf(android.R.drawable.ic_media_play, android.R.drawable.ic_menu_myplaces,
-            android.R.drawable.ic_menu_compass, android.R.drawable.ic_menu_info_details)
+        // All four local photos come from the official resort website in internal QA builds.
+        // Public CI uses the bundled illustrative fallback sheet.
+        val photos = listOf(resortSeedPhotos[2], heroSeedPhoto, resortSeedPhotos[3], resortSeedPhotos[0])
         val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; clipChildren = false; clipToPadding = false }
         val cards = mutableListOf<View>()
         sections.forEachIndexed { index, (id, title, subtitle) ->
-            val card = sectionCard(title, subtitle, icons[index]) { lastHomeIndex = index; showSection(id, title) }
+            val card = homeImageCard(title, subtitle, photos[index]) {
+                lastHomeIndex = index
+                showSection(id, title)
+            }
             cards.add(card)
-            row.addView(card, LinearLayout.LayoutParams(0, dp(fitHeight(165, 140)), 1f).apply {
-                setMargins(dp(5), dp(5), dp(5), dp(5))
+            row.addView(card, LinearLayout.LayoutParams(0, dp(fitHeight(194, 154)), 1f).apply {
+                setMargins(dp(10), dp(8), dp(10), dp(8))
             })
         }
         root.addView(row, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(11) })
@@ -461,9 +551,10 @@ class MainActivity : Activity() {
         }, LinearLayout.LayoutParams(0, dp(27), 1f))
         root.addView(quickHeading)
         quickApps(root)
-        val imageNotice = if (internalPhotoSeedAvailable) "OFFICIAL WEBSITE PHOTOS · INTERNAL QA ONLY"
-            else "ILLUSTRATIVE FALLBACK · NO HOTEL PHOTOS"
-        root.addView(textLine("$syncStatus   ·   $imageNotice", 11f).apply {
+        val imageNotice = if (!isInternalQaBuild) ""
+            else if (internalPhotoSeedAvailable) "   ·   OFFICIAL WEBSITE PHOTOS · INTERNAL QA ONLY"
+            else "   ·   ILLUSTRATIVE FALLBACK · NO HOTEL PHOTOS"
+        root.addView(textLine("$syncStatus$imageNotice", 11f).apply {
             setTextColor(Color.rgb(192, 206, 198))
         }, LinearLayout.LayoutParams(-1, dp(28)).apply { topMargin = dp(5) })
         cards[3].setOnLongClickListener { showStaffTools(); true }
@@ -501,7 +592,7 @@ class MainActivity : Activity() {
             for (i in start until minOf(start + 3, items.length())) {
                 val item = items.optJSONObject(i) ?: continue
                 val name = item.optString("title", "Information")
-                val details = if (item.optBoolean("verified", false)) item.optString("description", "")
+                val details = if (item.optBoolean("verified", false)) guestCopy(item.optString("description", ""))
                     else "Information pending • " + item.optString("description", "TEST DATA")
                 val icon = when (id) {
                     "resort" -> android.R.drawable.ic_menu_myplaces
@@ -544,7 +635,7 @@ class MainActivity : Activity() {
         val frame = FrameLayout(this).apply {
             isFocusable = true
             isFocusableInTouchMode = true
-            contentDescription = "$title. ${if (internalPhotoSeedAvailable) "Ao Nang Fiore Resort website photo" else "Illustrative image"}. $caption"
+            contentDescription = "$title. $caption"
             background = GradientDrawable().apply {
                 setColor(Color.rgb(20, 49, 51))
                 cornerRadius = dp(17).toFloat()
@@ -561,10 +652,6 @@ class MainActivity : Activity() {
             background = GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
                 intArrayOf(Color.TRANSPARENT, Color.argb(225, 4, 22, 27)))
         }, FrameLayout.LayoutParams(-1, -1))
-        frame.addView(textLine(if (internalPhotoSeedAvailable) "OFFICIAL SITE · QA ONLY" else "ILLUSTRATIVE IMAGE", 10f, true).apply {
-            setPadding(dp(13), 0, 0, 0)
-            letterSpacing = 0.11f
-        }, FrameLayout.LayoutParams(-1, dp(28), Gravity.TOP))
         val captionBox = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setPadding(dp(15), 0, dp(12), dp(12))
@@ -579,19 +666,7 @@ class MainActivity : Activity() {
             ellipsize = android.text.TextUtils.TruncateAt.END
         })
         frame.addView(captionBox, FrameLayout.LayoutParams(-1, -2, Gravity.BOTTOM))
-        fun outline(focused: Boolean) = GradientDrawable().apply {
-            setColor(Color.TRANSPARENT)
-            cornerRadius = dp(17).toFloat()
-            setStroke(dp(if (focused) 3 else 1),
-                if (focused) Color.rgb(255, 239, 206) else Color.rgb(138, 161, 151))
-        }
-        frame.foreground = outline(false)
-        frame.setOnFocusChangeListener { _, focused ->
-            frame.foreground = outline(focused)
-            frame.animate().scaleX(if (focused) 1.035f else 1f)
-                .scaleY(if (focused) 1.035f else 1f).setDuration(110).start()
-            frame.elevation = dp(if (focused) 12 else 0).toFloat()
-        }
+        premiumPhotoFocus(frame)
         return frame
     }
 
@@ -602,8 +677,8 @@ class MainActivity : Activity() {
         var aboutView: View? = null
         if (aboutIndex != null) {
             val about = items.optJSONObject(aboutIndex)
-            val description = about?.optString("description", "TEST DATA — Resort information pending.")
-                ?: "TEST DATA — Resort information pending."
+            val description = guestCopy(about?.optString("description", "TEST DATA — Resort information pending.")
+                ?: "TEST DATA — Resort information pending.")
             val box = LinearLayout(this).apply {
                 orientation = LinearLayout.VERTICAL
                 background = panel(false, Color.rgb(24, 60, 58))
@@ -629,8 +704,7 @@ class MainActivity : Activity() {
             })
             aboutView = box
         }
-        root.addView(textLine(if (internalPhotoSeedAvailable) "EXPLORE OUR RESORT  ·  OFFICIAL SITE PHOTOS"
-            else "EXPLORE OUR RESORT  ·  ILLUSTRATIVE PHOTOS", 13f, true).apply {
+        root.addView(textLine("EXPLORE OUR RESORT", 13f, true).apply {
             setTextColor(muted)
             letterSpacing = 0.1f
         }, LinearLayout.LayoutParams(-1, dp(32)))
@@ -646,7 +720,7 @@ class MainActivity : Activity() {
                 val item = items.optJSONObject(index) ?: return@forEach
                 val title = item.optString("title", "Resort")
                 val category = item.optString("category", "Resort")
-                val details = if (item.optBoolean("verified", false)) item.optString("description", "")
+                val details = if (item.optBoolean("verified", false)) guestCopy(item.optString("description", ""))
                     else "Information pending • " + item.optString("description", "TEST DATA")
                 val photo = when (category.lowercase(java.util.Locale.ROOT)) {
                     "rooms" -> 0
@@ -667,8 +741,8 @@ class MainActivity : Activity() {
                     showDetail("resort", "Our Resort", title, details)
                 }
                 cards[index] = card
-                row.addView(card, LinearLayout.LayoutParams(0, dp(fitHeight(205, 158)), 1f).apply {
-                    setMargins(dp(6), dp(7), dp(6), dp(7))
+                row.addView(card, LinearLayout.LayoutParams(0, dp(fitHeight(245, 168)), 1f).apply {
+                    setMargins(dp(10), dp(9), dp(10), dp(9))
                 })
             }
             repeat(4 - row.childCount) {
@@ -857,6 +931,7 @@ class MainActivity : Activity() {
             val published = File(filesDir, "published-content.json")
             if (published.isFile) JSONObject(published.readText())
             else JSONObject(assets.open("hotel_content.json").bufferedReader().use { it.readText() })
+                .also { contentFromOfflineSeed = true }
         } catch (_: Exception) {
             JSONObject()
         }
@@ -925,8 +1000,11 @@ class MainActivity : Activity() {
                     coordinator.assignedRoom else ""
                 syncStatus = when (result) {
                     MediaSyncCoordinator.Status.UPDATED -> {
-                        content = try { JSONObject(File(filesDir, "published-content.json").readText()) }
-                        catch (_: Exception) { content }
+                        runCatching { JSONObject(File(filesDir, "published-content.json").readText()) }
+                            .getOrNull()?.let {
+                                content = it
+                                contentFromOfflineSeed = false
+                            }
                         getSharedPreferences("sync_status", MODE_PRIVATE).edit()
                             .putLong("last_updated", System.currentTimeMillis()).apply()
                         "Updated " + java.text.SimpleDateFormat("dd MMM HH:mm", java.util.Locale.getDefault())
