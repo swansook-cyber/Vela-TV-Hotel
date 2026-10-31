@@ -11,6 +11,7 @@ import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.util.LruCache
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
@@ -54,6 +55,8 @@ class MainActivity : Activity() {
     private var syncStatus = "Offline guide"
     private var assignedRoom = ""
     private var slideshow: MediaSlideshow? = null
+    private var galleryBack: (() -> Unit)? = null
+    private var lastGalleryIndex = 0
     private val isInternalQaBuild: Boolean by lazy {
         applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0
     }
@@ -142,8 +145,31 @@ class MainActivity : Activity() {
     private fun internalPhoto(name: String): Bitmap? = runCatching {
         assets.open("fiore_internal/$name").use { BitmapFactory.decodeStream(it) }
     }.getOrNull()
+    private val approvedPhotoSeedAvailable: Boolean by lazy {
+        runCatching {
+            assets.list("fiore_approved")?.contains("index.json") == true
+        }.getOrDefault(false)
+    }
+    private val approvedPhotoCache = object : LruCache<String, Bitmap>(24 * 1024 * 1024) {
+        override fun sizeOf(key: String, value: Bitmap): Int = value.allocationByteCount
+    }
+    private fun approvedPhoto(number: Int, sampleSize: Int = 2): Bitmap? {
+        if (!approvedPhotoSeedAvailable) return null
+        val key = "$number:$sampleSize"
+        approvedPhotoCache.get(key)?.let { return it }
+        val photo = runCatching {
+            assets.open("fiore_approved/fiore_${number.toString().padStart(3, '0')}.webp").use {
+                BitmapFactory.decodeStream(it, null, BitmapFactory.Options().apply {
+                    inSampleSize = sampleSize
+                })
+            }
+        }.getOrNull() ?: return null
+        approvedPhotoCache.put(key, photo)
+        return photo
+    }
     private val heroSeedPhoto: Bitmap by lazy {
-        (if (internalPhotoSeedAvailable) internalPhoto("hero.webp") else null)
+        approvedPhoto(18, 1)
+            ?: (if (internalPhotoSeedAvailable) internalPhoto("hero.webp") else null)
             ?: BitmapFactory.decodeResource(resources, R.drawable.fiore_concept_hero)
     }
 
@@ -209,7 +235,7 @@ class MainActivity : Activity() {
             frame.addView(ImageView(this).apply {
                 setImageBitmap(heroSeedPhoto)
                 scaleType = ImageView.ScaleType.CENTER_CROP
-                contentDescription = if (internalPhotoSeedAvailable) "Ao Nang Fiore Resort"
+                contentDescription = if (approvedPhotoSeedAvailable || internalPhotoSeedAvailable) "Ao Nang Fiore Resort"
                     else "Illustrative tropical resort backdrop; not a hotel photograph"
             }, FrameLayout.LayoutParams(-1, -1))
             frame.addView(View(this).apply {
@@ -538,9 +564,14 @@ class MainActivity : Activity() {
             Triple("explore", "Explore Krabi", "Discover the area"),
             Triple("guest", "Guest Information", "Your stay & services")
         )
-        // All four local photos come from the official resort website in internal QA builds.
-        // Public CI uses the bundled illustrative fallback sheet.
-        val photos = listOf(resortSeedPhotos[2], heroSeedPhoto, resortSeedPhotos[3], resortSeedPhotos[0])
+        // Owner-selected photos are an opt-in internal QA asset set. Public CI
+        // retains the bundled illustrative fallback sheet.
+        val photos = listOf(
+            approvedPhoto(430) ?: resortSeedPhotos[2],
+            heroSeedPhoto,
+            approvedPhoto(456) ?: resortSeedPhotos[3],
+            approvedPhoto(321) ?: resortSeedPhotos[0]
+        )
         val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; clipChildren = false; clipToPadding = false }
         val cards = mutableListOf<View>()
         sections.forEachIndexed { index, (id, title, subtitle) ->
@@ -563,6 +594,7 @@ class MainActivity : Activity() {
         root.addView(quickHeading)
         quickApps(root)
         val imageNotice = if (!isInternalQaBuild) ""
+            else if (approvedPhotoSeedAvailable) "   ·   OWNER-SELECTED PHOTOS · INTERNAL QA ONLY"
             else if (internalPhotoSeedAvailable) "   ·   OFFICIAL WEBSITE PHOTOS · INTERNAL QA ONLY"
             else "   ·   ILLUSTRATIVE FALLBACK · NO HOTEL PHOTOS"
         root.addView(textLine("$syncStatus$imageNotice", 11f).apply {
@@ -642,6 +674,7 @@ class MainActivity : Activity() {
     }
 
     private fun resortPhotoCard(title: String, caption: String, photoIndex: Int,
+                                approvedNumber: Int,
                                 onClick: () -> Unit): View {
         val frame = FrameLayout(this).apply {
             isFocusable = true
@@ -655,7 +688,7 @@ class MainActivity : Activity() {
             setOnClickListener { onClick() }
         }
         frame.addView(ImageView(this).apply {
-            setImageBitmap(resortSeedPhotos[photoIndex])
+            setImageBitmap(approvedPhoto(approvedNumber) ?: resortSeedPhotos[photoIndex])
             scaleType = ImageView.ScaleType.CENTER_CROP
             contentDescription = null
         }, FrameLayout.LayoutParams(-1, -1))
@@ -698,7 +731,7 @@ class MainActivity : Activity() {
                 contentDescription = "About the Resort. $description"
                 setOnClickListener {
                     lastSectionIndex = aboutIndex
-                    showDetail("resort", "Our Resort", "About the Resort", description)
+                    showDetail("resort", "Our Resort", "About the Resort", description, "profile")
                 }
             }
             box.addView(textLine("ABOUT THE RESORT", 13f, true).apply {
@@ -755,6 +788,12 @@ class MainActivity : Activity() {
                     "promotions" -> 3
                     else -> index % 4
                 }
+                val approvedNumber = when (category.lowercase(java.util.Locale.ROOT)) {
+                    "rooms" -> 1
+                    "dining" -> 234
+                    "facilities" -> 355
+                    else -> 430
+                }
                 val displayTitle = when (category.lowercase(java.util.Locale.ROOT)) {
                     "rooms" -> "Rooms & Amenities"
                     "dining" -> "Restaurants & Dining"
@@ -762,9 +801,9 @@ class MainActivity : Activity() {
                     "promotions" -> "Special Offers"
                     else -> title
                 }
-                val card = resortPhotoCard(displayTitle, category, photo) {
+                val card = resortPhotoCard(displayTitle, category, photo, approvedNumber) {
                     lastSectionIndex = index
-                    showDetail("resort", "Our Resort", title, details)
+                    showDetail("resort", "Our Resort", title, details, category)
                 }
                 cards[index] = card
                 row.addView(card, LinearLayout.LayoutParams(0, dp(fitHeight(245, 168)), 1f).apply {
@@ -813,7 +852,87 @@ class MainActivity : Activity() {
         root.addView(box, LinearLayout.LayoutParams(-1, dp(210)).apply { topMargin = dp(24) })
     }
 
-    private fun showDetail(id: String, sectionTitle: String, title: String, description: String) {
+    private fun approvedGalleryNumbers(category: String?): List<Int> = when (category?.lowercase(java.util.Locale.ROOT)) {
+        "profile" -> listOf(18, 28, 321, 336, 430, 435, 437, 452, 456)
+        "rooms" -> listOf(1, 5, 37, 130, 164, 169, 200)
+        "dining" -> listOf(227, 234, 243, 251)
+        "facilities" -> listOf(346, 355, 407, 412)
+        else -> emptyList()
+    }
+
+    private fun approvedCaption(number: Int): String = when (number) {
+        18 -> "Forest cottage"
+        28 -> "Resort aerial view"
+        1 -> "Cottage bedroom"
+        5 -> "Private terrace"
+        37 -> "Bathroom"
+        130 -> "Cottage exterior"
+        164 -> "Cottage interior"
+        169 -> "Terrace seating"
+        200 -> "Twin-bed room"
+        227 -> "Dining exterior"
+        234 -> "Restaurant seating"
+        243 -> "Buffet area"
+        251 -> "Cafe counter"
+        346 -> "Pool deck"
+        355 -> "Resort pool"
+        407 -> "Facility interior · details pending confirmation"
+        412 -> "Exercise room"
+        321 -> "Reception area"
+        336 -> "Resort sign"
+        430 -> "Resort lawn"
+        435 -> "Garden pond"
+        437 -> "Garden boardwalk"
+        452 -> "Resort gardens"
+        456 -> "Garden aerial view"
+        else -> "Resort photo"
+    }
+
+    private fun galleryPhotoCard(number: Int, onClick: () -> Unit): FrameLayout? {
+        val photo = approvedPhoto(number) ?: return null
+        val card = FrameLayout(this).apply {
+            isFocusable = true
+            isFocusableInTouchMode = true
+            contentDescription = approvedCaption(number)
+            clipToOutline = true
+            background = panel(false)
+            setOnClickListener { onClick() }
+        }
+        card.addView(ImageView(this).apply {
+            setImageBitmap(photo)
+            scaleType = ImageView.ScaleType.CENTER_CROP
+            contentDescription = null
+        }, FrameLayout.LayoutParams(-1, -1))
+        card.addView(textLine(approvedCaption(number), 13f, true).apply {
+            setPadding(dp(10), 0, dp(10), 0)
+            background = GradientDrawable().apply { setColor(Color.argb(210, 5, 24, 28)) }
+            maxLines = 1
+            ellipsize = android.text.TextUtils.TruncateAt.END
+        }, FrameLayout.LayoutParams(-1, dp(36), Gravity.BOTTOM))
+        premiumPhotoFocus(card)
+        return card
+    }
+
+    private fun showPhotoViewer(id: String, sectionTitle: String, title: String,
+                                description: String, category: String, number: Int) {
+        page = "gallery_photo"
+        galleryBack = { showDetail(id, sectionTitle, title, description, category, true) }
+        val root = newPage()
+        val back = header(root, approvedCaption(number)) { galleryBack?.invoke() }
+        approvedPhoto(number, 1)?.let { photo ->
+            root.addView(ImageView(this).apply {
+                setImageBitmap(photo)
+                scaleType = ImageView.ScaleType.FIT_CENTER
+                contentDescription = approvedCaption(number)
+            }, LinearLayout.LayoutParams(-1, dp(fitHeight(410, 285))))
+        }
+        root.addView(textLine(approvedCaption(number), 18f, true),
+            LinearLayout.LayoutParams(-1, dp(46)))
+        back.post { back.requestFocus() }
+    }
+
+    private fun showDetail(id: String, sectionTitle: String, title: String, description: String,
+                           mediaCategory: String? = null, restoreGalleryFocus: Boolean = false) {
         page = "detail:$id"
         val root = newPage()
         header(root, sectionTitle) { showSection(id, sectionTitle) }
@@ -824,9 +943,40 @@ class MainActivity : Activity() {
         box.addView(textLine(title, 27f, true), LinearLayout.LayoutParams(-1, dp(54)))
         box.addView(textLine(description, 18f).apply { setTextColor(muted) })
         root.addView(box, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(18) })
+        val galleryCards = mutableListOf<View>()
+        if (approvedPhotoSeedAvailable) {
+            val numbers = approvedGalleryNumbers(mediaCategory)
+            if (numbers.isNotEmpty()) {
+                root.addView(textLine("PHOTO GALLERY", 13f, true).apply { setTextColor(muted) },
+                    LinearLayout.LayoutParams(-1, dp(40)).apply { topMargin = dp(16) })
+                numbers.chunked(3).forEach { group ->
+                    val row = LinearLayout(this).apply {
+                        orientation = LinearLayout.HORIZONTAL
+                        clipChildren = false
+                        clipToPadding = false
+                    }
+                    group.forEach { number ->
+                        val card = galleryPhotoCard(number) {
+                            lastGalleryIndex = numbers.indexOf(number)
+                            showPhotoViewer(id, sectionTitle, title, description,
+                                mediaCategory ?: "", number)
+                        } ?: return@forEach
+                        galleryCards.add(card)
+                        row.addView(card, LinearLayout.LayoutParams(0, dp(fitHeight(160, 130)), 1f).apply {
+                            setMargins(dp(8), dp(7), dp(8), dp(7))
+                        })
+                    }
+                    repeat(3 - row.childCount) {
+                        row.addView(View(this), LinearLayout.LayoutParams(0, 1, 1f))
+                    }
+                    root.addView(row)
+                }
+            }
+        }
         val back = action("‹  Back to $sectionTitle") { showSection(id, sectionTitle) }
         root.addView(back, LinearLayout.LayoutParams(dp(260), dp(48)).apply { topMargin = dp(22) })
-        back.post { back.requestFocus() }
+        val focus = if (restoreGalleryFocus) galleryCards.getOrNull(lastGalleryIndex) ?: back else back
+        focus.post { focus.requestFocus() }
     }
 
     private fun addAppCards(root: LinearLayout) {
@@ -937,6 +1087,7 @@ class MainActivity : Activity() {
         if (page == "home") super.onBackPressed()
         else if (page == "staff_tools") showHome()
         else if (page == "media") showHome()
+        else if (page == "gallery_photo") galleryBack?.invoke()
         else if (page.startsWith("quick_picker:")) showQuickAppsEditor(page.substringAfter(":").toIntOrNull() ?: 0)
         else if (page == "quick_apps") showHome()
         else if (page.startsWith("detail:")) {
