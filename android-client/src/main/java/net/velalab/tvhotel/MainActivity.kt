@@ -698,7 +698,22 @@ class MainActivity : Activity() {
                 maxLines = 2
                 ellipsize = android.text.TextUtils.TruncateAt.END
             })
-            focusCard(box, Color.rgb(24, 60, 58))
+            // Keep the full focus ring inside the wide About panel's bounds.
+            // Scaling this edge-to-edge row clips the left/right stroke on TV.
+            box.setOnFocusChangeListener { _, focused ->
+                box.background = panel(false, Color.rgb(24, 60, 58))
+                box.foreground = if (focused) {
+                    android.graphics.drawable.InsetDrawable(
+                        GradientDrawable().apply {
+                            setColor(Color.TRANSPARENT)
+                            cornerRadius = dp(16).toFloat()
+                            setStroke(dp(3), Color.WHITE)
+                        }, dp(2)
+                    )
+                } else null
+                box.elevation = dp(if (focused) 8 else 0).toFloat()
+                box.invalidate()
+            }
             root.addView(box, LinearLayout.LayoutParams(-1, dp(fitHeight(100, 82))).apply {
                 bottomMargin = dp(15)
             })
