@@ -8,6 +8,8 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
@@ -23,6 +25,8 @@ import org.json.JSONObject
 import java.io.File
 import java.net.HttpURLConnection
 import java.net.URL
+import java.util.concurrent.Executor
+import java.util.concurrent.Executors
 
 /**
  * Hotel-first offline guest guide. Remote uses native Android focus/OK navigation.
@@ -48,6 +52,73 @@ class MainActivity : Activity() {
     private var assignedRoom = ""
     private var slideshow: MediaSlideshow? = null
     private val credentials by lazy { DeviceCredentials(this) }
+    private val weatherWorker = Executors.newSingleThreadExecutor()
+    private val weatherHandler = Handler(Looper.getMainLooper())
+    private val weatherRepository by lazy {
+        WeatherRepository(MetNorwayWeatherSource(), AndroidWeatherStore(this), weatherWorker,
+            Executor { task -> runOnUiThread(task) })
+    }
+    private var weatherTemperature: TextView? = null
+    private var weatherCondition: TextView? = null
+    private var weatherTime: TextView? = null
+    private var weatherUpdated: TextView? = null
+    private val weatherTicker = object : Runnable {
+        override fun run() {
+            updateWeatherWidget()
+            weatherRepository.refreshIfNeeded { updateWeatherWidget() }
+            weatherHandler.postDelayed(this, 60_000L)
+        }
+    }
+
+    private fun updateWeatherWidget() {
+        val now = System.currentTimeMillis()
+        weatherTime?.text = BangkokClock.format(now, "HH:mm · EEE, d MMM yyyy")
+        val reading = weatherRepository.current()
+        if (reading == null) {
+            weatherTemperature?.text = "— °C"
+            weatherCondition?.text = "Weather unavailable"
+            weatherUpdated?.text = "Weather data: MET Norway"
+        } else {
+            val (icon, label) = WeatherSymbols.describe(reading.symbol)
+            weatherTemperature?.text = "$icon  ${reading.temperatureC.toInt()} °C"
+            weatherCondition?.text = label
+            weatherUpdated?.text = "Last updated ${BangkokClock.format(reading.fetchedAtUtc, "d MMM HH:mm")}"
+        }
+    }
+
+    private fun weatherCard(): View {
+        val card = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(dp(16), dp(5), dp(16), dp(5))
+            isFocusable = false
+            descendantFocusability = ViewGroup.FOCUS_BLOCK_DESCENDANTS
+            background = GradientDrawable().apply {
+                setColor(Color.argb(188, 7, 27, 34))
+                cornerRadius = dp(17).toFloat()
+                setStroke(dp(1), Color.argb(120, 199, 224, 218))
+            }
+            contentDescription = "Ao Nang Krabi weather forecast. Data: MET Norway, CC BY 4.0."
+        }
+        card.addView(textLine("AO NANG · KRABI", 11f, true).apply {
+            letterSpacing = 0.12f; setTextColor(Color.rgb(222, 233, 229))
+        })
+        val weatherRow = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
+        weatherTemperature = textLine("— °C", 23f, true)
+        weatherRow.addView(weatherTemperature, LinearLayout.LayoutParams(0, -2, 1f))
+        weatherCondition = textLine("Weather unavailable", 11f).apply { gravity = Gravity.END }
+        weatherRow.addView(weatherCondition, LinearLayout.LayoutParams(-2, -2))
+        card.addView(weatherRow)
+        weatherTime = textLine("--:--", 12f, true).apply { setTextColor(Color.rgb(244, 219, 168)) }
+        card.addView(weatherTime)
+        weatherUpdated = textLine("MET Norway · CC BY 4.0", 9f).apply { setTextColor(Color.rgb(191, 209, 205)) }
+        card.addView(weatherUpdated)
+        card.addView(textLine("MET Norway · CC BY 4.0", 9f).apply {
+            setTextColor(Color.rgb(191, 209, 205))
+        })
+        updateWeatherWidget()
+        return card
+    }
     private val internalPhotoSeedAvailable: Boolean by lazy {
         runCatching {
             val names = assets.list("fiore_internal")?.toSet().orEmpty()
@@ -359,6 +430,8 @@ class MainActivity : Activity() {
         words.addView(textLine("Ao Nang Fiore Resort", 29f, true))
         if (welcome.isNotBlank()) words.addView(textLine(welcome, 16f).apply { setTextColor(muted) })
         hero.addView(words, LinearLayout.LayoutParams(0, -1, 1f))
+        hero.addView(weatherCard(), LinearLayout.LayoutParams(dp(if (compactTv()) 220 else 260),
+            dp(fitHeight(138, 105))).apply { rightMargin = dp(2) })
         root.addView(hero, LinearLayout.LayoutParams(-1, dp(fitHeight(154, 108))).apply { bottomMargin = dp(16) })
         root.addView(textLine("DISCOVER YOUR STAY", 13f, true).apply { setTextColor(muted); letterSpacing = 0.13f },
             LinearLayout.LayoutParams(-1, dp(25)))
@@ -798,6 +871,22 @@ class MainActivity : Activity() {
     override fun onStop() {
         slideshow?.stop()
         super.onStop()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        weatherHandler.removeCallbacks(weatherTicker)
+        weatherTicker.run()
+    }
+
+    override fun onPause() {
+        weatherHandler.removeCallbacks(weatherTicker)
+        super.onPause()
+    }
+
+    override fun onDestroy() {
+        weatherWorker.shutdownNow()
+        super.onDestroy()
     }
 
     private fun showMedia() {
