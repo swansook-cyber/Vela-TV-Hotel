@@ -267,7 +267,18 @@ class MainActivity : Activity() {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
         }
-        val back = action("‹  Welcome", onBack).apply { textSize = 14f }
+        val back = action("‹  Welcome", onBack).apply {
+            textSize = 14f
+            // This button starts at the left edge of the header row. Keep its
+            // focused stroke within its layout bounds instead of scaling outward.
+            setOnFocusChangeListener { _, focused ->
+                style(this, focused)
+                scaleX = 1f
+                scaleY = 1f
+            }
+            scaleX = 1f
+            scaleY = 1f
+        }
         bar.addView(back, LinearLayout.LayoutParams(dp(150), dp(46)))
         val logo = ImageView(this).apply {
             setImageResource(R.drawable.aonang_fiore_logo)
