@@ -18,72 +18,160 @@
     "items": [
       {
         "category": "Profile",
-        "title": "About the resort",
-        "description": "A tropical forest retreat near Ao Nang Beach, with villas set among lush greenery and mountain views. Source: official website home page, checked 2026-10-30.",
+        "title": "About the Resort",
+        "description": "Experience a relaxing tropical escape in a charming room surrounded by lush greenery. Blending natural wood and bamboo elements with distinctive architectural design, the room features a high vaulted ceiling that creates a spacious, airy, and inviting atmosphere. Enjoy a comfortable large bed with crisp white linens, a cozy sofa for lounging, and floor-to-ceiling glass doors that welcome natural light and offer views of the surrounding greenery. Every detail creates a warm and peaceful ambiance, perfect for unwinding and reconnecting with nature. Ideal for couples and travelers seeking tranquility, this nature-inspired retreat offers a memorable resort experience at Aonang Fiore Resort, where comfort meets the beauty of the tropics.",
         "verified": true
       },
       {
         "category": "Rooms",
-        "title": "Rooms & amenities",
-        "description": "Deluxe Cottages, Jacuzzi Villas, Tree Top Villas and Premium Jacuzzi Villas are listed on the resort website. Rooms include free Wi-Fi. Source: Accommodation, checked 2026-10-30.",
+        "title": "Rooms & Amenities",
+        "description": "Deluxe Cottage — 34 sqm; Tree Top Villa — 37 sqm; Jacuzzi Villa — 55 sqm.",
         "verified": true
       },
       {
         "category": "Dining",
-        "title": "Restaurants & dining",
-        "description": "De’fish Seafood Restaurant serves seafood, Thai and European food, including halal options. The site also lists Fiore Coffee and a Pool Bar. Confirm current hours with reception. Source: Dining, checked 2026-10-30.",
+        "title": "Restaurants & Dining",
+        "description": "De’fish Restaurant · Thai food, Seafood, Halal food · 11.00 am. – 10.30 pm. · 4003",
         "verified": true
       },
       {
         "category": "Facilities",
-        "title": "Spa, pool & activities",
-        "description": "The resort website lists a pool with a view, massage, and an on-site zipline adventure. Confirm availability and current hours with reception. Source: Facilities and Activities, checked 2026-10-30.",
-        "verified": true
-      },
-      {
-        "category": "Promotions",
-        "title": "Special offers",
-        "description": "For current offers and booking terms, ask reception or visit the official resort website. Offers change and are not stored in this offline guide. Source: Offers, checked 2026-10-30.",
+        "title": "Spa, Pool & Activities",
+        "description": "Pool · 09.00 am. – 9.00 pm.\nPalm  tree massage · 10.00 am. -08.00 pm. · 4006 or  0",
         "verified": true
       }
     ]
   },
   "explore": {
-    "items": [
-      {
-        "category": "Attractions",
-        "title": "Explore Krabi",
-        "description": "The resort website highlights Ao Nang Beach, Poda Island and zipline activities. Ask the tour desk for current transport and excursion details. Source: Facilities and Activities, checked 2026-10-30.",
-        "verified": true
-      }
-    ]
+    "items": []
   },
   "guest": {
     "items": [
       {
-        "category": "Services",
-        "title": "Guest services",
-        "description": "The resort lists a 24-hour front desk, concierge, room service, laundry, luggage storage and a tour desk. Source: Facilities, checked 2026-10-30.",
-        "verified": true
-      },
-      {
-        "category": "Wi-Fi",
-        "title": "Wi-Fi",
-        "description": "Complimentary Wi-Fi is listed for guest rooms. Ask reception for the current network and password. Source: Facilities and FAQ, checked 2026-10-30.",
+        "category": "Stay",
+        "title": "Check-in & check-out",
+        "description": "Check-in: 02.00 pm. · Check-out: 11.00 am.",
         "verified": true
       },
       {
         "category": "Reception",
         "title": "Reception",
-        "description": "24-hour front desk. Tel: +66 75 695522-3. Email: info@aonangfiore.com. Source: Facilities and Contact, checked 2026-10-30.",
+        "description": "Press 0",
         "verified": true
       },
       {
-        "category": "Safety",
-        "title": "Check-in and check-out",
-        "description": "The FAQ lists check-in from 2:00 PM and check-out until 11:00 AM. Confirm exceptions with reception. Source: FAQ, checked 2026-10-30.",
+        "category": "Housekeeping",
+        "title": "Housekeeping",
+        "description": "Press 0",
+        "verified": true
+      },
+      {
+        "category": "Shuttle",
+        "title": "Shuttle",
+        "description": "3 times/days   10.00 am./03.00 pm./07.00 pm.",
+        "verified": true
+      },
+      {
+        "category": "Policy",
+        "title": "No smoking",
+        "description": "No smoking",
+        "verified": true
+      },
+      {
+        "category": "Wi-Fi",
+        "title": "Wi-Fi",
+        "description": "Free wifi · No password",
+        "verified": true
+      },
+      {
+        "category": "Emergency",
+        "title": "Emergency contact",
+        "description": "+66 63 081 1693",
+        "verified": true
+      },
+      {
+        "category": "Contact",
+        "title": "Contact",
+        "description": "764 Moo 2, Ao Nang, Mueang Krabi, Krabi 81180 · 075-695522-3 · info@aonangfiore.com · www.aonangfiore.com",
         "verified": true
       }
     ]
+  },
+  "approved_content": {
+    "source": {
+      "document": "638830211362193836_Vela_TV_Hotel_Fiore_Content_Form.docx",
+      "sha256": "3183e5e2acfb9e1f72c30492c0ca0e3702e4b98748475f590923f83b9fcad93a",
+      "form_version": "1.0"
+    },
+    "welcome": {
+      "display_name_en": "Aonang Fiore Resort",
+      "display_name_th": "อ่าวนางฟีโอเร่ รีสอร์ท",
+      "generic_en": "Welcome to Aonang Fiore Resort",
+      "tagline_en": "The best land you can touch"
+    },
+    "about": {
+      "description_en": "Experience a relaxing tropical escape in a charming room surrounded by lush greenery. Blending natural wood and bamboo elements with distinctive architectural design, the room features a high vaulted ceiling that creates a spacious, airy, and inviting atmosphere. Enjoy a comfortable large bed with crisp white linens, a cozy sofa for lounging, and floor-to-ceiling glass doors that welcome natural light and offer views of the surrounding greenery. Every detail creates a warm and peaceful ambiance, perfect for unwinding and reconnecting with nature. Ideal for couples and travelers seeking tranquility, this nature-inspired retreat offers a memorable resort experience at Aonang Fiore Resort, where comfort meets the beauty of the tropics.",
+      "description_th": "สัมผัสการพักผ่อนท่ามกลางธรรมชาติอันร่มรื่น ในห้องพักสไตล์ทรอปิคอลที่ผสมผสานความอบอุ่นของไม้ธรรมชาติเข้ากับดีไซน์ที่มีเอกลักษณ์ โดดเด่นด้วยเพดานทรงสูงตกแต่งด้วยไม้ไผ่และวัสดุธรรมชาติ ให้ความรู้สึกโปร่งโล่ง สบาย และผ่อนคลาย ห้องพักตกแต่งด้วยเตียงนอนขนาดใหญ่พร้อมชุดเครื่องนอนสีขาวสะอาดตา มีโซฟาสำหรับนั่งพักผ่อน และประตูกระจกบานใหญ่ที่เปิดรับวิวสวนเขียวขจี ให้คุณได้ใกล้ชิดธรรมชาติ พร้อมแสงธรรมชาติที่ช่วยเติมเต็มบรรยากาศแห่งการพักผ่อนอย่างมีความสุข เหมาะสำหรับผู้ที่ต้องการหลีกหนีความวุ่นวาย มาพักผ่อนท่ามกลางความสงบและความร่มรื่น พร้อมสัมผัสเสน่ห์ของการพักผ่อนสไตล์รีสอร์ตธรรมชาติ ณ อ่าวนางฟีโอเร่",
+      "highlights_th": "การตกแต่งสไตล์ทรอปิคอลด้วยไม้ธรรมชาติและไม้ไผ่ ห้องพักกว้าง เพดานสูง ให้ความรู้สึกโปร่งโล่งและเป็นเอกลักษณ์ บรรยากาศเงียบสงบ เหมาะสำหรับการพักผ่อนท่ามกลางธรรมชาติ",
+      "facilities_th": "สระว่ายน้ำ, ร้านอาหาร, สปา,ฟิตเนส"
+    },
+    "accommodation": {
+      "room_types": [
+        {
+          "name": "Deluxe Cottage",
+          "size_sqm": 34,
+          "description_en": "Escape to nature in our Deluxe Cottage at Aonang Fiore Resort, where tropical charm meets comfort and relaxation. Surrounded by lush greenery, this cozy cottage features natural wood accents and a distinctive design that creates a warm, peaceful, and inviting atmosphere."
+        },
+        {
+          "name": "Tree Top Villa",
+          "size_sqm": 37,
+          "description_en": "Experience a peaceful tropical escape at Tree Top Villa, Aonang Fiore Resort, where the beauty of nature meets comfort and privacy. Surrounded by lush greenery, this charming villa offers a relaxing atmosphere and a unique natural setting, perfect for guests seeking a tranquil getaway.",
+          "source_name": "Tree top Villa"
+        },
+        {
+          "name": "Jacuzzi Villa",
+          "size_sqm": 55,
+          "description_en": "Escape into a world of romance and relaxation at Jacuzzi Villa, Aonang Fiore Resort, where tropical elegance meets comfort and privacy. Nestled amidst lush greenery in the heart of Ao Nang, Krabi, this charming villa offers a peaceful retreat surrounded by the beauty of nature. Designed with warm natural elements and tropical-inspired interiors, the villa features a private Jacuzzi, inviting you to unwind, relax, and indulge in a soothing experience in your own personal sanctuary."
+        }
+      ],
+      "photo_group": "rooms",
+      "photo_type_mapping_confirmed": false
+    },
+    "dining": {
+      "name": "De’fish Restaurant",
+      "cuisines": "Thai food, Seafood, Halal food",
+      "hours": "11.00  am. – 10.30 pm.",
+      "contact": "4003"
+    },
+    "facilities": {
+      "pool": {
+        "hours": "09.00 am. – 9.00 pm."
+      },
+      "massage": {
+        "name": "Palm  tree massage",
+        "hours": "10.00 am. -08.00 pm.",
+        "contact": "4006 or  0"
+      }
+    },
+    "guest": {
+      "check_in": "02.00 pm.",
+      "check_out": "11.00 am.",
+      "reception": "Press 0",
+      "emergency": "+66 63 081 1693",
+      "housekeeping": "Press 0",
+      "shuttle": "3 times/days   10.00 am./03.00 pm./07.00 pm.",
+      "smoking": "No smoking",
+      "wifi": "Free wifi",
+      "wifi_password_policy": "No password",
+      "source_emergency": "+66 630811693"
+    },
+    "contact": {
+      "address_en": "764 Moo 2, Ao Nang, Mueang Krabi, Krabi 81180",
+      "address_th": "764 หมู่ 2 ตำบลอ่าวนาง  อำเภอเมือง จังหวัด กระบี่  81180",
+      "telephone": "075-695522-3",
+      "email": "info@aonangfiore.com",
+      "website": "www.aonangfiore.com",
+      "source_address_en": "764 Moo2 Aonang Muang Krabi 81180"
+    }
   }
 }

@@ -408,6 +408,7 @@ class MainActivity : Activity() {
 
     private fun section(id: String): JSONObject = content.optJSONObject(id) ?: JSONObject()
     private fun entries(id: String) = section(id).optJSONArray("items")
+    private fun approvedContent(): JSONObject? = content.optJSONObject("approved_content")
     // Keep source notes in the bundled seed for audit without altering CMS-published copy.
     private fun guestCopy(description: String): String =
         if (contentFromOfflineSeed) description.substringBefore(" Source:").trim() else description
@@ -546,12 +547,22 @@ class MainActivity : Activity() {
             "hidden" -> ""
             "room" -> if (value.isNotBlank()) "Welcome, Room $value" else "Welcome, Guest"
             "name" -> if (value.isNotBlank()) "Welcome, $value" else "Welcome, Guest"
-            else -> if (assignedRoom.isNotBlank()) "Welcome, Room $assignedRoom" else "Welcome, Guest"
+            else -> approvedContent()?.optJSONObject("welcome")?.optString("generic_en")
+                ?.takeIf { it.isNotBlank() }
+                ?: if (assignedRoom.isNotBlank()) "Welcome, Room $assignedRoom" else "Welcome, Guest"
         }
         val words = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; gravity = Gravity.CENTER_VERTICAL; setPadding(dp(30), 0, 0, 0) }
-        words.addView(textLine("WELCOME TO", 13f, true).apply { setTextColor(muted); letterSpacing = 0.16f })
-        words.addView(textLine("Ao Nang Fiore Resort", 29f, true))
-        if (welcome.isNotBlank()) words.addView(textLine(welcome, 16f).apply { setTextColor(muted) })
+        if (approvedContent() != null) {
+            words.addView(textLine(welcome, if (compactTv()) 21f else 25f, true).apply {
+                maxLines = 2
+            })
+            val tagline = approvedContent()?.optJSONObject("welcome")?.optString("tagline_en").orEmpty()
+            if (tagline.isNotBlank()) words.addView(textLine(tagline, 15f).apply { setTextColor(muted) })
+        } else {
+            words.addView(textLine("WELCOME TO", 13f, true).apply { setTextColor(muted); letterSpacing = 0.16f })
+            words.addView(textLine("Ao Nang Fiore Resort", 29f, true))
+            if (welcome.isNotBlank()) words.addView(textLine(welcome, 16f).apply { setTextColor(muted) })
+        }
         hero.addView(words, LinearLayout.LayoutParams(0, -1, 1f))
         hero.addView(weatherCard(), LinearLayout.LayoutParams(dp(if (compactTv()) 220 else 260),
             dp(fitHeight(138, 105))).apply { rightMargin = dp(2) })
@@ -644,7 +655,7 @@ class MainActivity : Activity() {
                 }
                 val card = sectionCard(name, details.take(85), icon) {
                     lastSectionIndex = i
-                    showDetail(id, title, name, details)
+                    showDetail(id, title, name, details, item.optString("category"))
                 }
                 cards.add(card)
                 row.addView(card, LinearLayout.LayoutParams(0, dp(fitHeight(165, 142)), 1f).apply {
@@ -853,10 +864,11 @@ class MainActivity : Activity() {
     }
 
     private fun approvedGalleryNumbers(category: String?): List<Int> = when (category?.lowercase(java.util.Locale.ROOT)) {
-        "profile" -> listOf(18, 28, 321, 336, 430, 435, 437, 452, 456)
+        "profile" -> listOf(18, 28, 430, 435, 437, 452, 456)
         "rooms" -> listOf(1, 5, 37, 130, 164, 169, 200)
         "dining" -> listOf(227, 234, 243, 251)
         "facilities" -> listOf(346, 355, 407, 412)
+        "reception", "contact" -> listOf(321, 336)
         else -> emptyList()
     }
 
@@ -931,6 +943,69 @@ class MainActivity : Activity() {
         back.post { back.requestFocus() }
     }
 
+    private fun approvedDetailBlocks(category: String?): List<Pair<String, String>> {
+        val approved = approvedContent() ?: return emptyList()
+        return when (category?.lowercase(java.util.Locale.ROOT)) {
+            "profile" -> {
+                val about = approved.optJSONObject("about") ?: return emptyList()
+                listOfNotNull(
+                    about.optString("description_th").takeIf { it.isNotBlank() }
+                        ?.let { "เกี่ยวกับรีสอร์ต" to it },
+                    about.optString("highlights_th").takeIf { it.isNotBlank() }
+                        ?.let { "จุดเด่น" to it }
+                )
+            }
+            "rooms" -> {
+                val rooms = approved.optJSONObject("accommodation")?.optJSONArray("room_types")
+                    ?: return emptyList()
+                (0 until rooms.length()).mapNotNull { index ->
+                    rooms.optJSONObject(index)?.let { room ->
+                        val name = room.optString("name")
+                        val size = room.optInt("size_sqm")
+                        val description = room.optString("description_en")
+                        if (name.isBlank() || description.isBlank()) null
+                        else "$name · $size sqm" to description
+                    }
+                }
+            }
+            "dining" -> approved.optJSONObject("dining")?.let { dining ->
+                listOf(dining.optString("name") to listOf(
+                    dining.optString("cuisines"), dining.optString("hours"),
+                    "Contact: ${dining.optString("contact")}"
+                ).filter { it.isNotBlank() }.joinToString("\n"))
+            } ?: emptyList()
+            "facilities" -> approved.optJSONObject("facilities")?.let { facilities ->
+                listOfNotNull(
+                    facilities.optJSONObject("pool")?.optString("hours")
+                        ?.takeIf { it.isNotBlank() }?.let { "Pool" to it },
+                    facilities.optJSONObject("massage")?.let { massage ->
+                        val name = massage.optString("name")
+                        if (name.isBlank()) null else name to listOf(
+                            massage.optString("hours"), "Contact: ${massage.optString("contact")}"
+                        ).joinToString("\n")
+                    }
+                )
+            } ?: emptyList()
+            "contact" -> approved.optJSONObject("contact")?.optString("address_th")
+                ?.takeIf { it.isNotBlank() }?.let { listOf("ที่อยู่" to it) } ?: emptyList()
+            else -> emptyList()
+        }
+    }
+
+    private fun detailTextBlock(title: String, body: String): View =
+        LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(30), dp(17), dp(30), dp(19))
+            background = panel(false, Color.rgb(24, 60, 58))
+            isFocusable = true
+            contentDescription = "$title. $body"
+            setOnFocusChangeListener { _, focused ->
+                background = panel(focused, Color.rgb(24, 60, 58))
+            }
+            addView(textLine(title, 21f, true))
+            addView(textLine(body, 17f).apply { setTextColor(muted) })
+        }
+
     private fun showDetail(id: String, sectionTitle: String, title: String, description: String,
                            mediaCategory: String? = null, restoreGalleryFocus: Boolean = false) {
         page = "detail:$id"
@@ -939,10 +1014,18 @@ class MainActivity : Activity() {
         val box = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL; background = panel(false)
             setPadding(dp(34), dp(28), dp(34), dp(30))
+            isFocusable = true
+            contentDescription = "$title. $description"
+            setOnFocusChangeListener { _, focused -> background = panel(focused) }
         }
         box.addView(textLine(title, 27f, true), LinearLayout.LayoutParams(-1, dp(54)))
         box.addView(textLine(description, 18f).apply { setTextColor(muted) })
         root.addView(box, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(18) })
+        approvedDetailBlocks(mediaCategory).forEach { (heading, body) ->
+            root.addView(detailTextBlock(heading, body), LinearLayout.LayoutParams(-1, -2).apply {
+                topMargin = dp(12)
+            })
+        }
         val galleryCards = mutableListOf<View>()
         if (approvedPhotoSeedAvailable) {
             val numbers = approvedGalleryNumbers(mediaCategory)
@@ -975,7 +1058,7 @@ class MainActivity : Activity() {
         }
         val back = action("‹  Back to $sectionTitle") { showSection(id, sectionTitle) }
         root.addView(back, LinearLayout.LayoutParams(dp(260), dp(48)).apply { topMargin = dp(22) })
-        val focus = if (restoreGalleryFocus) galleryCards.getOrNull(lastGalleryIndex) ?: back else back
+        val focus = if (restoreGalleryFocus) galleryCards.getOrNull(lastGalleryIndex) ?: back else box
         focus.post { focus.requestFocus() }
     }
 
