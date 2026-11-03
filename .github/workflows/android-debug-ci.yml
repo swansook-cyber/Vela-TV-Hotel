@@ -76,7 +76,10 @@ jobs:
           cp "$APK" dist/Vela-TV-Hotel-v1.1.0-code15-${SOURCE_SHA:0:7}-Fiore24-debug.apk
           sha256sum dist/*.apk | tee dist/SHA256SUMS.txt
           printf 'source_commit=%s\nversion_name=1.1.0\nversion_code=15\nasset_profile=internal_qa_fiore24\n' "$SOURCE_SHA" > dist/BUILD-IDENTITY.txt
-          "${ANDROID_HOME}/build-tools/$(ls "${ANDROID_HOME}/build-tools" | sort -V | tail -n 1)/apksigner" verify --print-certs "$APK" | grep 'Signer #1 certificate SHA-256 digest' > dist/CI-SIGNING-CERT.txt
+          APKSIGNER="$(find "${ANDROID_HOME}/build-tools" -name apksigner -type f | sort -V | tail -n 1)"
+          test -x "$APKSIGNER"
+          "$APKSIGNER" verify --print-certs "$APK" > dist/CI-SIGNING-CERT.txt
+          test -s dist/CI-SIGNING-CERT.txt
       - uses: actions/upload-artifact@v4
         with:
           name: Vela-TV-Hotel-V1.1.0-FIORE24-INTERNAL-QA-${{ github.run_number }}
