@@ -67,6 +67,10 @@ object ContentSyncContract {
             if (items.length() > 40) return null
             for (i in 0 until items.length()) {
                 val item = items.optJSONObject(i) ?: return null
+                val keys = item.keys().asSequence().toSet()
+                if (!keys.containsAll(listOf("title", "description", "verified")) ||
+                    keys.any { it !in setOf("title", "description", "verified", "category") } ||
+                    item.opt("title") !is String || item.opt("description") !is String) return null
                 val title = item.optString("title")
                 val description = item.optString("description")
                 if (title.length !in 1..100 || description.length > 2000 ||
@@ -82,6 +86,8 @@ object ContentSyncContract {
     fun parseManifest(bytes: ByteArray, appVersionCode: Int = APP_VERSION_CODE): ContentManifest? {
         if (bytes.isEmpty() || bytes.size > 64 * 1024) return null
         val root = try { JSONObject(String(bytes, Charsets.UTF_8)) } catch (_: Exception) { return null }
+        if (root.keys().asSequence().toSet() !=
+            setOf("schemaVersion", "contentVersion", "publishedAt", "minAppVersionCode", "files")) return null
         if (root.opt("schemaVersion") !is Int || root.optInt("schemaVersion") != 1 ||
             root.opt("minAppVersionCode") !is Int ||
             root.optInt("minAppVersionCode") !in 15..appVersionCode) return null
@@ -97,6 +103,9 @@ object ContentSyncContract {
         for (i in 0 until list.length()) {
             val item = list.optJSONObject(i) ?: return null
             val kind = item.optString("kind")
+            val expectedKeys = setOf("kind", "path", "downloadPath", "sha256", "size") +
+                (if (kind == "content") emptySet() else setOf("durationSeconds"))
+            if (item.keys().asSequence().toSet() != expectedKeys) return null
             val path = item.optString("path")
             val downloadPath = item.optString("downloadPath")
             val digest = item.optString("sha256")

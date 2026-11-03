@@ -118,6 +118,17 @@ class UniversalContentResolverTest {
         assertEquals(ContentSource.BUNDLED, store.current().source)
     }
 
+    @Test fun structurallyInvalidContentIsRejectedBeforeActivation() {
+        val invalid = JSONObject(String(bundled))
+            .getJSONObject("resort").getJSONArray("items")
+            .put(JSONObject().put("title", "Incomplete").put("verified", true))
+        val content = JSONObject(String(bundled))
+            .put("resort", JSONObject().put("items", invalid)).toString().toByteArray()
+        val store = ContentPackageStore(root, bundled)
+        assertEquals(ContentSyncStatus.REJECTED, resolve(store, "1", content).status)
+        assertEquals(ContentSource.BUNDLED, store.current().source)
+    }
+
     @Test fun sha256MismatchKeepsBundledBaseline() {
         val content = payload("new")
         val store = ContentPackageStore(root, bundled)
