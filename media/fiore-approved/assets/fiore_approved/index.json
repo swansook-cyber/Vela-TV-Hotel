@@ -1,0 +1,461 @@
+{
+  "schema_version": 1,
+  "images": [
+    {
+      "id": 18,
+      "category": "welcome",
+      "asset": "fiore_018.webp",
+      "source_filename": "Aonang fiore resort-18.jpg",
+      "source_sha256": "f98b4f92ac263ead77d67c08ae10ffe88b705d2c0a784f91d26ce2c28fae9540",
+      "source_size": [
+        5464,
+        3640
+      ],
+      "export_sha256": "d33002998d798f56b36564d9a1bd092cf8e6d4f452fec5be5445f5b8f2cc84d1",
+      "export_size": [
+        1920,
+        1080
+      ],
+      "export_bytes": 711732,
+      "rights": "Owner-selected for internal QA; redistribution rights not documented",
+      "status": "Selected for internal QA"
+    },
+    {
+      "id": 28,
+      "category": "welcome",
+      "asset": "fiore_028.webp",
+      "source_filename": "Aonang fiore resort-28.jpg",
+      "source_sha256": "77cc797b2c139ce31858cd2fb54362553217d229191657e823c69a7a6eac6b72",
+      "source_size": [
+        5464,
+        3640
+      ],
+      "export_sha256": "2806070b9cc82037f0f1fee8ed690bb4422cd9418c3ea11fd3089469520caf43",
+      "export_size": [
+        1920,
+        1080
+      ],
+      "export_bytes": 770600,
+      "rights": "Owner-selected for internal QA; redistribution rights not documented",
+      "status": "Selected for internal QA"
+    },
+    {
+      "id": 1,
+      "category": "rooms",
+      "asset": "fiore_001.webp",
+      "source_filename": "Aonang fiore resort-1.jpg",
+      "source_sha256": "3aa20bb8b0e290d1f80f56d9de2cf31375e3f7ae95aa9cbf44deddf179f34bcb",
+      "source_size": [
+        7952,
+        5304
+      ],
+      "export_sha256": "a1586dd136a97bc501fe00ee851e3d4c2e27519762f7ffd9d8895212f8adccb5",
+      "export_size": [
+        1920,
+        1080
+      ],
+      "export_bytes": 288436,
+      "rights": "Owner-selected for internal QA; redistribution rights not documented",
+      "status": "Selected for internal QA"
+    },
+    {
+      "id": 5,
+      "category": "rooms",
+      "asset": "fiore_005.webp",
+      "source_filename": "Aonang fiore resort-5.jpg",
+      "source_sha256": "7d7788461ee2c9670b96f1fc13d2033aa4879cf3f752c19677f00af18d7328fb",
+      "source_size": [
+        7214,
+        4812
+      ],
+      "export_sha256": "5a60a2ae2206dca53517fbf79fb1bd7c77f38a5d3fdcef0363dc23fdacf3f20a",
+      "export_size": [
+        1920,
+        1080
+      ],
+      "export_bytes": 412810,
+      "rights": "Owner-selected for internal QA; redistribution rights not documented",
+      "status": "Selected for internal QA"
+    },
+    {
+      "id": 37,
+      "category": "rooms",
+      "asset": "fiore_037.webp",
+      "source_filename": "Aonang fiore resort-37.jpg",
+      "source_sha256": "5a1b8baf6767c8cf9f3c10e44026686c775e1727254d6abe10be6c7a32188ef1",
+      "source_size": [
+        7952,
+        5304
+      ],
+      "export_sha256": "6de8e3d4fcbfeb4cff0e4961b3478222848c08039a6d0a0cac781f09ce914a85",
+      "export_size": [
+        1920,
+        1080
+      ],
+      "export_bytes": 233478,
+      "rights": "Owner-selected for internal QA; redistribution rights not documented",
+      "status": "Selected for internal QA"
+    },
+    {
+      "id": 130,
+      "category": "rooms",
+      "asset": "fiore_130.webp",
+      "source_filename": "Aonang fiore resort-130.jpg",
+      "source_sha256": "88f2da5ba51165edefc5276c53ec4a2df674ea82d98c67558b410c7e06aaf962",
+      "source_size": [
+        7952,
+        5304
+      ],
+      "export_sha256": "90703fb94503e39ae97ea34a457b9323c4ee1257c319aec674aa289cd975fa85",
+      "export_size": [
+        1920,
+        1080
+      ],
+      "export_bytes": 467590,
+      "rights": "Owner-selected for internal QA; redistribution rights not documented",
+      "status": "Selected for internal QA"
+    },
+    {
+      "id": 164,
+      "category": "rooms",
+      "asset": "fiore_164.webp",
+      "source_filename": "Aonang fiore resort-164.jpg",
+      "source_sha256": "63b8bc40216931be846a00758131923d92c331ac1c69d8f98869fb084a27354b",
+      "source_size": [
+        7952,
+        5304
+      ],
+      "export_sha256": "01ea6844e542f2fd96b73287836e41a2c96e0dc160fe2b12538a0a8cf8559468",
+      "export_size": [
+        1920,
+        1080
+      ],
+      "export_bytes": 288984,
+      "rights": "Owner-selected for internal QA; redistribution rights not documented",
+      "status": "Selected for internal QA"
+    },
+    {
+      "id": 169,
+      "category": "rooms",
+      "asset": "fiore_169.webp",
+      "source_filename": "Aonang fiore resort-169.jpg",
+      "source_sha256": "1e076b38c14843688d7141a91b324edb4b97514ecc6d31ed8a64276f00b3683f",
+      "source_size": [
+        7952,
+        5304
+      ],
+      "export_sha256": "257a001500c991eebb853c0d2d0b22754e35d2cb9388f609c1a9cf264ac35a0c",
+      "export_size": [
+        1920,
+        1080
+      ],
+      "export_bytes": 694654,
+      "rights": "Owner-selected for internal QA; redistribution rights not documented",
+      "status": "Selected for internal QA"
+    },
+    {
+      "id": 200,
+      "category": "rooms",
+      "asset": "fiore_200.webp",
+      "source_filename": "Aonang fiore resort-200.jpg",
+      "source_sha256": "4409ce4577435d774660cc44a596a9e1d45cee00e2e55eeb897a74ee241f26f4",
+      "source_size": [
+        7952,
+        5304
+      ],
+      "export_sha256": "99bc19a1e2eac04495014f064aae75b151ebfb078091319124c4a1cd9cbc3521",
+      "export_size": [
+        1920,
+        1080
+      ],
+      "export_bytes": 238766,
+      "rights": "Owner-selected for internal QA; redistribution rights not documented",
+      "status": "Selected for internal QA"
+    },
+    {
+      "id": 227,
+      "category": "dining",
+      "asset": "fiore_227.webp",
+      "source_filename": "Aonang fiore resort-227.jpg",
+      "source_sha256": "f262a5f30e82d9f56ed742923dced96f05f62a0bccdd4360b7c6ce1326d77205",
+      "source_size": [
+        7952,
+        5304
+      ],
+      "export_sha256": "4d96cf113e056804d3e28f0539c4db3d9feb188f5354ab187977dfeb2166a081",
+      "export_size": [
+        1920,
+        1080
+      ],
+      "export_bytes": 609154,
+      "rights": "Owner-selected for internal QA; redistribution rights not documented",
+      "status": "Selected for internal QA"
+    },
+    {
+      "id": 234,
+      "category": "dining",
+      "asset": "fiore_234.webp",
+      "source_filename": "Aonang fiore resort-234.jpg",
+      "source_sha256": "a13a606df26d42309c7e8d44d6347af396a6e149908ea68dfbb2a70ba79f1a4c",
+      "source_size": [
+        7952,
+        5304
+      ],
+      "export_sha256": "17277d1365bfc48f7ff350d7c33a432cce0bb608070efa44d0393118808f9f80",
+      "export_size": [
+        1920,
+        1080
+      ],
+      "export_bytes": 521136,
+      "rights": "Owner-selected for internal QA; redistribution rights not documented",
+      "status": "Selected for internal QA"
+    },
+    {
+      "id": 243,
+      "category": "dining",
+      "asset": "fiore_243.webp",
+      "source_filename": "Aonang fiore resort-243.jpg",
+      "source_sha256": "b66656868a8208e96ce005a1ed4128d5e72886f7c4f8b245f4da907870cb86c5",
+      "source_size": [
+        5168,
+        3447
+      ],
+      "export_sha256": "4ebca5ea18e5e151fddc6d393f0dc3dc4a7236171ec7babf5d376403a898ae3e",
+      "export_size": [
+        1920,
+        1080
+      ],
+      "export_bytes": 572202,
+      "rights": "Owner-selected for internal QA; redistribution rights not documented",
+      "status": "Selected for internal QA"
+    },
+    {
+      "id": 251,
+      "category": "dining",
+      "asset": "fiore_251.webp",
+      "source_filename": "Aonang fiore resort-251.jpg",
+      "source_sha256": "897024558e437e4d1a4d6f7aec889362a331c961f19159a0674c366e51807071",
+      "source_size": [
+        5213,
+        3477
+      ],
+      "export_sha256": "eb3526aee53d10d5cca3fb8d15d8bdd0167949df42e4f42779e9a03bd206a7ae",
+      "export_size": [
+        1920,
+        1080
+      ],
+      "export_bytes": 514846,
+      "rights": "Owner-selected for internal QA; redistribution rights not documented",
+      "status": "Selected for internal QA"
+    },
+    {
+      "id": 346,
+      "category": "facilities",
+      "asset": "fiore_346.webp",
+      "source_filename": "Aonang fiore resort-346.jpg",
+      "source_sha256": "637a25d9d6673ba0363c9f7eae6cc3c08e20215f971f23d56e5f95bf5d881e26",
+      "source_size": [
+        7952,
+        5304
+      ],
+      "export_sha256": "440fd662450408d3ddf746a3c6825acacf4c40a1beb1fa418140c2a2b1dbdb6d",
+      "export_size": [
+        1920,
+        1080
+      ],
+      "export_bytes": 739246,
+      "rights": "Owner-selected for internal QA; redistribution rights not documented",
+      "status": "Selected for internal QA"
+    },
+    {
+      "id": 355,
+      "category": "facilities",
+      "asset": "fiore_355.webp",
+      "source_filename": "Aonang fiore resort-355.jpg",
+      "source_sha256": "5e6727b788fe6a6d2c9f8444be4b363490cf80461f0e42198469dc87d463f977",
+      "source_size": [
+        7952,
+        5304
+      ],
+      "export_sha256": "1b38828892e91f9cebcacdeb9a773b3e6f43a100998c0dfdb91ce789f896677a",
+      "export_size": [
+        1920,
+        1080
+      ],
+      "export_bytes": 706660,
+      "rights": "Owner-selected for internal QA; redistribution rights not documented",
+      "status": "Selected for internal QA"
+    },
+    {
+      "id": 407,
+      "category": "facilities",
+      "asset": "fiore_407.webp",
+      "source_filename": "Aonang fiore resort-407.jpg",
+      "source_sha256": "5da97106be1331a17d69d8fc3c44435f78c31a33562b406bf4bdcc6658f86d69",
+      "source_size": [
+        7951,
+        5303
+      ],
+      "export_sha256": "1b6126e4f6dd93c50f6ea0515f5248027d38307a9c491f8b5eb293edc05e79e2",
+      "export_size": [
+        1920,
+        1080
+      ],
+      "export_bytes": 324756,
+      "rights": "Owner-selected for internal QA; redistribution rights not documented",
+      "status": "Facility identity and service availability unconfirmed"
+    },
+    {
+      "id": 412,
+      "category": "facilities",
+      "asset": "fiore_412.webp",
+      "source_filename": "Aonang fiore resort-412.jpg",
+      "source_sha256": "4fbc5a406372c436e65cae85dd04f33b96e335f0c0ef7e394a1ab092d6005d2f",
+      "source_size": [
+        7952,
+        5304
+      ],
+      "export_sha256": "36f8c9c14d8141ca606b32859f2a99a117b2a9d31b15a65985d872aa190900c1",
+      "export_size": [
+        1920,
+        1080
+      ],
+      "export_bytes": 387176,
+      "rights": "Owner-selected for internal QA; redistribution rights not documented",
+      "status": "Selected for internal QA"
+    },
+    {
+      "id": 321,
+      "category": "guest",
+      "asset": "fiore_321.webp",
+      "source_filename": "Aonang fiore resort-321.jpg",
+      "source_sha256": "964679c70e5c58a10c66ce496f04bc184e750a074114b41cd4caf67c7d4c1923",
+      "source_size": [
+        7951,
+        5303
+      ],
+      "export_sha256": "a9756c6692be60d9545bb04c582dd50b2049d8b7b3bce1371bf2cd6fce45bbd2",
+      "export_size": [
+        1920,
+        1080
+      ],
+      "export_bytes": 403468,
+      "rights": "Owner-selected for internal QA; redistribution rights not documented",
+      "status": "Selected for internal QA"
+    },
+    {
+      "id": 336,
+      "category": "guest",
+      "asset": "fiore_336.webp",
+      "source_filename": "Aonang fiore resort-336.jpg",
+      "source_sha256": "7f9e60f7aadb063041b9384106ca29f6d839ac6022abb94a9ebcf1e4820b0e0e",
+      "source_size": [
+        5168,
+        3448
+      ],
+      "export_sha256": "fd71925e53ceb0159f4134cd23cd3599e1fef3c11ad343b27c376345154d43d2",
+      "export_size": [
+        1920,
+        1080
+      ],
+      "export_bytes": 350900,
+      "rights": "Owner-selected for internal QA; redistribution rights not documented",
+      "status": "Selected for internal QA"
+    },
+    {
+      "id": 430,
+      "category": "grounds",
+      "asset": "fiore_430.webp",
+      "source_filename": "Aonang fiore resort-430.jpg",
+      "source_sha256": "b0302e0e5bda68861f387538cc250b3804acbdb635af2b8bb74a49b25c887321",
+      "source_size": [
+        7950,
+        5304
+      ],
+      "export_sha256": "9eaec9cf9c4759408be31acb7edfe93ae727bcf076dcac199e72f1746ad719f4",
+      "export_size": [
+        1920,
+        1080
+      ],
+      "export_bytes": 621498,
+      "rights": "Owner-selected for internal QA; redistribution rights not documented",
+      "status": "Selected for internal QA"
+    },
+    {
+      "id": 435,
+      "category": "grounds",
+      "asset": "fiore_435.webp",
+      "source_filename": "Aonang fiore resort-435.jpg",
+      "source_sha256": "41a22f86786bd3d23ca0444eb01d94783f7ecc01081e135f382cf1afaae5a1ae",
+      "source_size": [
+        5167,
+        3447
+      ],
+      "export_sha256": "1b6901baa27ec31d886bbcd98ae7988d4170fa5da4e257651620f172b9828994",
+      "export_size": [
+        1920,
+        1080
+      ],
+      "export_bytes": 616658,
+      "rights": "Owner-selected for internal QA; redistribution rights not documented",
+      "status": "Selected for internal QA"
+    },
+    {
+      "id": 437,
+      "category": "grounds",
+      "asset": "fiore_437.webp",
+      "source_filename": "Aonang fiore resort-437.jpg",
+      "source_sha256": "7eec85360adba62be01587920d5a870f5a1c96e9c0b401dedc4f75e88d2b4df0",
+      "source_size": [
+        7950,
+        5304
+      ],
+      "export_sha256": "cb272ecd161e3b403cc3539de925c2baade0a37349af344fbbdc31e3e80e1b96",
+      "export_size": [
+        1920,
+        1080
+      ],
+      "export_bytes": 809594,
+      "rights": "Owner-selected for internal QA; redistribution rights not documented",
+      "status": "Selected for internal QA"
+    },
+    {
+      "id": 452,
+      "category": "grounds",
+      "asset": "fiore_452.webp",
+      "source_filename": "Aonang fiore resort-452.jpg",
+      "source_sha256": "94203f257e678ab38746aab203c37b20ff5151359a6ca413d8947069d43ba7ed",
+      "source_size": [
+        5464,
+        3640
+      ],
+      "export_sha256": "8e529dbf60f0724df38d2745e5912029c5262dc04819b1d386882e2748095980",
+      "export_size": [
+        1920,
+        1080
+      ],
+      "export_bytes": 723794,
+      "rights": "Owner-selected for internal QA; redistribution rights not documented",
+      "status": "Selected for internal QA"
+    },
+    {
+      "id": 456,
+      "category": "grounds",
+      "asset": "fiore_456.webp",
+      "source_filename": "Aonang fiore resort-456.jpg",
+      "source_sha256": "3a398c9a496d259898a54535cd7a0d44f59777c1a4e6534b753dee3ee20f5cd5",
+      "source_size": [
+        5464,
+        3640
+      ],
+      "export_sha256": "bff9c87ecf7011ec16f44c4050be0f861536258cffc297e50f752bfe64d9cbd3",
+      "export_size": [
+        1920,
+        1080
+      ],
+      "export_bytes": 622746,
+      "rights": "Owner-selected for internal QA; redistribution rights not documented",
+      "status": "Selected for internal QA"
+    }
+  ]
+}

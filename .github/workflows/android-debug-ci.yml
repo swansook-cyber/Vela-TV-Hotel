@@ -2,10 +2,9 @@ name: Hotel Android Debug CI
 on:
   push:
     branches:
-      - develop/hotel-v0.1-foundation
-      - fix/hotel-*
-      - feature/hotel-*
-    paths: ['android-client/**', '*.gradle.kts', 'gradle.properties', '.github/workflows/android-debug-ci.yml']
+      - 'develop/**'
+      - 'fix/**'
+      - 'feature/**'
   pull_request:
   workflow_dispatch:
 permissions:
@@ -32,8 +31,10 @@ jobs:
         run: python3 -c "import xml.etree.ElementTree as ET; ET.parse('android-client/src/main/AndroidManifest.xml')"
       - name: Run backend contract tests
         run: python3 -m unittest discover -s backend -p 'test_*.py' -v
-      - name: Build debug APK
-        run: gradle --no-daemon :android-client:testDebugUnitTest :android-client:assembleDebug
+      - name: Exclude unlicensed internal resort photos from CI
+        run: test ! -d android-client/src/main/assets/fiore_internal
+      - name: Compile, test and build debug QA APK
+        run: gradle --no-daemon :android-client:compileDebugKotlin :android-client:testDebugUnitTest :android-client:assembleDebug
       - name: Verify actual APK identity, version and unique filename
         shell: bash
         run: |
@@ -43,14 +44,23 @@ jobs:
           AAPT="$(find "${ANDROID_HOME}/build-tools" -name aapt -type f | sort -V | tail -n 1)"
           test -x "$AAPT"
           "$AAPT" dump badging "$APK" | grep '^package:'
-          "$AAPT" dump badging "$APK" | grep -E "^package: name='net.velalab.tvhotel' versionCode='12' versionName='1.0.4'"
+          "$AAPT" dump badging "$APK" | grep -E "^package: name='net.velalab.tvhotel' versionCode='14' versionName='1.0.6'"
+          python3 - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile
+          apk = Path('android-client/build/outputs/apk/debug/android-client-debug.apk')
+          with ZipFile(apk) as archive:
+              assert archive.read('assets/hotel_content.json') == Path('android-client/src/main/assets/hotel_content.json').read_bytes()
+              assert not any(name.startswith('assets/fiore_approved/') for name in archive.namelist())
+          print('Approved offline content seed present; licensed resort photos excluded from public CI artifact')
+          PY
           mkdir -p dist
           SOURCE_SHA="${{ github.event.pull_request.head.sha || github.sha }}"
-          cp "$APK" dist/Vela-TV-Hotel-v1.0.4-code12-${SOURCE_SHA:0:7}-debug.apk
+          cp "$APK" dist/Vela-TV-Hotel-v1.0.6-code14-${SOURCE_SHA:0:7}-debug.apk
           sha256sum dist/*.apk | tee dist/SHA256SUMS.txt
-          printf 'source_commit=%s\nversion_name=1.0.4\nversion_code=12\nasset_profile=public_fallback_no_licensed_photos\n' "$SOURCE_SHA" > dist/BUILD-IDENTITY.txt
+          printf 'source_commit=%s\nversion_name=1.0.6\nversion_code=14\nasset_profile=public_fallback_no_licensed_photos\n' "$SOURCE_SHA" > dist/BUILD-IDENTITY.txt
       - uses: actions/upload-artifact@v4
         with:
-          name: Vela-TV-Hotel-V1.0.4-PUBLIC-FALLBACK-${{ github.run_number }}
+          name: Vela-TV-Hotel-V1.0.6-PUBLIC-FALLBACK-${{ github.run_number }}
           path: dist/
           if-no-files-found: error
