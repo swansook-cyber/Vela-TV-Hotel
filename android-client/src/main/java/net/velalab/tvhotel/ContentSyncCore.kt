@@ -30,11 +30,44 @@ data class ContentSyncResult(val status: ContentSyncStatus, val snapshot: Conten
 
 /** Mirrors the published JSON Schemas without adding an Android runtime dependency. */
 object ContentSyncContract {
-    const val APP_VERSION_CODE = 15
+    const val APP_VERSION_CODE = 16
     private val shaPattern = Regex("[0-9a-f]{64}")
     private val versionPattern = Regex("[1-9][0-9]*")
     private val mediaPattern = Regex("media/[A-Za-z0-9_-]{1,64}\\.(jpg|jpeg|png|mp4)")
     private val quickApps = listOf("Netflix", "Disney+", "YouTube", "Prime Video", "iQIYI")
+
+    fun validRoomService(menu: JSONObject): Boolean {
+        if (menu.keys().asSequence().toSet() != setOf("menuVersion", "currency", "contact", "categories") ||
+            menu.opt("menuVersion") !is String ||
+            !Regex("[A-Za-z0-9._-]{1,48}").matches(menu.optString("menuVersion")) ||
+            menu.optString("currency") != "THB" || menu.opt("contact") !is String ||
+            !Regex("[0-9]{1,12}").matches(menu.optString("contact"))) return false
+        val categories = menu.optJSONArray("categories") ?: return false
+        if (categories.length() !in 1..20) return false
+        val ids = mutableSetOf<String>()
+        val numbers = mutableSetOf<Int>()
+        for (i in 0 until categories.length()) {
+            val category = categories.optJSONObject(i) ?: return false
+            if (category.keys().asSequence().toSet() != setOf("id", "title_en", "items")) return false
+            val id = category.optString("id")
+            if (!Regex("[a-z][a-z0-9_]{0,39}").matches(id) || !ids.add(id) ||
+                category.opt("title_en") !is String ||
+                category.optString("title_en").trim().length !in 1..80) return false
+            val items = category.optJSONArray("items") ?: return false
+            if (items.length() !in 1..83) return false
+            for (j in 0 until items.length()) {
+                val item = items.optJSONObject(j) ?: return false
+                if (item.keys().asSequence().toSet() != setOf("number", "name_th", "name_en", "price_thb") ||
+                    item.opt("number") !is Int || item.optInt("number") !in 1..83 ||
+                    !numbers.add(item.optInt("number")) || item.opt("price_thb") !is Int ||
+                    item.optInt("price_thb") !in 1..10000) return false
+                for (name in listOf("name_th", "name_en")) {
+                    if (item.opt(name) !is String || item.optString(name).trim().length !in 1..160) return false
+                }
+            }
+        }
+        return numbers.isNotEmpty()
+    }
 
     fun sha256(bytes: ByteArray): String = MessageDigest.getInstance("SHA-256")
         .digest(bytes).joinToString("") { "%02x".format(it) }
@@ -80,6 +113,8 @@ object ContentSyncContract {
         }
         if (content.has("approved_content") && content.optJSONObject("approved_content") == null)
             return null
+        if (content.has("room_service") &&
+            (content.optJSONObject("room_service")?.let { validRoomService(it) } != true)) return null
         return content
     }
 

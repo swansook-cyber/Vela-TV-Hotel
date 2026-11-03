@@ -32,6 +32,35 @@ class UniversalContentResolverTest {
     private fun payload(marker: String): ByteArray = JSONObject(String(bundled))
         .put("qa_marker", marker).toString().toByteArray()
 
+    private fun menu(number: Int = 1) = JSONObject().put("menuVersion", "2026-11-04.1")
+        .put("currency", "THB").put("contact", "4003")
+        .put("categories", JSONArray().put(JSONObject().put("id", "appetizer")
+            .put("title_en", "APPETIZER").put("items", JSONArray().put(JSONObject()
+                .put("number", number).put("name_th", "อาหารไทย")
+                .put("name_en", "Thai dish").put("price_thb", 120)))))
+
+    @Test fun menuUpdatesThroughTheExistingAtomicContentPackage() {
+        val store = ContentPackageStore(root, bundled)
+        val updated = JSONObject(String(bundled)).put("room_service", menu()).toString().toByteArray()
+        assertEquals(ContentSyncStatus.UPDATED, resolve(store, "1", updated).status)
+        assertEquals("2026-11-04.1", store.current().content.getJSONObject("room_service").getString("menuVersion"))
+        assertEquals(ContentSource.ACTIVE, ContentPackageStore(root, bundled).current().source)
+    }
+
+    @Test fun invalidMenuNeverReplacesLastKnownGood() {
+        val store = ContentPackageStore(root, bundled)
+        val valid = JSONObject(String(bundled)).put("room_service", menu()).toString().toByteArray()
+        assertEquals(ContentSyncStatus.UPDATED, resolve(store, "1", valid).status)
+        val bad = menu().put("categories", JSONArray().put(JSONObject().put("id", "appetizer")
+            .put("title_en", "APPETIZER").put("items", JSONArray().put(JSONObject()
+                .put("number", 1).put("name_th", "อาหารไทย").put("name_en", "Thai dish")
+                .put("price_thb", 120)).put(JSONObject().put("number", 1)
+                .put("name_th", "ซ้ำ").put("name_en", "Duplicate").put("price_thb", 140)))))
+        val invalid = JSONObject(String(bundled)).put("room_service", bad).toString().toByteArray()
+        assertEquals(ContentSyncStatus.REJECTED, resolve(store, "2", invalid).status)
+        assertEquals("1", store.current().version)
+    }
+
     private fun manifest(version: String, payload: ByteArray, schema: Int = 1,
                          minCode: Int = 15, digest: String = ContentSyncContract.sha256(payload)) =
         JSONObject().put("schemaVersion", schema).put("contentVersion", version)
@@ -164,7 +193,7 @@ class UniversalContentResolverTest {
         val store = ContentPackageStore(root, bundled)
         val content = payload("new")
         for (bad in listOf(manifest("1", content, schema = 2),
-                           manifest("1", content, minCode = 16))) {
+                           manifest("1", content, minCode = 17))) {
             assertEquals(ContentSyncStatus.INCOMPATIBLE,
                 resolve(store, "1", content, bad).status)
         }

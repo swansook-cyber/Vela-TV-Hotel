@@ -65,6 +65,9 @@ class MainActivity : Activity() {
     private var slideshow: MediaSlideshow? = null
     private var galleryBack: (() -> Unit)? = null
     private var lastGalleryIndex = 0
+    private var lastMenuCategory = 0
+    private var lastMenuItem = 0
+    private var diningReturn: (() -> Unit)? = null
     private val isInternalQaBuild: Boolean by lazy {
         applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0
     }
@@ -1024,7 +1027,8 @@ class MainActivity : Activity() {
         }
 
     private fun showDetail(id: String, sectionTitle: String, title: String, description: String,
-                           mediaCategory: String? = null, restoreGalleryFocus: Boolean = false) {
+                           mediaCategory: String? = null, restoreGalleryFocus: Boolean = false,
+                           restoreMenuFocus: Boolean = false) {
         page = "detail:$id"
         val root = newPage()
         header(root, sectionTitle) { showSection(id, sectionTitle) }
@@ -1042,6 +1046,13 @@ class MainActivity : Activity() {
             root.addView(detailTextBlock(heading, body), LinearLayout.LayoutParams(-1, -2).apply {
                 topMargin = dp(12)
             })
+        }
+        var menuAction: View? = null
+        if (mediaCategory == "dining") {
+            diningReturn = { showDetail(id, sectionTitle, title, description, mediaCategory,
+                restoreMenuFocus = true) }
+            menuAction = action("Room Service Menu  •  In-Room Dining") { showRoomServiceCategories() }
+            root.addView(menuAction, LinearLayout.LayoutParams(-1, dp(60)).apply { topMargin = dp(18) })
         }
         val galleryCards = mutableListOf<View>()
         if (approvedPhotoSeedAvailable) {
@@ -1075,8 +1086,89 @@ class MainActivity : Activity() {
         }
         val back = action("‹  Back to $sectionTitle") { showSection(id, sectionTitle) }
         root.addView(back, LinearLayout.LayoutParams(dp(260), dp(48)).apply { topMargin = dp(22) })
-        val focus = if (restoreGalleryFocus) galleryCards.getOrNull(lastGalleryIndex) ?: back else box
+        val focus = if (restoreMenuFocus) menuAction ?: box else if (restoreGalleryFocus)
+            galleryCards.getOrNull(lastGalleryIndex) ?: back else box
         focus.post { focus.requestFocus() }
+    }
+
+    private fun roomServiceMenu(): JSONObject? {
+        val selected = content.optJSONObject("room_service")
+        if (selected != null && ContentSyncContract.validRoomService(selected)) return selected
+        // Older published content may predate this optional field. Keep the approved
+        // bundled menu available while the server content is updated.
+        val bundled = assets.open("hotel_content.json").use { JSONObject(String(it.readBytes(), Charsets.UTF_8)) }
+            .optJSONObject("room_service")
+        return bundled?.takeIf { ContentSyncContract.validRoomService(it) }
+    }
+
+    private fun showRoomServiceCategories() {
+        page = "room_service"
+        val root = newPage()
+        val back = header(root, "Room Service") { diningReturn?.invoke() ?: showSection("resort", "Our Resort") }
+        val menu = roomServiceMenu()
+        if (menu == null) {
+            emptyState(root, "Room Service menu unavailable", "Please contact the restaurant.")
+            back.post { back.requestFocus() }
+            return
+        }
+        root.addView(detailTextBlock("IN-ROOM DINING", "Call ${menu.optString("contact")} to order. Prices in THB."),
+            LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(16) })
+        val categories = menu.getJSONArray("categories")
+        val buttons = mutableListOf<View>()
+        for (index in 0 until categories.length()) {
+            val category = categories.getJSONObject(index)
+            val button = action("${category.getString("title_en")}  ·  ${category.getJSONArray("items").length()} items") {
+                lastMenuCategory = index
+                lastMenuItem = 0
+                showRoomServiceItems(index)
+            }
+            buttons.add(button)
+            root.addView(button, LinearLayout.LayoutParams(-1, dp(58)).apply { topMargin = dp(9) })
+        }
+        buttons.getOrNull(lastMenuCategory.coerceIn(0, buttons.lastIndex))?.post {
+            buttons[lastMenuCategory.coerceIn(0, buttons.lastIndex)].requestFocus()
+        }
+    }
+
+    private fun showRoomServiceItems(categoryIndex: Int) {
+        val menu = roomServiceMenu() ?: return showRoomServiceCategories()
+        val categories = menu.getJSONArray("categories")
+        if (categoryIndex !in 0 until categories.length()) return showRoomServiceCategories()
+        lastMenuCategory = categoryIndex
+        page = "room_service_items"
+        val category = categories.getJSONObject(categoryIndex)
+        val root = newPage()
+        header(root, category.getString("title_en")) { showRoomServiceCategories() }
+        root.addView(detailTextBlock("IN-ROOM DINING", "Call ${menu.getString("contact")} to order. Prices in THB."),
+            LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(16) })
+        val items = category.getJSONArray("items")
+        val buttons = mutableListOf<View>()
+        for (index in 0 until items.length()) {
+            val item = items.getJSONObject(index)
+            val button = action("#${item.getInt("number")}  ${item.getString("name_en")}  ·  ${item.getInt("price_thb")} THB\n${item.getString("name_th")}") {
+                lastMenuItem = index
+                showRoomServiceItem(categoryIndex, index)
+            }.apply { textSize = 17f; gravity = Gravity.CENTER_VERTICAL or Gravity.START; setPadding(dp(20), 0, dp(20), 0) }
+            buttons.add(button)
+            root.addView(button, LinearLayout.LayoutParams(-1, dp(82)).apply { topMargin = dp(9) })
+        }
+        buttons.getOrNull(lastMenuItem.coerceIn(0, buttons.lastIndex))?.post {
+            buttons[lastMenuItem.coerceIn(0, buttons.lastIndex)].requestFocus()
+        }
+    }
+
+    private fun showRoomServiceItem(categoryIndex: Int, itemIndex: Int) {
+        val menu = roomServiceMenu() ?: return showRoomServiceCategories()
+        val item = menu.getJSONArray("categories").getJSONObject(categoryIndex)
+            .getJSONArray("items").getJSONObject(itemIndex)
+        page = "room_service_item"
+        val root = newPage()
+        header(root, "Room Service") { showRoomServiceItems(categoryIndex) }
+        root.addView(detailTextBlock("#${item.getInt("number")}  ${item.getString("name_en")}",
+            "${item.getString("name_th")}\n${item.getInt("price_thb")} THB\nCall ${menu.getString("contact")} to order."),
+            LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(20) })
+        root.addView(action("‹  Back to menu") { showRoomServiceItems(categoryIndex) },
+            LinearLayout.LayoutParams(dp(240), dp(52)).apply { topMargin = dp(20) })
     }
 
     private fun addAppCards(root: LinearLayout) {
@@ -1185,6 +1277,9 @@ class MainActivity : Activity() {
     @Deprecated("Legacy Back handling preserves native OK/D-pad")
     override fun onBackPressed() {
         if (page == "home") super.onBackPressed()
+        else if (page == "room_service_item") showRoomServiceItems(lastMenuCategory)
+        else if (page == "room_service_items") showRoomServiceCategories()
+        else if (page == "room_service") diningReturn?.invoke() ?: showSection("resort", "Our Resort")
         else if (page == "staff_tools") showHome()
         else if (page == "media") showHome()
         else if (page == "gallery_photo") galleryBack?.invoke()

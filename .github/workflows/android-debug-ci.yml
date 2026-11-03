@@ -56,7 +56,7 @@ jobs:
           AAPT="$(find "${ANDROID_HOME}/build-tools" -name aapt -type f | sort -V | tail -n 1)"
           test -x "$AAPT"
           "$AAPT" dump badging "$APK" | grep '^package:'
-          "$AAPT" dump badging "$APK" | grep -E "^package: name='net.velalab.tvhotel' versionCode='15' versionName='1.1.0'"
+          "$AAPT" dump badging "$APK" | grep -E "^package: name='net.velalab.tvhotel' versionCode='16' versionName='1.1.1'"
           python3 - <<'PY'
           import hashlib, json
           from pathlib import Path
@@ -64,24 +64,28 @@ jobs:
           apk = Path('android-client/build/outputs/apk/debug/android-client-debug.apk')
           with ZipFile(apk) as archive:
               assert archive.read('assets/hotel_content.json') == Path('android-client/src/main/assets/hotel_content.json').read_bytes()
+              menu = json.loads(archive.read('assets/hotel_content.json'))['room_service']
+              assert menu['currency'] == 'THB' and menu['contact'] == '4003'
+              numbers = [item['number'] for category in menu['categories'] for item in category['items']]
+              assert len(numbers) == 81 and set(range(1, 84)) - set(numbers) == {37, 38}
               index = json.loads(archive.read('assets/fiore_approved/index.json'))
               assert len(index['images']) == 24
               for image in index['images']:
                   asset = archive.read('assets/fiore_approved/' + image['asset'])
                   assert hashlib.sha256(asset).hexdigest() == image['export_sha256']
-          print('Approved offline content seed and Fiore24 verified in Internal QA APK')
+          print('Approved offline content seed, room service menu and Fiore24 verified in Internal QA APK')
           PY
           mkdir -p dist
           SOURCE_SHA="${{ github.event.pull_request.head.sha || github.sha }}"
-          cp "$APK" dist/Vela-TV-Hotel-v1.1.0-code15-${SOURCE_SHA:0:7}-Fiore24-debug.apk
+          cp "$APK" dist/Vela-TV-Hotel-v1.1.1-code16-${SOURCE_SHA:0:7}-Fiore24-debug.apk
           sha256sum dist/*.apk | tee dist/SHA256SUMS.txt
-          printf 'source_commit=%s\nversion_name=1.1.0\nversion_code=15\nasset_profile=internal_qa_fiore24\n' "$SOURCE_SHA" > dist/BUILD-IDENTITY.txt
+          printf 'source_commit=%s\nversion_name=1.1.1\nversion_code=16\nasset_profile=internal_qa_fiore24\n' "$SOURCE_SHA" > dist/BUILD-IDENTITY.txt
           APKSIGNER="$(find "${ANDROID_HOME}/build-tools" -name apksigner -type f | sort -V | tail -n 1)"
           test -x "$APKSIGNER"
           "$APKSIGNER" verify --print-certs "$APK" > dist/CI-SIGNING-CERT.txt
           test -s dist/CI-SIGNING-CERT.txt
       - uses: actions/upload-artifact@v4
         with:
-          name: Vela-TV-Hotel-V1.1.0-FIORE24-INTERNAL-QA-${{ github.run_number }}
+          name: Vela-TV-Hotel-V1.1.1-FIORE24-INTERNAL-QA-${{ github.run_number }}
           path: dist/
           if-no-files-found: error

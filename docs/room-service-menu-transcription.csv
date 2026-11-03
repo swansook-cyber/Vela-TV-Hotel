@@ -1,0 +1,82 @@
+﻿number,category,name_th,name_en,price_thb,menuVersion
+1,APPETIZER,ปอเปี๊ยะ,Deep fried spring rolls,120,2026-11-04.1
+2,APPETIZER,ทอดมันกุ้ง,Deep fried shrimp cake,220,2026-11-04.1
+3,APPETIZER,ทอดมันปลา,Deep fried fish cake,180,2026-11-04.1
+4,APPETIZER,กุ้งชุบแป้งทอด,Deep fried batter - fried prawns,220,2026-11-04.1
+5,APPETIZER,ปลาหมึกชุบแป้งทอด,Deep fried batter-fried squid,220,2026-11-04.1
+6,APPETIZER,ปีกไก่ทอดน้ำปลา,Deep fried chicken with fish sauce,180,2026-11-04.1
+7,APPETIZER,ปีกไก่ย่าง บาร์บีคิว,Bbq chicken wing,180,2026-11-04.1
+8,APPETIZER,มันฝรั่งทอด,French fried,120,2026-11-04.1
+9,PASTA,สปาเก็ตตี้คาโบนาร่า,Spaghetti carbonara,200,2026-11-04.1
+10,PASTA,สปาเก็ตตี้ซอสเนื้อ,Spaghetti bolognese,220,2026-11-04.1
+11,PASTA,สปาเก็ตตี้ซอสมะเขือเทศ,Spaghetti tomato sauce,180,2026-11-04.1
+12,PIZZA,พิซซ่ามะเขือเทศ,Pizza margarita,240,2026-11-04.1
+13,PIZZA,พิซซ่าฮาวาย,Pizza hawaiian,260,2026-11-04.1
+14,PIZZA,พิซซ่าซีฟู้ด,Pizza marinara (seafood),320,2026-11-04.1
+15,BURGER & SANDWICH,ชีสเบอร์เกอร์,Cheese burger,220,2026-11-04.1
+16,BURGER & SANDWICH,เบอร์เกอร์ไก่,Chicken burger,180,2026-11-04.1
+17,BURGER & SANDWICH,เบอร์เกอร์ปลา,Fish burger,220,2026-11-04.1
+18,BURGER & SANDWICH,ทูน่าแซนวิส,Tuna sandwich,160,2026-11-04.1
+19,BURGER & SANDWICH,คลับแซนวิส,Club sandwich,180,2026-11-04.1
+20,BURGER & SANDWICH,ชีสแซนวิส,Cheese sandwich,160,2026-11-04.1
+21,SPICY THAI SALAD,ส้มตำ,Papaya salad,150,2026-11-04.1
+22,SPICY THAI SALAD,ยำซีฟู้ด,Spicy seafood salad,250,2026-11-04.1
+23,SPICY THAI SALAD,ลาบไก่,Spicy minced chicken salad,180,2026-11-04.1
+24,SPICY THAI SALAD,ลาบเนื้อ,Spicy minced beef salad,220,2026-11-04.1
+25,THAI SOUP,"ต้มยำกุ้ง,ซีฟู้ด",Tom yum goong or seafood,230,2026-11-04.1
+26,THAI SOUP,ต้มข่าไก่,Tom kha gai,180,2026-11-04.1
+27,THAI SOUP,ต้มข่าซีฟู้ด,Tom kha seafood,200,2026-11-04.1
+28,SPICY THAI CURRY,แกงเขียวหวานไก่,Green curry with chicken,220,2026-11-04.1
+29,SPICY THAI CURRY,"แกงเขียวหวานกุ้ง, เนื้อ",Green curry with shrimp or beef,240,2026-11-04.1
+30,SPICY THAI CURRY,แกงมัสมั่นไก่,Massaman curry with chicken,220,2026-11-04.1
+31,SPICY THAI CURRY,แกงมัสมั่นเนื้อ,Massaman curry with beef,240,2026-11-04.1
+32,SPICY THAI CURRY,แพนงไก่,Red curry with chicken,220,2026-11-04.1
+33,SPICY THAI CURRY,"แพนงกุ้ง, เนื้อ",Red curry with shrimp or beef,230,2026-11-04.1
+34,NOODLES,ผัดไทยไก่,Pad thai chicken,170,2026-11-04.1
+35,NOODLES,ผัดไทยกุ้ง,Pad thai shrimp,180,2026-11-04.1
+36,NOODLES,ผัดซีอิ๊วไก่,Stir fried noodle with chicken,150,2026-11-04.1
+39,NOODLES,"ราดหน้ากุ้ง, เนื้อ, ซีฟู้ด",Fried noodle gravy with shrimp or beef or seafood,180,2026-11-04.1
+40,NOODLES,หมี่เหลืองผัดซีอิ๊วไก่,Fried yellow noodle with chicken,150,2026-11-04.1
+41,NOODLES,"หมี่เหลืองผัดซีอิ๊วเนื้อ, กุ้ง, ซีฟู้ด","Fried yellow noodle with beef or shrimp, seafood",180,2026-11-04.1
+42,RICE,ข้าวเปล่า,Steamed rice,30,2026-11-04.1
+43,RICE,ข้าวผัดไก่,Fried rice with chicken,150,2026-11-04.1
+44,RICE,"ข้าวผัดกุ้ง, เนื้อ, ซีฟู้ด, เนื้อปู, ปลาหมึก",Fried rice with shrimp or beef or seafood or crab meat or squid,180,2026-11-04.1
+45,RICE,กะเพราไก่ราดข้าว,Stir fried hot basil with chicken on top rice,150,2026-11-04.1
+46,RICE,"กะเพราเนื้อ, กุ้ง, ปลาหมึก, ซีฟู้ด ราดข้าว",Stir fried hot basil with beef or shrimp or squid or seafood on top rice,180,2026-11-04.1
+47,RICE,เครื่องแกงไก่ราดข้าว,Stir fried curry with chicken on top rice,150,2026-11-04.1
+48,RICE,"เครื่องแกงเนื้อ, กุ้ง, ปลาหมึก, ซีฟู้ด ราดข้าว",Stir fried curry with beef or shrimp or squid or seafood on top rice,180,2026-11-04.1
+49,RICE,ไก่ทอดกระเทียมราดข้าว,Deep fried chicken with garlic & pepper on top rice,150,2026-11-04.1
+50,RICE,เนื้อทอดกระเทียมราดข้าว,Deep fried beef with garlic & pepper on top rice,180,2026-11-04.1
+51,THAI A LA CARTE,"ไก่, เนื้อ ผัดน้ำมันหอย","Stir fried chicken or beef with oyster sauce, onion, mushroom",200,2026-11-04.1
+52,THAI A LA CARTE,ไก่ผัดเม็ดมะม่วง,Stir fried chicken with cashew nuts,220,2026-11-04.1
+53,THAI A LA CARTE,ผัดเปรี้ยวหวานไก่,Stir fried chicken with sweet & sour,220,2026-11-04.1
+54,THAI A LA CARTE,"ผัดเปรี้ยวหวานปลา, กุ้ง",Stir fried fish or shrimp with sweet & sour,240,2026-11-04.1
+55,THAI A LA CARTE,"ผัดผงกะหรี่กุ้ง, ซีฟู้ด",Stir fried curry powder with shrimp or seafood,240,2026-11-04.1
+56,THAI A LA CARTE,ผัดผักรวม,Stir fried mixed vegetable,160,2026-11-04.1
+57,THAI A LA CARTE,"ผัดพริกไทยดำ เนื้อ, ไก่, ปลา",Stir fried beef or chicken or fish with black pepper,220,2026-11-04.1
+58,THAI A LA CARTE,ผัดผักบุ้งไฟแดง,Stir fried morning glory,150,2026-11-04.1
+59,THAI A LA CARTE,"ไข่เจียวปู, กุ้ง, ไก่สับ","Thai omelet with crab or shrimp, chicken",150,2026-11-04.1
+60,THAI A LA CARTE,ไข่เจียว,Thai omelet,120,2026-11-04.1
+61,THAI A LA CARTE,ไข่ดาว,Fried egg,20,2026-11-04.1
+62,SOUTHERN THAI TRADITIONAL FOOD,แกงส้มปลา,Hot & sour curry with fish & vegetable,220,2026-11-04.1
+63,SOUTHERN THAI TRADITIONAL FOOD,"คั่วกลิ้งไก่, เนื้อ",Spicy dry fried chicken or beef / kua kling,220,2026-11-04.1
+64,SOUTHERN THAI TRADITIONAL FOOD,ผักเหมียงผัดไข่,Stir fried gnetum gnemon with egg,180,2026-11-04.1
+65,SOUTHERN THAI TRADITIONAL FOOD,ยำถั่วพลูกุ้งสด,"Wing bean mixed dried coconut, chilli paste, shrimp serve with boiled egg",220,2026-11-04.1
+66,SOUTHERN THAI TRADITIONAL FOOD,ยำสามกรอบ,Spicy 3 crispy salad,240,2026-11-04.1
+67,SOUTHERN THAI TRADITIONAL FOOD,ยำหัวปลี,Banana blossom spicy salad,220,2026-11-04.1
+68,DRINK,น้ำผลไม้ปั่น,Fruit shake,100,2026-11-04.1
+69,DRINK,สมูทตี้ผลไม้,Fruit smoothies,120,2026-11-04.1
+70,DRINK,น้ำผลไม้,Fruit juice,120,2026-11-04.1
+71,DRINK,น้ำมะพร้าว,Coconut,100,2026-11-04.1
+72,DRINK,โซดามะนาว,Lemon soda,100,2026-11-04.1
+73,DRINK,แดงโซดามะนาว,Red lemon soda,100,2026-11-04.1
+74,DRINK,ชานมเย็น,Thai ice milk tea,100,2026-11-04.1
+75,DRINK,ชาดำเย็น,Thai black tea,100,2026-11-04.1
+76,DRINK,ชามะนาว,Ice lemon tea,100,2026-11-04.1
+77,DRINK,กาแฟเย็น,Ice coffee,100,2026-11-04.1
+78,DRINK,ชาเขียว,Ice green tea,100,2026-11-04.1
+79,DRINK,น้ำกระเจี๊ยบ,Roselle juice,80,2026-11-04.1
+80,DRINK,น้ำเก๊กฮวย,Chrysanthemum tea,80,2026-11-04.1
+81,DESSERT,ผลไม้รวม,Fresh seasonal fruit platter,120,2026-11-04.1
+82,DESSERT,ข้าวเหนียวมะม่วง,Thai sweet sticky rice with mango,180,2026-11-04.1
+83,DESSERT,กล้วยหอมทอด,Deep fried banana,100,2026-11-04.1

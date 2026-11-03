@@ -97,6 +97,120 @@
       }
     ]
   },
+  "room_service": {
+    "menuVersion": "2026-11-04.1",
+    "currency": "THB",
+    "contact": "4003",
+    "categories": [
+      {"id": "appetizer", "title_en": "APPETIZER", "items": [
+        {"number": 1, "name_th": "ปอเปี๊ยะ", "name_en": "Deep fried spring rolls", "price_thb": 120},
+        {"number": 2, "name_th": "ทอดมันกุ้ง", "name_en": "Deep fried shrimp cake", "price_thb": 220},
+        {"number": 3, "name_th": "ทอดมันปลา", "name_en": "Deep fried fish cake", "price_thb": 180},
+        {"number": 4, "name_th": "กุ้งชุบแป้งทอด", "name_en": "Deep fried batter - fried prawns", "price_thb": 220},
+        {"number": 5, "name_th": "ปลาหมึกชุบแป้งทอด", "name_en": "Deep fried batter-fried squid", "price_thb": 220},
+        {"number": 6, "name_th": "ปีกไก่ทอดน้ำปลา", "name_en": "Deep fried chicken with fish sauce", "price_thb": 180},
+        {"number": 7, "name_th": "ปีกไก่ย่าง บาร์บีคิว", "name_en": "Bbq chicken wing", "price_thb": 180},
+        {"number": 8, "name_th": "มันฝรั่งทอด", "name_en": "French fried", "price_thb": 120}
+      ]},
+      {"id": "pasta", "title_en": "PASTA", "items": [
+        {"number": 9, "name_th": "สปาเก็ตตี้คาโบนาร่า", "name_en": "Spaghetti carbonara", "price_thb": 200},
+        {"number": 10, "name_th": "สปาเก็ตตี้ซอสเนื้อ", "name_en": "Spaghetti bolognese", "price_thb": 220},
+        {"number": 11, "name_th": "สปาเก็ตตี้ซอสมะเขือเทศ", "name_en": "Spaghetti tomato sauce", "price_thb": 180}
+      ]},
+      {"id": "pizza", "title_en": "PIZZA", "items": [
+        {"number": 12, "name_th": "พิซซ่ามะเขือเทศ", "name_en": "Pizza margarita", "price_thb": 240},
+        {"number": 13, "name_th": "พิซซ่าฮาวาย", "name_en": "Pizza hawaiian", "price_thb": 260},
+        {"number": 14, "name_th": "พิซซ่าซีฟู้ด", "name_en": "Pizza marinara (seafood)", "price_thb": 320}
+      ]},
+      {"id": "burger_sandwich", "title_en": "BURGER & SANDWICH", "items": [
+        {"number": 15, "name_th": "ชีสเบอร์เกอร์", "name_en": "Cheese burger", "price_thb": 220},
+        {"number": 16, "name_th": "เบอร์เกอร์ไก่", "name_en": "Chicken burger", "price_thb": 180},
+        {"number": 17, "name_th": "เบอร์เกอร์ปลา", "name_en": "Fish burger", "price_thb": 220},
+        {"number": 18, "name_th": "ทูน่าแซนวิส", "name_en": "Tuna sandwich", "price_thb": 160},
+        {"number": 19, "name_th": "คลับแซนวิส", "name_en": "Club sandwich", "price_thb": 180},
+        {"number": 20, "name_th": "ชีสแซนวิส", "name_en": "Cheese sandwich", "price_thb": 160}
+      ]},
+      {"id": "spicy_thai_salad", "title_en": "SPICY THAI SALAD", "items": [
+        {"number": 21, "name_th": "ส้มตำ", "name_en": "Papaya salad", "price_thb": 150},
+        {"number": 22, "name_th": "ยำซีฟู้ด", "name_en": "Spicy seafood salad", "price_thb": 250},
+        {"number": 23, "name_th": "ลาบไก่", "name_en": "Spicy minced chicken salad", "price_thb": 180},
+        {"number": 24, "name_th": "ลาบเนื้อ", "name_en": "Spicy minced beef salad", "price_thb": 220}
+      ]},
+      {"id": "thai_soup", "title_en": "THAI SOUP", "items": [
+        {"number": 25, "name_th": "ต้มยำกุ้ง,ซีฟู้ด", "name_en": "Tom yum goong or seafood", "price_thb": 230},
+        {"number": 26, "name_th": "ต้มข่าไก่", "name_en": "Tom kha gai", "price_thb": 180},
+        {"number": 27, "name_th": "ต้มข่าซีฟู้ด", "name_en": "Tom kha seafood", "price_thb": 200}
+      ]},
+      {"id": "spicy_thai_curry", "title_en": "SPICY THAI CURRY", "items": [
+        {"number": 28, "name_th": "แกงเขียวหวานไก่", "name_en": "Green curry with chicken", "price_thb": 220},
+        {"number": 29, "name_th": "แกงเขียวหวานกุ้ง, เนื้อ", "name_en": "Green curry with shrimp or beef", "price_thb": 240},
+        {"number": 30, "name_th": "แกงมัสมั่นไก่", "name_en": "Massaman curry with chicken", "price_thb": 220},
+        {"number": 31, "name_th": "แกงมัสมั่นเนื้อ", "name_en": "Massaman curry with beef", "price_thb": 240},
+        {"number": 32, "name_th": "แพนงไก่", "name_en": "Red curry with chicken", "price_thb": 220},
+        {"number": 33, "name_th": "แพนงกุ้ง, เนื้อ", "name_en": "Red curry with shrimp or beef", "price_thb": 230}
+      ]},
+      {"id": "noodles", "title_en": "NOODLES", "items": [
+        {"number": 34, "name_th": "ผัดไทยไก่", "name_en": "Pad thai chicken", "price_thb": 170},
+        {"number": 35, "name_th": "ผัดไทยกุ้ง", "name_en": "Pad thai shrimp", "price_thb": 180},
+        {"number": 36, "name_th": "ผัดซีอิ๊วไก่", "name_en": "Stir fried noodle with chicken", "price_thb": 150},
+        {"number": 39, "name_th": "ราดหน้ากุ้ง, เนื้อ, ซีฟู้ด", "name_en": "Fried noodle gravy with shrimp or beef or seafood", "price_thb": 180},
+        {"number": 40, "name_th": "หมี่เหลืองผัดซีอิ๊วไก่", "name_en": "Fried yellow noodle with chicken", "price_thb": 150},
+        {"number": 41, "name_th": "หมี่เหลืองผัดซีอิ๊วเนื้อ, กุ้ง, ซีฟู้ด", "name_en": "Fried yellow noodle with beef or shrimp, seafood", "price_thb": 180}
+      ]},
+      {"id": "rice", "title_en": "RICE", "items": [
+        {"number": 42, "name_th": "ข้าวเปล่า", "name_en": "Steamed rice", "price_thb": 30},
+        {"number": 43, "name_th": "ข้าวผัดไก่", "name_en": "Fried rice with chicken", "price_thb": 150},
+        {"number": 44, "name_th": "ข้าวผัดกุ้ง, เนื้อ, ซีฟู้ด, เนื้อปู, ปลาหมึก", "name_en": "Fried rice with shrimp or beef or seafood or crab meat or squid", "price_thb": 180},
+        {"number": 45, "name_th": "กะเพราไก่ราดข้าว", "name_en": "Stir fried hot basil with chicken on top rice", "price_thb": 150},
+        {"number": 46, "name_th": "กะเพราเนื้อ, กุ้ง, ปลาหมึก, ซีฟู้ด ราดข้าว", "name_en": "Stir fried hot basil with beef or shrimp or squid or seafood on top rice", "price_thb": 180},
+        {"number": 47, "name_th": "เครื่องแกงไก่ราดข้าว", "name_en": "Stir fried curry with chicken on top rice", "price_thb": 150},
+        {"number": 48, "name_th": "เครื่องแกงเนื้อ, กุ้ง, ปลาหมึก, ซีฟู้ด ราดข้าว", "name_en": "Stir fried curry with beef or shrimp or squid or seafood on top rice", "price_thb": 180},
+        {"number": 49, "name_th": "ไก่ทอดกระเทียมราดข้าว", "name_en": "Deep fried chicken with garlic & pepper on top rice", "price_thb": 150},
+        {"number": 50, "name_th": "เนื้อทอดกระเทียมราดข้าว", "name_en": "Deep fried beef with garlic & pepper on top rice", "price_thb": 180}
+      ]},
+      {"id": "thai_a_la_carte", "title_en": "THAI A LA CARTE", "items": [
+        {"number": 51, "name_th": "ไก่, เนื้อ ผัดน้ำมันหอย", "name_en": "Stir fried chicken or beef with oyster sauce, onion, mushroom", "price_thb": 200},
+        {"number": 52, "name_th": "ไก่ผัดเม็ดมะม่วง", "name_en": "Stir fried chicken with cashew nuts", "price_thb": 220},
+        {"number": 53, "name_th": "ผัดเปรี้ยวหวานไก่", "name_en": "Stir fried chicken with sweet & sour", "price_thb": 220},
+        {"number": 54, "name_th": "ผัดเปรี้ยวหวานปลา, กุ้ง", "name_en": "Stir fried fish or shrimp with sweet & sour", "price_thb": 240},
+        {"number": 55, "name_th": "ผัดผงกะหรี่กุ้ง, ซีฟู้ด", "name_en": "Stir fried curry powder with shrimp or seafood", "price_thb": 240},
+        {"number": 56, "name_th": "ผัดผักรวม", "name_en": "Stir fried mixed vegetable", "price_thb": 160},
+        {"number": 57, "name_th": "ผัดพริกไทยดำ เนื้อ, ไก่, ปลา", "name_en": "Stir fried beef or chicken or fish with black pepper", "price_thb": 220},
+        {"number": 58, "name_th": "ผัดผักบุ้งไฟแดง", "name_en": "Stir fried morning glory", "price_thb": 150},
+        {"number": 59, "name_th": "ไข่เจียวปู, กุ้ง, ไก่สับ", "name_en": "Thai omelet with crab or shrimp, chicken", "price_thb": 150},
+        {"number": 60, "name_th": "ไข่เจียว", "name_en": "Thai omelet", "price_thb": 120},
+        {"number": 61, "name_th": "ไข่ดาว", "name_en": "Fried egg", "price_thb": 20}
+      ]},
+      {"id": "southern_thai_traditional_food", "title_en": "SOUTHERN THAI TRADITIONAL FOOD", "items": [
+        {"number": 62, "name_th": "แกงส้มปลา", "name_en": "Hot & sour curry with fish & vegetable", "price_thb": 220},
+        {"number": 63, "name_th": "คั่วกลิ้งไก่, เนื้อ", "name_en": "Spicy dry fried chicken or beef / kua kling", "price_thb": 220},
+        {"number": 64, "name_th": "ผักเหมียงผัดไข่", "name_en": "Stir fried gnetum gnemon with egg", "price_thb": 180},
+        {"number": 65, "name_th": "ยำถั่วพลูกุ้งสด", "name_en": "Wing bean mixed dried coconut, chilli paste, shrimp serve with boiled egg", "price_thb": 220},
+        {"number": 66, "name_th": "ยำสามกรอบ", "name_en": "Spicy 3 crispy salad", "price_thb": 240},
+        {"number": 67, "name_th": "ยำหัวปลี", "name_en": "Banana blossom spicy salad", "price_thb": 220}
+      ]},
+      {"id": "drink", "title_en": "DRINK", "items": [
+        {"number": 68, "name_th": "น้ำผลไม้ปั่น", "name_en": "Fruit shake", "price_thb": 100},
+        {"number": 69, "name_th": "สมูทตี้ผลไม้", "name_en": "Fruit smoothies", "price_thb": 120},
+        {"number": 70, "name_th": "น้ำผลไม้", "name_en": "Fruit juice", "price_thb": 120},
+        {"number": 71, "name_th": "น้ำมะพร้าว", "name_en": "Coconut", "price_thb": 100},
+        {"number": 72, "name_th": "โซดามะนาว", "name_en": "Lemon soda", "price_thb": 100},
+        {"number": 73, "name_th": "แดงโซดามะนาว", "name_en": "Red lemon soda", "price_thb": 100},
+        {"number": 74, "name_th": "ชานมเย็น", "name_en": "Thai ice milk tea", "price_thb": 100},
+        {"number": 75, "name_th": "ชาดำเย็น", "name_en": "Thai black tea", "price_thb": 100},
+        {"number": 76, "name_th": "ชามะนาว", "name_en": "Ice lemon tea", "price_thb": 100},
+        {"number": 77, "name_th": "กาแฟเย็น", "name_en": "Ice coffee", "price_thb": 100},
+        {"number": 78, "name_th": "ชาเขียว", "name_en": "Ice green tea", "price_thb": 100},
+        {"number": 79, "name_th": "น้ำกระเจี๊ยบ", "name_en": "Roselle juice", "price_thb": 80},
+        {"number": 80, "name_th": "น้ำเก๊กฮวย", "name_en": "Chrysanthemum tea", "price_thb": 80}
+      ]},
+      {"id": "dessert", "title_en": "DESSERT", "items": [
+        {"number": 81, "name_th": "ผลไม้รวม", "name_en": "Fresh seasonal fruit platter", "price_thb": 120},
+        {"number": 82, "name_th": "ข้าวเหนียวมะม่วง", "name_en": "Thai sweet sticky rice with mango", "price_thb": 180},
+        {"number": 83, "name_th": "กล้วยหอมทอด", "name_en": "Deep fried banana", "price_thb": 100}
+      ]}
+    ]
+  },
   "approved_content": {
     "source": {
       "document": "638830211362193836_Vela_TV_Hotel_Fiore_Content_Form.docx",
