@@ -178,7 +178,7 @@ class PilotStoreTests(unittest.TestCase):
             config = root / "pilot.env"
             values = {"HOTEL_PROFILE": "pilot", "HOTEL_DATA_DIR": str(root / "data"),
                       "HOTEL_INITIAL_CONTENT": str(seed),
-                      "HOTEL_PUBLIC_MEDIA_HOST": "hotel.example",
+                      "HOTEL_PUBLIC_MEDIA_HOST": "hotel.velalab.net",
                       "HOTEL_EDITOR_TOKEN": "e" * 40,
                       "HOTEL_PUBLISHER_TOKEN": "p" * 40}
             config.write_text("\n".join(f"{key}={value}" for key, value in values.items()))
@@ -200,7 +200,7 @@ class PilotStoreTests(unittest.TestCase):
             config = root / "pilot.env"
             config.write_text("\n".join([
                 "HOTEL_PROFILE=development", f"HOTEL_DATA_DIR={data}",
-                f"HOTEL_INITIAL_CONTENT={seed}", "HOTEL_PUBLIC_MEDIA_HOST=hotel.example",
+                f"HOTEL_INITIAL_CONTENT={seed}", "HOTEL_PUBLIC_MEDIA_HOST=hotel.velalab.net",
                 "HOTEL_EDITOR_TOKEN=" + "e" * 40, "HOTEL_PUBLISHER_TOKEN=" + "p" * 40,
                 f"HOTEL_BIND_PORT={port}"]))
 

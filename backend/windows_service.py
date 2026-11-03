@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import os
+import sys
 from pathlib import Path
 
 import win32event
@@ -15,6 +16,7 @@ class VelaHotelPilotService(win32serviceutil.ServiceFramework):
     _svc_name_ = "VelaTVHotelPilot"
     _svc_display_name_ = "Vela TV Hotel Pilot API"
     _svc_description_ = "Loopback hotel CMS and TV content API; HTTPS terminates at the pilot proxy."
+    _exe_name_ = str(Path(sys.prefix) / "Scripts" / "pythonservice.exe")
 
     def __init__(self, args):
         super().__init__(args)

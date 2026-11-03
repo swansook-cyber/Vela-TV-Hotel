@@ -14,7 +14,22 @@ ALLOWED = {"HOTEL_PROFILE", "HOTEL_DATA_DIR", "HOTEL_INITIAL_CONTENT",
            "HOTEL_BIND_PORT"}
 
 
-def read_config(file: Path) -> dict[str, str]:
+def valid_public_host(host: str) -> bool:
+    """Require a real DNS hostname, never an example, local name or IP literal."""
+    host = host.lower()
+    if len(host) > 253 or host.endswith((".example", ".test", ".invalid", ".localhost",
+                                       ".local", ".example.com", ".example.net", ".example.org")):
+        return False
+    if host in {"example.com", "example.net", "example.org", "localhost"}:
+        return False
+    labels = host.split(".")
+    return len(labels) >= 2 and all(
+        len(label) <= 63 and re.fullmatch(r"[a-z0-9](?:[a-z0-9-]*[a-z0-9])?", label)
+        for label in labels
+    ) and not all(label.isdigit() for label in labels)
+
+
+def read_config(file: Path, seed_override: Path | None = None) -> dict[str, str]:
     values: dict[str, str] = {}
     for raw in file.read_text(encoding="utf-8-sig").splitlines():
         line = raw.strip()
@@ -30,11 +45,10 @@ def read_config(file: Path) -> dict[str, str]:
     if values["HOTEL_PROFILE"] not in ("development", "pilot"):
         raise ValueError("this launcher cannot run production")
     data = Path(values["HOTEL_DATA_DIR"])
-    seed = Path(values["HOTEL_INITIAL_CONTENT"])
+    seed = seed_override or Path(values["HOTEL_INITIAL_CONTENT"])
     if not data.is_absolute() or not seed.is_absolute() or not seed.is_file():
         raise ValueError("absolute private data path and approved seed required")
-    if not re.fullmatch(r"[a-zA-Z0-9.-]{4,253}", values["HOTEL_PUBLIC_MEDIA_HOST"]) or \
-            "." not in values["HOTEL_PUBLIC_MEDIA_HOST"]:
+    if not valid_public_host(values["HOTEL_PUBLIC_MEDIA_HOST"]):
         raise ValueError("public HTTPS hostname required")
     if min(len(values["HOTEL_EDITOR_TOKEN"]), len(values["HOTEL_PUBLISHER_TOKEN"])) < 32 or \
             values["HOTEL_EDITOR_TOKEN"] == values["HOTEL_PUBLISHER_TOKEN"] or \
@@ -74,9 +88,13 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", type=Path, required=True)
     parser.add_argument("--check", action="store_true", help="validate configuration without starting")
+    parser.add_argument("--seed-override", type=Path,
+                        help="validate staged seed before installation; --check only")
     args = parser.parse_args()
+    if args.seed_override and not args.check:
+        parser.error("--seed-override requires --check")
     if args.check:
-        read_config(args.config)
+        read_config(args.config, args.seed_override)
         print("Pilot configuration valid")
         return
     server = build_server(args.config)

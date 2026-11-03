@@ -2,7 +2,7 @@ param([Parameter(Mandatory=$true)][string]$Archive,
       [Parameter(Mandatory=$true)][string]$NewDataDirectory)
 $ErrorActionPreference = 'Stop'
 if (Test-Path -LiteralPath $NewDataDirectory) { throw 'Restore never overwrites an existing directory' }
-$python = 'C:\Program Files\Python312\python.exe'
+$python = 'C:\ProgramData\VelaTVHotel\app\.venv\Scripts\python.exe'
 $script = 'C:\ProgramData\VelaTVHotel\app\backend\pilot_backup.py'
 & $python $script restore $Archive $NewDataDirectory
 if ($LASTEXITCODE -ne 0) { throw 'Pilot restore failed' }

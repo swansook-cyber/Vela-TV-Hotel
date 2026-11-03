@@ -20,3 +20,20 @@ jobs:
         run: |
           python -m compileall -q backend
           python -m unittest discover -s backend -p 'test_*.py' -v
+  windows-installer-static:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Parse Windows scripts and reject placeholder pilot host
+        shell: pwsh
+        run: |
+          foreach ($file in (Get-ChildItem ops/windows/*.ps1)) {
+            $tokens = $null
+            $errors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile($file.FullName, [ref]$tokens, [ref]$errors) | Out-Null
+            if ($errors) { throw "$($file.Name): $($errors | Select-Object -ExpandProperty Message)" }
+          }
+          $result = & pwsh -NoProfile -File ops/windows/Preflight-Pilot.ps1 -PilotHost hotel-tv.example.com -BackupDestination $env:TEMP -PythonExe 'C:\absent\python.exe' 2>&1
+          if ($LASTEXITCODE -ne 1 -or ($result -join "`n") -notmatch 'FAIL hostname') {
+            throw 'Preflight did not reject a placeholder hostname'
+          }
