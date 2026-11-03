@@ -36,6 +36,9 @@ website photos and is not part of this commit. Gradle now stages only
 `hotel_content.json` from the canonical asset directory, so the ignored legacy
 directory stays outside both public and opt-in QA asset trees without deletion.
 
-The branch's CI workflow builds an APK on ordinary pushes. This integration
-commit uses `[skip ci]` because the owner explicitly deferred all APK builds.
-Run Android CI only when the owner issues the later build instruction.
+The Android CI workflow now compiles, tests, builds and uploads a public-fallback
+QA APK on every push to a development branch. Its artifact includes the current
+offline content seed but excludes the owner-selected Fiore24 images while image
+redistribution rights remain undocumented. The Fiore24 Internal QA APK is built
+locally on Windows with `-PincludeApprovedFioreMedia=true` and the existing TCL
+debug signing certificate. CI does not publish a release or deploy the app.
