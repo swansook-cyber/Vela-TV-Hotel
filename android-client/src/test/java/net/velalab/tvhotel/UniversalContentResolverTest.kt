@@ -216,4 +216,66 @@ class UniversalContentResolverTest {
         assertEquals("first", ContentPackageStore(root, bundled).current().content.getString("qa_marker"))
         assertEquals(ContentSource.PREVIOUS, store.current().source)
     }
+
+    @Test fun revokedOrInvalidTokenKeepsActiveContent() {
+        val store = ContentPackageStore(root, bundled)
+        assertEquals(ContentSyncStatus.UPDATED, resolve(store, "1", payload("accepted")).status)
+        val rejected = FakeFetcher(byteArrayOf(), byteArrayOf()) { _, _ ->
+            throw ContentHttpFailure(401)
+        }
+        val result = UniversalContentResolver(store, rejected).resolve(ContentSyncMode.AUTO_SYNC)
+        assertEquals(ContentSyncStatus.REJECTED, result.status)
+        assertEquals("accepted", result.snapshot.content.getString("qa_marker"))
+        assertEquals("1", store.current().version)
+    }
+
+    @Test fun unreachableServerAfterRestartKeepsLastKnownGood() {
+        assertEquals(ContentSyncStatus.UPDATED,
+            resolve(ContentPackageStore(root, bundled), "1", payload("persisted")).status)
+        val restarted = ContentPackageStore(root, bundled)
+        val unreachable = FakeFetcher(byteArrayOf(), byteArrayOf()) { _, _ ->
+            throw IOException("server unreachable")
+        }
+        val result = UniversalContentResolver(restarted, unreachable).resolve(ContentSyncMode.AUTO_SYNC)
+        assertEquals(ContentSyncStatus.OFFLINE, result.status)
+        assertEquals(ContentSource.ACTIVE, result.snapshot.source)
+        assertEquals("persisted", result.snapshot.content.getString("qa_marker"))
+    }
+
+    @Test fun failedMediaIntegrityUpdateKeepsPreviousVersion() {
+        val store = ContentPackageStore(root, bundled)
+        assertEquals(ContentSyncStatus.UPDATED, resolve(store, "1", payload("first")).status)
+        val next = payload("second")
+        val expectedMedia = "approved-media".toByteArray()
+        val digest = ContentSyncContract.sha256(expectedMedia)
+        val media = JSONObject().put("kind", "image").put("path", "media/gallery.png")
+            .put("downloadPath", "/api/v1/media/$digest.png")
+            .put("sha256", digest).put("size", expectedMedia.size).put("durationSeconds", 5)
+        val newManifest = JSONObject(String(manifest("2", next)))
+        newManifest.getJSONArray("files").put(media)
+        val fetcher = object : ContentFetcher {
+            override fun fetch(path: String, maxBytes: Long, output: OutputStream): Long {
+                val bytes = when {
+                    path.endsWith("content-manifest") -> newManifest.toString().toByteArray()
+                    path.startsWith("/api/v1/media/") -> "corrupt-media!".toByteArray()
+                    else -> next
+                }
+                output.write(bytes)
+                return bytes.size.toLong()
+            }
+        }
+        val result = UniversalContentResolver(store, fetcher).resolve(ContentSyncMode.AUTO_SYNC)
+        assertEquals(ContentSyncStatus.REJECTED, result.status)
+        assertEquals("first", store.current().content.getString("qa_marker"))
+        assertEquals("1", store.current().version)
+    }
+
+    @Test fun serverUrlRequiresHttpsDefaultPortAndRootPath() {
+        assertEquals("https://hotel.velalab.net",
+            ServerEndpoint("https://hotel.velalab.net/").normalizedHttpsUrl())
+        for (url in listOf("http://hotel.velalab.net", "https://hotel.velalab.net:8132",
+                           "https://hotel.velalab.net/admin", "https://user@hotel.velalab.net")) {
+            assertNull(ServerEndpoint(url).normalizedHttpsUrl())
+        }
+    }
 }

@@ -44,6 +44,17 @@ class ManifestTests(unittest.TestCase):
             self.assertFalse(valid_content(sample))
             store.db.close()
 
+    def test_expired_enrollment_code_cannot_be_used(self):
+        with tempfile.TemporaryDirectory() as temp:
+            store = Store(Path(temp))
+            code = store.create_code("Expired Pilot TV")
+            import hashlib
+            store.db.execute("UPDATE enrollments SET expires_at=0 WHERE code_hash=?",
+                             (hashlib.sha256(code.encode()).hexdigest(),))
+            store.db.commit()
+            self.assertIsNone(store.enroll(code))
+            store.db.close()
+
 
 if __name__ == "__main__":
     unittest.main()
