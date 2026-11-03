@@ -39,6 +39,7 @@ class ManifestTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             store = Store(Path(temp))
             sample = store.draft()
+            sample["guest"]["items"][0]["verified"] = False
             sample["guest"]["items"][0]["description"] = "Invented phone number"
             self.assertFalse(valid_content(sample))
             store.db.close()

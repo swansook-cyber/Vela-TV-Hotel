@@ -1,4 +1,5 @@
 import hashlib
+import io
 import json
 import tempfile
 import threading
@@ -10,6 +11,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 import jsonschema
+from PIL import Image
 
 import hotel_api
 from content_sync_contract import valid_sync_manifest
@@ -28,7 +30,9 @@ class ContentSyncContractTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp, patch.object(hotel_api, "ROOT", Path(temp)):
             store = hotel_api.Store()
             store.save_draft(store.draft())
-            media = b"\x89PNG\r\n\x1a\n" + b"test-media"
+            image = io.BytesIO()
+            Image.new("RGB", (2, 2), "green").save(image, format="PNG")
+            media = image.getvalue()
             media_sha = hashlib.sha256(media).hexdigest()
             (store.media_dir / (media_sha + ".png")).write_bytes(media)
             store.set_state("media", json.dumps([{

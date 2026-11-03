@@ -5,3 +5,8 @@ backend/.hotel-data/
 local.properties
 *.apk
 android-client/src/main/assets/fiore_internal/
+pilot.env
+**/*.sqlite3
+**/*.sqlite3-wal
+**/*.sqlite3-shm
+ops/windows/backups/

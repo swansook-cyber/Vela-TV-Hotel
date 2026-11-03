@@ -6,6 +6,7 @@ import hmac
 import html
 import base64
 import json
+import logging
 import os
 import secrets
 import sqlite3
@@ -18,10 +19,12 @@ from urllib.parse import urlsplit, parse_qs
 
 from content_contract import valid_content
 from content_sync_contract import valid_sync_manifest
+from media_validation import valid_media
 from playlist_contract import valid_manifest
 
 ROOT = Path(os.getenv("HOTEL_DATA_DIR", Path(__file__).parent / ".hotel-data"))
-SAMPLE = Path(__file__).parent.parent / "docs" / "hotel-content-sample.json"
+SAMPLE = Path(os.getenv("HOTEL_INITIAL_CONTENT", Path(__file__).parent.parent /
+                     "android-client" / "src" / "main" / "assets" / "hotel_content.json"))
 MAX_JSON = 256 * 1024
 MAX_MEDIA = 50 * 1024 * 1024
 
@@ -58,7 +61,17 @@ class Store:
               id INTEGER PRIMARY KEY, at INTEGER NOT NULL, actor TEXT NOT NULL,
               action TEXT NOT NULL, detail TEXT NOT NULL);
         """)
-        self.db.commit()
+        self.db.execute("BEGIN IMMEDIATE")
+        try:
+            columns = {row["name"] for row in self.db.execute("PRAGMA table_info(devices)")}
+            if "last_sync" not in columns:
+                self.db.execute("ALTER TABLE devices ADD COLUMN last_sync INTEGER")
+            if "content_version" not in columns:
+                self.db.execute("ALTER TABLE devices ADD COLUMN content_version TEXT")
+            self.db.commit()
+        except Exception:
+            self.db.rollback()
+            raise
 
     def state(self, key: str) -> str | None:
         row = self.db.execute("SELECT value FROM state WHERE key=?", (key,)).fetchone()
@@ -91,33 +104,53 @@ class Store:
         return self.db.execute("SELECT * FROM revisions WHERE id=?", (rev,)).fetchone() if rev else None
 
     def publish(self, actor: str = "publisher") -> int:
-        content = self.draft()
-        if not valid_content(content):
-            raise ValueError("invalid draft")
-        media = json.loads(self.state("media") or "[]")
-        if media:
-            manifest = {"schema_version": 1, "revision": "check",
-                        "hotel": content["hotel"], "media": media}
-            host = os.getenv("HOTEL_PUBLIC_MEDIA_HOST", "")
-            if not host or not valid_manifest(manifest, host):
-                raise ValueError("invalid media playlist or media host")
-            for item in media:
-                if not (self.media_dir / (item["sha256"] + "." + item["extension"])).is_file():
-                    raise ValueError("missing media file")
-        cur = self.db.execute(
-            "INSERT INTO revisions(content,media,created_at,actor) VALUES (?,?,?,?)",
-            (json.dumps(content, ensure_ascii=False), json.dumps(media), int(time.time()), actor))
-        self.db.commit()
-        self.set_state("published", str(cur.lastrowid))
-        self.log(actor, "publish", str(cur.lastrowid))
-        return cur.lastrowid
+        self.db.execute("BEGIN IMMEDIATE")
+        try:
+            content = self.draft()
+            if not valid_content(content):
+                raise ValueError("invalid draft")
+            media = json.loads(self.state("media") or "[]")
+            if media:
+                manifest = {"schema_version": 1, "revision": "check",
+                            "hotel": content["hotel"], "media": media}
+                host = os.getenv("HOTEL_PUBLIC_MEDIA_HOST", "")
+                if not host or not valid_manifest(manifest, host):
+                    raise ValueError("invalid media playlist or media host")
+                for item in media:
+                    file = self.media_dir / (item["sha256"] + "." + item["extension"])
+                    if not file.is_file() or file.stat().st_size > MAX_MEDIA:
+                        raise ValueError("missing or corrupt media file")
+                    payload = file.read_bytes()
+                    if hashlib.sha256(payload).hexdigest() != item["sha256"] or \
+                            not valid_media(payload, item["extension"]):
+                        raise ValueError("missing or corrupt media file")
+            cur = self.db.execute(
+                "INSERT INTO revisions(content,media,created_at,actor) VALUES (?,?,?,?)",
+                (json.dumps(content, ensure_ascii=False), json.dumps(media), int(time.time()), actor))
+            revision = cur.lastrowid
+            self.db.execute("INSERT OR REPLACE INTO state VALUES ('published',?)", (str(revision),))
+            self.content_sync_manifest()
+            self.db.execute("INSERT INTO audit(at,actor,action,detail) VALUES (?,?,?,?)",
+                            (int(time.time()), actor, "publish", str(revision)))
+            self.db.commit()
+            return revision
+        except Exception:
+            self.db.rollback()
+            raise
 
     def rollback(self, revision: int):
-        row = self.db.execute("SELECT id FROM revisions WHERE id=?", (revision,)).fetchone()
-        if not row:
-            raise ValueError("unknown revision")
-        self.set_state("published", str(revision))
-        self.log("publisher", "rollback", str(revision))
+        self.db.execute("BEGIN IMMEDIATE")
+        try:
+            row = self.db.execute("SELECT id FROM revisions WHERE id=?", (revision,)).fetchone()
+            if not row:
+                raise ValueError("unknown revision")
+            self.db.execute("INSERT OR REPLACE INTO state VALUES ('published',?)", (str(revision),))
+            self.db.execute("INSERT INTO audit(at,actor,action,detail) VALUES (?,?,?,?)",
+                            (int(time.time()), "publisher", "rollback", str(revision)))
+            self.db.commit()
+        except Exception:
+            self.db.rollback()
+            raise
 
     def create_code(self, label: str) -> str:
         code = secrets.token_urlsafe(12)
@@ -128,17 +161,24 @@ class Store:
         return code
 
     def enroll(self, code: str) -> tuple[str, str] | None:
-        row = self.db.execute("SELECT * FROM enrollments WHERE code_hash=?", (digest(code),)).fetchone()
-        if not row or row["expires_at"] < time.time():
-            return None
-        token = secrets.token_urlsafe(32)
-        device_id = secrets.token_hex(12)
-        self.db.execute("DELETE FROM enrollments WHERE code_hash=?", (digest(code),))
-        self.db.execute("INSERT INTO devices(id,label,token_hash) VALUES (?,?,?)",
-                        (device_id, row["label"], digest(token)))
-        self.db.commit()
-        self.log("device", "enroll", device_id)
-        return device_id, token
+        self.db.execute("BEGIN IMMEDIATE")
+        try:
+            row = self.db.execute("SELECT * FROM enrollments WHERE code_hash=?", (digest(code),)).fetchone()
+            if not row or row["expires_at"] < time.time():
+                self.db.rollback()
+                return None
+            token = secrets.token_urlsafe(32)
+            device_id = secrets.token_hex(12)
+            self.db.execute("DELETE FROM enrollments WHERE code_hash=?", (digest(code),))
+            self.db.execute("INSERT INTO devices(id,label,token_hash) VALUES (?,?,?)",
+                            (device_id, row["label"], digest(token)))
+            self.db.execute("INSERT INTO audit(at,actor,action,detail) VALUES (?,?,?,?)",
+                            (int(time.time()), "device", "enroll", device_id))
+            self.db.commit()
+            return device_id, token
+        except Exception:
+            self.db.rollback()
+            raise
 
     def device(self, token: str) -> sqlite3.Row | None:
         if len(token) > 256:
@@ -192,6 +232,11 @@ class Store:
 class Handler(BaseHTTPRequestHandler):
     server_version = "VelaHotelPilot/1.0"
 
+    def log_request(self, code="-", size="-"):
+        # Default BaseHTTPRequestHandler logging includes the full URL/query.
+        logging.getLogger("hotel_api").info("request method=%s path=%s status=%s",
+                                            self.command, urlsplit(self.path).path[:128], code)
+
     def respond(self, status: int, data: dict):
         payload = json.dumps(data, ensure_ascii=False).encode()
         self.send_response(status)
@@ -208,7 +253,7 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Content-Type", "text/html; charset=utf-8")
         self.send_header("Cache-Control", "no-store")
         self.send_header("X-Frame-Options", "DENY")
-        self.send_header("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'self'; img-src 'self'; media-src 'self'; form-action 'self'")
+        self.send_header("Content-Security-Policy", "default-src 'none'; style-src 'self'; script-src 'self'; connect-src 'self'; img-src 'self'; media-src 'self'; form-action 'self'")
         self.send_header("Content-Length", str(len(payload)))
         self.end_headers()
         self.wfile.write(payload)
@@ -240,6 +285,8 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(payload)
 
     def body_json(self) -> dict:
+        if self.headers.get("Content-Type", "").split(";", 1)[0].strip().lower() != "application/json":
+            raise ValueError("application/json required")
         size = int(self.headers.get("Content-Length", "0"))
         if size < 1 or size > MAX_JSON:
             raise ValueError("invalid body size")
@@ -254,9 +301,13 @@ class Handler(BaseHTTPRequestHandler):
             return self.respond(200, {"status": "ok"})
         store = Store()
         try:
+            if path == "/readyz":
+                store.db.execute("SELECT 1").fetchone()
+                return self.respond(200, {"status": "ready"})
             if path == "/api/v1/device/content-manifest" or path.startswith("/api/v1/device/content/"):
                 token = (self.headers.get("Authorization") or "").removeprefix("Bearer ")
-                if not (store.device(token) if token else None):
+                device = store.device(token) if token else None
+                if not device:
                     return self.respond(401, {"error": "unauthorized"})
                 if urlsplit(self.path).query:
                     return self.respond(404, {"error": "not_found"})
@@ -265,12 +316,18 @@ class Handler(BaseHTTPRequestHandler):
                 except ValueError:
                     return self.respond(503, {"error": "unpublished"})
                 if path == "/api/v1/device/content-manifest":
+                    store.db.execute("UPDATE devices SET last_seen=? WHERE id=?",
+                                     (int(time.time()), device["id"]))
+                    store.db.commit()
                     return self.respond(200, manifest)
                 content_file = manifest["files"][0]
                 if path != content_file["downloadPath"]:
                     return self.respond(404, {"error": "not_found"})
                 row = store.published()
                 payload = store.content_bytes(row)
+                store.db.execute("UPDATE devices SET last_seen=?,last_sync=?,content_version=? WHERE id=?",
+                                 (int(time.time()), int(time.time()), str(row["id"]), device["id"]))
+                store.db.commit()
                 self.send_response(200)
                 self.send_header("Content-Type", "application/json; charset=utf-8")
                 self.send_header("Cache-Control", "private, no-store")
@@ -315,19 +372,44 @@ class Handler(BaseHTTPRequestHandler):
                 return self.admin_unauthorized() if path == "/admin" else self.respond(401, {"error": "admin_auth_required"})
             if path == "/admin":
                 return self.admin_page(store, role)
+            if path in ("/admin/cms.css", "/admin/cms.js"):
+                file = Path(__file__).parent / path.rsplit("/", 1)[-1]
+                data = file.read_bytes()
+                self.send_response(200)
+                self.send_header("Content-Type", "text/css; charset=utf-8" if path.endswith(".css")
+                                 else "text/javascript; charset=utf-8")
+                self.send_header("Cache-Control", "no-store")
+                self.send_header("X-Content-Type-Options", "nosniff")
+                self.send_header("Content-Length", str(len(data)))
+                self.end_headers()
+                return self.wfile.write(data)
             if path == "/api/v1/admin/draft":
                 return self.respond(200, store.draft())
             if path == "/api/v1/admin/preview":
-                return self.respond(200, {"content": store.draft(), "media": json.loads(store.state("media") or "[]")})
+                draft = store.draft()
+                return self.respond(200, {"content": draft,
+                                          "valid": valid_content(draft),
+                                          "media": json.loads(store.state("media") or "[]")})
             if path == "/api/v1/admin/status":
                 devices = [dict(row) for row in store.db.execute(
-                    "SELECT id,label,room,revoked,last_seen FROM devices ORDER BY label")]
+                    "SELECT id,label,room,revoked,last_seen,last_sync,content_version FROM devices ORDER BY label")]
                 revisions = [dict(row) for row in store.db.execute(
                     "SELECT id,created_at,actor FROM revisions ORDER BY id DESC LIMIT 20")]
                 audit = [dict(row) for row in store.db.execute(
                     "SELECT at,actor,action,detail FROM audit ORDER BY id DESC LIMIT 50")]
                 return self.respond(200, {"published": store.state("published"), "devices": devices,
                                           "revisions": revisions, "audit": audit})
+            if path.startswith("/api/v1/admin/revision/"):
+                raw = path.rsplit("/", 1)[-1]
+                if not raw.isdecimal():
+                    return self.respond(404, {"error": "not_found"})
+                row = store.db.execute("SELECT id,content,media,created_at,actor FROM revisions WHERE id=?",
+                                       (int(raw),)).fetchone()
+                if not row:
+                    return self.respond(404, {"error": "not_found"})
+                return self.respond(200, {"id": row["id"], "content": json.loads(row["content"]),
+                                          "media": json.loads(row["media"]),
+                                          "created_at": row["created_at"], "actor": row["actor"]})
             if path.startswith("/api/v1/admin/media-file/"):
                 filename = path.rsplit("/", 1)[-1]
                 stem, dot, extension = filename.partition(".")
@@ -349,39 +431,9 @@ class Handler(BaseHTTPRequestHandler):
             store.db.close()
 
     def admin_page(self, store: Store, role: str):
-        current = html.escape(json.dumps(store.draft(), ensure_ascii=False, indent=2))
-        markup = f"""<!doctype html><html><meta charset="utf-8"><title>Vela Hotel CMS</title>
-<style>body{{background:#082324;color:#fff;font:18px system-ui;max-width:1050px;margin:2rem auto}}
-textarea{{width:100%;height:60vh;background:#123c3e;color:#fff;font:15px monospace}}
-button{{padding:.8rem;margin:.5rem;background:#dbad61;border:0}}pre{{white-space:pre-wrap}}</style>
-<h1>Vela Hotel CMS · {role}</h1><p>Staging only. Draft → Preview → Publish. Unverified text must say TEST DATA.</p>
-<textarea id="content">{current}</textarea><p><button onclick="call('draft',JSON.parse(document.getElementById('content').value))">Save draft</button>
-<button onclick="read('preview')">Preview</button><button onclick="call('publish',{{}})">Publish</button>
-<button onclick="read('status')">Status / audit</button></p>
-<p><input id="label" placeholder="TV label"><button onclick="call('enrollment',{{label:document.getElementById('label').value}})">Create 10-minute TV code</button></p>
-<p><input id="revision" type="number" placeholder="Revision ID"><button onclick="call('rollback',{{revision:Number(document.getElementById('revision').value)}})">Rollback</button></p>
-<p><input id="device" placeholder="Device ID"><input id="room" placeholder="Room assignment">
-<button onclick="call('device',{{device_id:document.getElementById('device').value,room:document.getElementById('room').value,action:'assign'}})">Assign room</button>
-<button onclick="call('device',{{device_id:document.getElementById('device').value,action:'revoke'}})">Revoke</button></p>
-<p><input type="file" id="mediaFile" accept="image/jpeg,image/png,video/mp4">
-<button onclick="upload()">Upload media</button></p>
-<div id="mediaPreview"></div>
-<p>Playlist JSON (published separately from upload)</p><textarea id="playlist" style="height:8rem">[]</textarea>
-<button onclick="call('media',{{media:JSON.parse(document.getElementById('playlist').value)}})">Save playlist</button>
-<pre id="result"></pre>
-<script>async function call(path,data){{let r=await fetch('/api/v1/admin/'+path,{{method:'POST',
-headers:{{'Content-Type':'application/json'}},body:JSON.stringify(data)}});
-document.getElementById('result').textContent=await r.text()}}
-async function read(path){{let r=await fetch('/api/v1/admin/'+path);
-document.getElementById('result').textContent=await r.text()}}
-async function upload(){{let file=document.getElementById('mediaFile').files[0];if(!file)return;
-let bytes=await file.arrayBuffer();let hash=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes))).map(x=>x.toString(16).padStart(2,'0')).join('');
-let ext=file.name.split('.').pop().toLowerCase();let r=await fetch('/api/v1/admin/media-file',{{method:'PUT',
-headers:{{'X-Content-SHA256':hash,'X-Media-Extension':ext}},body:bytes}});
-document.getElementById('result').textContent=await r.text();
-if(r.ok){{let view=document.createElement(ext==='mp4'?'video':'img');view.src='/api/v1/admin/media-file/'+hash+'.'+ext;
-view.style.maxWidth='600px';view.style.maxHeight='320px';if(ext==='mp4')view.controls=true;
-document.getElementById('mediaPreview').replaceChildren(view)}}}}</script></html>"""
+        markup = (Path(__file__).parent / "cms.html").read_text(encoding="utf-8")
+        markup = markup.replace("__ROLE__", html.escape(role)).replace(
+            "__CONTENT__", html.escape(json.dumps(store.draft(), ensure_ascii=False, indent=2)))
         return self.page(200, markup)
 
     def do_POST(self):
@@ -397,6 +449,9 @@ document.getElementById('mediaPreview').replaceChildren(view)}}}}</script></html
             if not role:
                 return self.respond(401, {"error": "admin_auth_required"})
             body = self.body_json()
+            if path == "/api/v1/admin/validate":
+                return self.respond(200, {"valid": valid_content(body),
+                                          "schemaVersion": 1})
             if path == "/api/v1/admin/draft":
                 store.save_draft(body)
                 return self.respond(200, {"status": "draft_saved"})
@@ -417,16 +472,20 @@ document.getElementById('mediaPreview').replaceChildren(view)}}}}</script></html
                 if not isinstance(device_id, str):
                     raise ValueError("invalid device")
                 if body.get("action") == "revoke":
-                    store.db.execute("UPDATE devices SET revoked=1 WHERE id=?", (device_id,))
-                    store.log("publisher", "revoke", device_id)
+                    changed = store.db.execute("UPDATE devices SET revoked=1 WHERE id=?", (device_id,))
+                    action = "revoke"
                 elif body.get("action") == "assign":
                     room = body.get("room", "")
-                    if not isinstance(room, str) or len(room) > 30:
+                    if not isinstance(room, str) or len(room) > 30 or \
+                            any(ch not in "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 -" for ch in room):
                         raise ValueError("invalid room")
-                    store.db.execute("UPDATE devices SET room=? WHERE id=?", (room, device_id))
-                    store.log("publisher", "assign_room", device_id)
+                    changed = store.db.execute("UPDATE devices SET room=? WHERE id=?", (room, device_id))
+                    action = "assign_room"
                 else:
                     raise ValueError("invalid action")
+                if changed.rowcount != 1:
+                    raise ValueError("unknown device")
+                store.log("publisher", action, device_id)
                 store.db.commit()
                 return self.respond(200, {"status": "updated"})
             if path == "/api/v1/admin/media":
@@ -465,17 +524,13 @@ document.getElementById('mediaPreview').replaceChildren(view)}}}}</script></html
         if not 1 <= size <= MAX_MEDIA:
             return self.respond(413, {"error": "size_limit"})
         store = Store()
-        temporary = store.media_dir / (expected + ".part")
+        temporary = store.media_dir / (expected + "." + secrets.token_hex(8) + ".part")
         try:
             data = self.rfile.read(size)
             if len(data) != size or hashlib.sha256(data).hexdigest() != expected:
                 return self.respond(400, {"error": "hash_mismatch"})
-            if extension in ("jpg", "jpeg") and not data.startswith(b"\xff\xd8\xff"):
-                return self.respond(400, {"error": "invalid_jpeg"})
-            if extension == "png" and not data.startswith(b"\x89PNG\r\n\x1a\n"):
-                return self.respond(400, {"error": "invalid_png"})
-            if extension == "mp4" and data[4:8] != b"ftyp":
-                return self.respond(400, {"error": "invalid_mp4"})
+            if not valid_media(data, extension):
+                return self.respond(400, {"error": "invalid_media"})
             temporary.write_bytes(data)
             temporary.replace(store.media_dir / (expected + "." + extension))
             store.log("publisher", "upload_media", expected)

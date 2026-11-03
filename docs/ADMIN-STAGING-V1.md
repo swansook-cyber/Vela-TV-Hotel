@@ -1,5 +1,7 @@
 # Vela Hotel V1.0 staging admin guide
 
+> Historical V1.0 guide. For the V1.1 Windows pilot, use [Windows Hotel Pilot V1.1](WINDOWS-HOTEL-PILOT-V1.1.md). The V1.1 initial Draft now comes from the approved bilingual Android offline seed, not the TEST DATA sample described below.
+
 The Python server binds to `127.0.0.1:8131`. It must run behind a staging HTTPS reverse proxy with access controls before TVs connect. Keep `backend/.hotel-data` private and backed up. Never commit tokens or this database.
 
 Set two different, long random environment variables `HOTEL_EDITOR_TOKEN` and `HOTEL_PUBLISHER_TOKEN`. Set `HOTEL_DATA_DIR` to a private persistent staging directory. Set `HOTEL_PUBLIC_MEDIA_HOST` to the HTTPS host used by the TVs. Start with `python backend/hotel_api.py`. For a local admin browser, open `/admin`, authenticate with username `editor` or `publisher`, and use the matching token as password. A remote browser must use HTTPS.

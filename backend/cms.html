@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Vela Hotel Pilot CMS</title>
+  <link rel="stylesheet" href="/admin/cms.css">
+  <script src="/admin/cms.js" defer></script>
+</head>
+<body data-role="__ROLE__">
+  <header><div><small>VELA TV HOTEL · PILOT</small><h1>Content Management</h1>
+    <p>Signed in as __ROLE__. Draft changes reach TVs only after Publish.</p></div>
+    <div class="badge">Local Admin · HTTPS via pilot proxy</div></header>
+  <nav id="sections" aria-label="Content sections"></nav>
+  <main>
+    <section class="panel"><h2 id="section-title">Hotel Information</h2>
+      <p id="section-hint"></p><div id="fields"></div>
+      <div class="actions"><button id="validate">Validate</button><button id="save">Save Draft</button>
+        <button id="preview">Preview Saved Draft</button>
+        <button id="publish" class="publisher">Publish Version</button></div>
+    </section>
+    <section class="panel"><h2>Media Management</h2>
+      <p>Upload does not publish. Only JPG, PNG and verified H.264 MP4 are accepted.</p>
+      <input type="file" id="media-file" accept="image/jpeg,image/png,video/mp4">
+      <button id="upload" class="publisher">Upload Media</button>
+      <label for="playlist">Draft playlist JSON</label><textarea id="playlist" rows="6">[]</textarea>
+      <button id="save-media" class="publisher">Save Draft Playlist</button>
+    </section>
+    <section class="panel"><h2>Version History and Devices</h2>
+      <button id="refresh">Refresh Status</button><div id="history"></div><div id="devices"></div>
+      <div class="actions publisher"><label>Revision ID <input id="revision" type="number" min="1"></label>
+        <button id="rollback">Rollback Published Version</button></div>
+      <div class="actions publisher"><label>TV label <input id="label" maxlength="80"></label>
+        <button id="enroll">Create One-Time Enrollment Code</button></div>
+      <div class="actions publisher"><label>Device ID <input id="device-id"></label>
+        <label>Room <input id="room" maxlength="30"></label>
+        <button id="assign">Assign Room</button><button id="revoke">Revoke Token</button></div>
+      <p>Last sync is the last completed content download observed by the server; TV activation is not yet acknowledged.</p>
+    </section>
+    <section class="panel"><h2>Result</h2><pre id="result" role="status" aria-live="polite"></pre></section>
+  </main>
+  <textarea id="seed" hidden>__CONTENT__</textarea>
+</body>
+</html>
