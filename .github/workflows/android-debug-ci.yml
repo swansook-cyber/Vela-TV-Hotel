@@ -25,16 +25,28 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
+      - name: Install pinned schema test dependency
+        run: python3 -m pip install -r backend/requirements-test.txt
       - name: Verify original resort logo bytes
         run: echo "3a1c4b7459df4555b1953cf54514462983bd2ec86453f21e153786df1d3c5c54  android-client/src/main/res/drawable-nodpi/aonang_fiore_logo.png" | sha256sum --check
       - name: Validate Android manifest XML
         run: python3 -c "import xml.etree.ElementTree as ET; ET.parse('android-client/src/main/AndroidManifest.xml')"
       - name: Run backend contract tests
         run: python3 -m unittest discover -s backend -p 'test_*.py' -v
-      - name: Exclude unlicensed internal resort photos from CI
-        run: test ! -d android-client/src/main/assets/fiore_internal
+      - name: Verify Fiore24 Internal QA assets
+        run: |
+          test ! -d android-client/src/main/assets/fiore_internal
+          python3 - <<'PY'
+          import hashlib, json
+          from pathlib import Path
+          root = Path('media/fiore-approved/assets/fiore_approved')
+          images = json.loads((root / 'index.json').read_text())['images']
+          assert len(images) == 24
+          for image in images:
+              assert hashlib.sha256((root / image['asset']).read_bytes()).hexdigest() == image['export_sha256']
+          PY
       - name: Compile, test and build debug QA APK
-        run: gradle --no-daemon :android-client:compileDebugKotlin :android-client:testDebugUnitTest :android-client:assembleDebug
+        run: gradle --no-daemon -PincludeApprovedFioreMedia=true :android-client:compileDebugKotlin :android-client:testDebugUnitTest :android-client:assembleDebug
       - name: Verify actual APK identity, version and unique filename
         shell: bash
         run: |
@@ -44,23 +56,29 @@ jobs:
           AAPT="$(find "${ANDROID_HOME}/build-tools" -name aapt -type f | sort -V | tail -n 1)"
           test -x "$AAPT"
           "$AAPT" dump badging "$APK" | grep '^package:'
-          "$AAPT" dump badging "$APK" | grep -E "^package: name='net.velalab.tvhotel' versionCode='14' versionName='1.0.6'"
+          "$AAPT" dump badging "$APK" | grep -E "^package: name='net.velalab.tvhotel' versionCode='15' versionName='1.1.0'"
           python3 - <<'PY'
+          import hashlib, json
           from pathlib import Path
           from zipfile import ZipFile
           apk = Path('android-client/build/outputs/apk/debug/android-client-debug.apk')
           with ZipFile(apk) as archive:
               assert archive.read('assets/hotel_content.json') == Path('android-client/src/main/assets/hotel_content.json').read_bytes()
-              assert not any(name.startswith('assets/fiore_approved/') for name in archive.namelist())
-          print('Approved offline content seed present; licensed resort photos excluded from public CI artifact')
+              index = json.loads(archive.read('assets/fiore_approved/index.json'))
+              assert len(index['images']) == 24
+              for image in index['images']:
+                  asset = archive.read('assets/fiore_approved/' + image['asset'])
+                  assert hashlib.sha256(asset).hexdigest() == image['export_sha256']
+          print('Approved offline content seed and Fiore24 verified in Internal QA APK')
           PY
           mkdir -p dist
           SOURCE_SHA="${{ github.event.pull_request.head.sha || github.sha }}"
-          cp "$APK" dist/Vela-TV-Hotel-v1.0.6-code14-${SOURCE_SHA:0:7}-debug.apk
+          cp "$APK" dist/Vela-TV-Hotel-v1.1.0-code15-${SOURCE_SHA:0:7}-Fiore24-debug.apk
           sha256sum dist/*.apk | tee dist/SHA256SUMS.txt
-          printf 'source_commit=%s\nversion_name=1.0.6\nversion_code=14\nasset_profile=public_fallback_no_licensed_photos\n' "$SOURCE_SHA" > dist/BUILD-IDENTITY.txt
+          printf 'source_commit=%s\nversion_name=1.1.0\nversion_code=15\nasset_profile=internal_qa_fiore24\n' "$SOURCE_SHA" > dist/BUILD-IDENTITY.txt
+          "${ANDROID_HOME}/build-tools/$(ls "${ANDROID_HOME}/build-tools" | sort -V | tail -n 1)/apksigner" verify --print-certs "$APK" | grep 'Signer #1 certificate SHA-256 digest' > dist/CI-SIGNING-CERT.txt
       - uses: actions/upload-artifact@v4
         with:
-          name: Vela-TV-Hotel-V1.0.6-PUBLIC-FALLBACK-${{ github.run_number }}
+          name: Vela-TV-Hotel-V1.1.0-FIORE24-INTERNAL-QA-${{ github.run_number }}
           path: dist/
           if-no-files-found: error

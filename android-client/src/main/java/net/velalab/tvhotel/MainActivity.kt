@@ -30,6 +30,7 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.util.concurrent.Executor
 import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Hotel-first offline guest guide. Remote uses native Android focus/OK navigation.
@@ -53,6 +54,13 @@ class MainActivity : Activity() {
     private var content = JSONObject()
     private var contentFromOfflineSeed = false
     private var syncStatus = "Offline guide"
+    private val contentSyncRunning = AtomicBoolean(false)
+    private val contentSyncSettings by lazy { ContentSyncSettings(this) }
+    private val contentPackageStore by lazy {
+        ContentPackageStore(File(filesDir, "content-sync"),
+            assets.open("hotel_content.json").use { it.readBytes() },
+            File(filesDir, "published-content.json"))
+    }
     private var assignedRoom = ""
     private var slideshow: MediaSlideshow? = null
     private var galleryBack: (() -> Unit)? = null
@@ -843,7 +851,16 @@ class MainActivity : Activity() {
         val options = listOf(
             Pair("Edit Apps") { showQuickAppsEditor(lastQuickSlot) },
             Pair("Resort Media") { showMedia() },
-            Pair("Connect / Sync") { showSetup() }
+            Pair("Connect / Sync") { showSetup() },
+            Pair(if (contentSyncSettings.mode() == ContentSyncMode.AUTO_SYNC)
+                "Content Sync: Auto Sync" else "Content Sync: Offline Only") {
+                val next = if (contentSyncSettings.mode() == ContentSyncMode.AUTO_SYNC)
+                    ContentSyncMode.OFFLINE_ONLY else ContentSyncMode.AUTO_SYNC
+                if (contentSyncSettings.setMode(next)) {
+                    showStaffTools()
+                    if (next == ContentSyncMode.AUTO_SYNC) syncInBackground()
+                }
+            }
         )
         options.forEach { (title, callback) ->
             root.addView(action(title, callback), LinearLayout.LayoutParams(dp(340), dp(65)).apply {
@@ -1189,8 +1206,9 @@ class MainActivity : Activity() {
         super.onCreate(savedInstanceState)
         content = try {
             val published = File(filesDir, "published-content.json")
-            if (published.isFile) JSONObject(published.readText())
-            else JSONObject(assets.open("hotel_content.json").bufferedReader().use { it.readText() })
+            val legacy = if (published.isFile)
+                ContentSyncContract.validContent(published.readBytes()) else null
+            legacy ?: JSONObject(assets.open("hotel_content.json").bufferedReader().use { it.readText() })
                 .also { contentFromOfflineSeed = true }
         } catch (_: Exception) {
             JSONObject()
@@ -1230,7 +1248,9 @@ class MainActivity : Activity() {
         header(root, "Resort Media") { showHome() }
         root.addView(textLine("Checking saved media…", 17f).apply { setTextColor(muted) })
         Thread {
-            val slides = VerifiedMediaCache(this).activeSlides()
+            val snapshot = contentPackageStore.current()
+            val slides = if (snapshot.source in listOf(ContentSource.ACTIVE, ContentSource.PREVIOUS))
+                contentPackageStore.mediaSlides() else VerifiedMediaCache(this).activeSlides()
             runOnUiThread {
                 if (page != "media") return@runOnUiThread
                 val view = newPage()
@@ -1249,31 +1269,57 @@ class MainActivity : Activity() {
     }
 
     private fun syncInBackground() {
-        val endpoint = ServerConfigStore(this).active() ?: return
-        val token = credentials.token() ?: return
+        if (!contentSyncRunning.compareAndSet(false, true)) return
         Thread {
-            val host = java.net.URI(endpoint.normalizedHttpsUrl()).host
-            val coordinator = MediaSyncCoordinator(this)
-            val result = coordinator.sync(endpoint, token, host)
-            runOnUiThread {
-                assignedRoom = if (result == MediaSyncCoordinator.Status.UPDATED)
-                    coordinator.assignedRoom else ""
-                syncStatus = when (result) {
-                    MediaSyncCoordinator.Status.UPDATED -> {
-                        runCatching { JSONObject(File(filesDir, "published-content.json").readText()) }
-                            .getOrNull()?.let {
-                                content = it
-                                contentFromOfflineSeed = false
-                            }
-                        getSharedPreferences("sync_status", MODE_PRIVATE).edit()
-                            .putLong("last_updated", System.currentTimeMillis()).apply()
-                        "Updated " + java.text.SimpleDateFormat("dd MMM HH:mm", java.util.Locale.getDefault())
-                            .format(java.util.Date())
-                    }
-                    MediaSyncCoordinator.Status.REJECTED -> "Sync rejected • check enrollment"
-                    else -> "Offline • showing saved guide"
+            try {
+                val mode = contentSyncSettings.mode()
+                val endpoint = if (mode == ContentSyncMode.AUTO_SYNC) ServerConfigStore(this).active() else null
+                val token = if (mode == ContentSyncMode.AUTO_SYNC) credentials.token() else null
+                val fetcher = if (endpoint != null && token != null)
+                    HttpsContentFetcher(endpoint, token) else null
+                val result = UniversalContentResolver(contentPackageStore, fetcher).resolve(mode)
+                var snapshot = result.snapshot
+                var status = result.status
+                // Older staging servers still expose the V1.0.6 endpoint. Keep that path
+                // until the new content manifest is installed, without sending it in Offline Only.
+                if (status == ContentSyncStatus.UNSUPPORTED && endpoint != null && token != null &&
+                    snapshot.source !in listOf(ContentSource.ACTIVE, ContentSource.PREVIOUS)) {
+                    val coordinator = MediaSyncCoordinator(this)
+                    val legacyResult = coordinator.sync(endpoint, token,
+                        java.net.URI(endpoint.normalizedHttpsUrl()).host)
+                    if (legacyResult == MediaSyncCoordinator.Status.UPDATED) {
+                        val legacy = File(filesDir, "published-content.json")
+                        ContentSyncContract.validContent(legacy.readBytes())?.let {
+                            snapshot = ContentSnapshot(it, ContentSource.LEGACY_CACHE)
+                            assignedRoom = coordinator.assignedRoom
+                            status = ContentSyncStatus.UPDATED
+                        }
+                    } else status = if (legacyResult == MediaSyncCoordinator.Status.REJECTED)
+                        ContentSyncStatus.REJECTED else ContentSyncStatus.OFFLINE
                 }
-                if (page == "home") showHome()
+                val selected = snapshot
+                val resolvedStatus = status
+                runOnUiThread {
+                    content = selected.content
+                    contentFromOfflineSeed = selected.source == ContentSource.BUNDLED
+                    syncStatus = when {
+                        mode == ContentSyncMode.OFFLINE_ONLY -> "Offline Only • saved guide"
+                        resolvedStatus == ContentSyncStatus.UPDATED -> {
+                            getSharedPreferences("sync_status", MODE_PRIVATE).edit()
+                                .putLong("last_updated", System.currentTimeMillis()).apply()
+                            "Updated " + java.text.SimpleDateFormat("dd MMM HH:mm", java.util.Locale.getDefault())
+                                .format(java.util.Date())
+                        }
+                        resolvedStatus == ContentSyncStatus.REJECTED -> "Sync rejected • check enrollment"
+                        resolvedStatus == ContentSyncStatus.INCOMPATIBLE -> "Content requires app update"
+                        else -> "Offline • showing saved guide"
+                    }
+                    if (page == "home") showHome()
+                }
+            } catch (_: Exception) {
+                runOnUiThread { syncStatus = "Offline • showing saved guide" }
+            } finally {
+                contentSyncRunning.set(false)
             }
         }.start()
     }

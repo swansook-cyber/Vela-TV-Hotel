@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://velalab.net/schema/hotel-content-v1.json",
+  "title": "Vela TV Hotel guest content v1",
+  "type": "object",
+  "required": ["schema_version", "hotel", "guest_welcome", "quick_apps", "resort", "explore", "guest"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "hotel": {
+      "type": "object", "required": ["name"],
+      "properties": {"name": {"const": "Ao Nang Fiore Resort"}}
+    },
+    "guest_welcome": {
+      "type": "object", "required": ["mode", "value"],
+      "properties": {"mode": {"const": "generic"}, "value": {"const": ""}}
+    },
+    "quick_apps": {"const": ["Netflix", "Disney+", "YouTube", "Prime Video", "iQIYI"]},
+    "resort": {"$ref": "#/$defs/section"},
+    "explore": {"$ref": "#/$defs/section"},
+    "guest": {"$ref": "#/$defs/section"},
+    "approved_content": {"type": "object"}
+  },
+  "$defs": {
+    "section": {
+      "type": "object", "required": ["items"],
+      "properties": {
+        "items": {"type": "array", "maxItems": 40, "items": {"$ref": "#/$defs/item"}}
+      }
+    },
+    "item": {
+      "type": "object", "additionalProperties": false,
+      "required": ["title", "description", "verified"],
+      "properties": {
+        "title": {"type": "string", "minLength": 1, "maxLength": 100},
+        "description": {"type": "string", "maxLength": 2000},
+        "verified": {"type": "boolean"},
+        "category": {"type": "string"}
+      },
+      "if": {"properties": {"verified": {"const": false}}},
+      "then": {"properties": {"description": {"pattern": "TEST DATA"}}}
+    }
+  }
+}

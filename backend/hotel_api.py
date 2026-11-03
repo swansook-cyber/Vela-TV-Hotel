@@ -10,12 +10,14 @@ import os
 import secrets
 import sqlite3
 import time
+from datetime import datetime, timezone
 from http.cookies import SimpleCookie
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlsplit, parse_qs
 
 from content_contract import valid_content
+from content_sync_contract import valid_sync_manifest
 from playlist_contract import valid_manifest
 
 ROOT = Path(os.getenv("HOTEL_DATA_DIR", Path(__file__).parent / ".hotel-data"))
@@ -153,6 +155,39 @@ class Store:
                 "hotel": json.loads(row["content"])["hotel"],
                 "content": json.loads(row["content"]), "media": media}
 
+    @staticmethod
+    def content_bytes(row: sqlite3.Row) -> bytes:
+        return json.dumps(json.loads(row["content"]), ensure_ascii=False,
+                          sort_keys=True, separators=(",", ":")).encode("utf-8")
+
+    def content_sync_manifest(self) -> dict:
+        row = self.published()
+        if not row:
+            raise ValueError("nothing published")
+        content = self.content_bytes(row)
+        content_sha = hashlib.sha256(content).hexdigest()
+        version = str(row["id"])
+        files = [{"kind": "content", "path": "content.json",
+                  "downloadPath": f"/api/v1/device/content/{version}/{content_sha}.json",
+                  "sha256": content_sha, "size": len(content)}]
+        for item in json.loads(row["media"]):
+            filename = item["sha256"] + "." + item["extension"]
+            media_file = self.media_dir / filename
+            if not media_file.is_file():
+                raise ValueError("published media missing")
+            files.append({"kind": item["type"],
+                          "path": f"media/{item['id']}.{item['extension']}",
+                          "downloadPath": f"/api/v1/media/{filename}",
+                          "sha256": item["sha256"], "size": media_file.stat().st_size,
+                          "durationSeconds": item["duration_seconds"]})
+        manifest = {"schemaVersion": 1, "contentVersion": version,
+                    "publishedAt": datetime.fromtimestamp(row["created_at"], timezone.utc)
+                        .isoformat(timespec="seconds").replace("+00:00", "Z"),
+                    "minAppVersionCode": 15, "files": files}
+        if not valid_sync_manifest(manifest):
+            raise ValueError("invalid content sync manifest")
+        return manifest
+
 
 class Handler(BaseHTTPRequestHandler):
     server_version = "VelaHotelPilot/1.0"
@@ -219,6 +254,30 @@ class Handler(BaseHTTPRequestHandler):
             return self.respond(200, {"status": "ok"})
         store = Store()
         try:
+            if path == "/api/v1/device/content-manifest" or path.startswith("/api/v1/device/content/"):
+                token = (self.headers.get("Authorization") or "").removeprefix("Bearer ")
+                if not (store.device(token) if token else None):
+                    return self.respond(401, {"error": "unauthorized"})
+                if urlsplit(self.path).query:
+                    return self.respond(404, {"error": "not_found"})
+                try:
+                    manifest = store.content_sync_manifest()
+                except ValueError:
+                    return self.respond(503, {"error": "unpublished"})
+                if path == "/api/v1/device/content-manifest":
+                    return self.respond(200, manifest)
+                content_file = manifest["files"][0]
+                if path != content_file["downloadPath"]:
+                    return self.respond(404, {"error": "not_found"})
+                row = store.published()
+                payload = store.content_bytes(row)
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.send_header("Cache-Control", "private, no-store")
+                self.send_header("X-Content-Type-Options", "nosniff")
+                self.send_header("Content-Length", str(len(payload)))
+                self.end_headers()
+                return self.wfile.write(payload)
             if path == "/api/v1/device/manifest":
                 token = (self.headers.get("Authorization") or "").removeprefix("Bearer ")
                 device = store.device(token) if token else None
