@@ -70,6 +70,8 @@ class MainActivity : Activity() {
     private var diningReturn: (() -> Unit)? = null
     private val roomServiceNavigation = RoomServiceNavigation()
     private var restoreHomeRoomServiceFocus = false
+    private val roomServiceArt by lazy { RoomServiceArtLoader(this) }
+    private val roomGold = Color.rgb(246, 201, 107)
     private val isInternalQaBuild: Boolean by lazy {
         applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0
     }
@@ -1137,6 +1139,140 @@ class MainActivity : Activity() {
         }
     }
 
+    private fun roomServiceDisclaimer(root: LinearLayout) {
+        root.addView(textLine("${RoomServicePresentation.DISCLAIMER_TH}  ·  ${RoomServicePresentation.DISCLAIMER_EN}",
+            if (compactTv()) 13f else 14f).apply { setTextColor(Color.rgb(207, 197, 170)) },
+            LinearLayout.LayoutParams(-1, dp(38)).apply { topMargin = dp(14) })
+    }
+
+    private fun roomServiceImage(key: String): ImageView = ImageView(this).apply {
+        scaleType = ImageView.ScaleType.CENTER_CROP
+        contentDescription = "AI promotional category illustration: $key"
+        background = GradientDrawable().apply {
+            setColor(Color.rgb(31, 68, 58)); cornerRadius = dp(15).toFloat()
+        }
+        clipToOutline = true
+    }
+
+    private fun roomServiceFocus(card: View) {
+        card.isFocusable = true
+        card.isFocusableInTouchMode = true
+        card.setOnFocusChangeListener { _, focused ->
+            card.foreground = GradientDrawable().apply {
+                setColor(Color.TRANSPARENT)
+                cornerRadius = dp(16).toFloat()
+                setStroke(dp(if (focused) 4 else 1),
+                    if (focused) roomGold else Color.rgb(145, 128, 80))
+            }
+            card.animate().scaleX(if (focused) 1.025f else 1f)
+                .scaleY(if (focused) 1.025f else 1f).setDuration(140).start()
+            card.elevation = dp(if (focused) 12 else 2).toFloat()
+        }
+        card.background = GradientDrawable().apply {
+            setColor(Color.rgb(9, 42, 34)); cornerRadius = dp(16).toFloat()
+        }
+    }
+
+    private fun roomServiceCover(root: LinearLayout, contact: String,
+                                 images: MutableList<Pair<ImageView, String>>) {
+        val hero = FrameLayout(this).apply {
+            background = GradientDrawable().apply {
+                setColor(Color.rgb(12, 48, 37)); cornerRadius = dp(16).toFloat()
+            }
+            clipToOutline = true
+        }
+        val photo = roomServiceImage("hero")
+        hero.addView(photo, FrameLayout.LayoutParams(-1, -1))
+        images.add(photo to "hero")
+        hero.addView(View(this).apply {
+            background = GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT,
+                intArrayOf(Color.argb(246, 3, 30, 25), Color.argb(205, 3, 30, 25),
+                    Color.argb(60, 3, 30, 25)))
+        }, FrameLayout.LayoutParams(-1, -1))
+        val copy = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(dp(26), dp(12), dp(16), dp(12))
+        }
+        copy.addView(textLine("ROOM SERVICE", if (compactTv()) 25f else 30f, true).apply {
+            setTextColor(roomGold); maxLines = 1
+        })
+        copy.addView(textLine("In-Room Dining", if (compactTv()) 18f else 22f, true).apply {
+            maxLines = 1
+        })
+        copy.addView(textLine("Call $contact to order", if (compactTv()) 17f else 20f).apply {
+            maxLines = 1
+        })
+        hero.addView(copy, FrameLayout.LayoutParams(-1, -1))
+        root.addView(hero, LinearLayout.LayoutParams(-1, dp(fitHeight(188, 140))).apply {
+            topMargin = dp(12); bottomMargin = dp(13)
+        })
+    }
+
+    private fun roomServiceCategoryCard(category: JSONObject, onClick: () -> Unit,
+                                        images: MutableList<Pair<ImageView, String>>): View {
+        val id = category.getString("id")
+        val card = FrameLayout(this).apply { clipChildren = false; setOnClickListener { onClick() } }
+        val photo = roomServiceImage(id)
+        card.addView(photo, FrameLayout.LayoutParams(-1, -1))
+        images.add(photo to id)
+        val overlay = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(14), dp(25), dp(12), dp(10))
+            background = GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM,
+                intArrayOf(Color.argb(0, 2, 24, 20), Color.argb(242, 2, 24, 20)))
+        }
+        overlay.addView(textLine(category.getString("title_en"),
+            if (compactTv()) 15f else 17f, true).apply { maxLines = 2 })
+        overlay.addView(textLine(RoomServicePresentation.thaiCategoryNames[id] ?: "",
+            if (compactTv()) 13f else 15f).apply { maxLines = 1; setTextColor(roomGold) })
+        overlay.addView(textLine("${category.getJSONArray("items").length()} items", 13f).apply {
+            setTextColor(Color.rgb(220, 228, 218))
+        })
+        card.addView(overlay, FrameLayout.LayoutParams(-1, -2, Gravity.BOTTOM))
+        roomServiceFocus(card)
+        card.contentDescription = "${category.getString("title_en")}, ${RoomServicePresentation.thaiCategoryNames[id]}, ${category.getJSONArray("items").length()} items. Promotional illustration."
+        return card
+    }
+
+    private fun roomServiceItemCard(item: JSONObject, categoryId: String, onClick: () -> Unit,
+                                    images: MutableList<Pair<ImageView, String>>): View {
+        val card = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            clipChildren = false
+            setOnClickListener { onClick() }
+        }
+        val photoBox = FrameLayout(this)
+        val photo = roomServiceImage(categoryId)
+        photoBox.addView(photo, FrameLayout.LayoutParams(-1, -1))
+        images.add(photo to categoryId)
+        photoBox.addView(textLine("Category illustration", 11f).apply {
+            gravity = Gravity.CENTER
+            setBackgroundColor(Color.argb(210, 3, 30, 25))
+        }, FrameLayout.LayoutParams(-1, dp(25), Gravity.BOTTOM))
+        card.addView(photoBox, LinearLayout.LayoutParams(dp(if (compactTv()) 135 else 180), -1))
+        val copy = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(dp(18), dp(5), dp(8), dp(5))
+        }
+        copy.addView(textLine("#${item.getInt("number")}   ${item.getString("name_en")}",
+            if (compactTv()) 16f else 19f, true).apply { maxLines = 2 })
+        copy.addView(textLine(item.getString("name_th"), if (compactTv()) 15f else 17f).apply {
+            maxLines = 1; setTextColor(Color.rgb(216, 224, 213))
+        })
+        card.addView(copy, LinearLayout.LayoutParams(0, -1, 1f))
+        card.addView(textLine("${item.getInt("price_thb")} THB", if (compactTv()) 17f else 21f, true).apply {
+            gravity = Gravity.END or Gravity.CENTER_VERTICAL
+            setTextColor(roomGold)
+            maxLines = 1
+        }, LinearLayout.LayoutParams(dp(if (compactTv()) 95 else 135), -1).apply { rightMargin = dp(16) })
+        roomServiceFocus(card)
+        card.contentDescription = "#${item.getInt("number")}, ${item.getString("name_en")}, ${item.getString("name_th")}, ${item.getInt("price_thb")} THB. Category illustration, not the actual dish."
+        return card
+    }
+
     private fun showRoomServiceCategories() {
         page = "room_service"
         val root = newPage()
@@ -1149,20 +1285,33 @@ class MainActivity : Activity() {
             back.post { back.requestFocus() }
             return
         }
-        root.addView(detailTextBlock("IN-ROOM DINING", "Call ${menu.optString("contact")} to order. Prices in THB."),
-            LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(16) })
+        val images = mutableListOf<Pair<ImageView, String>>()
+        roomServiceCover(root, menu.getString("contact"), images)
+        root.addView(textLine("IN-ROOM DINING MENU", 14f, true).apply { setTextColor(roomGold) },
+            LinearLayout.LayoutParams(-1, dp(30)))
         val categories = menu.getJSONArray("categories")
         val buttons = mutableListOf<View>()
-        for (index in 0 until categories.length()) {
-            val category = categories.getJSONObject(index)
-            val button = action("${category.getString("title_en")}  ·  ${category.getJSONArray("items").length()} items") {
-                lastMenuCategory = index
-                lastMenuItem = 0
-                showRoomServiceItems(index)
+        val columns = if (compactTv()) 3 else 4
+        for (start in 0 until categories.length() step columns) {
+            val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; clipChildren = false }
+            for (index in start until minOf(start + columns, categories.length())) {
+                val button = roomServiceCategoryCard(categories.getJSONObject(index), {
+                    lastMenuCategory = index
+                    lastMenuItem = 0
+                    showRoomServiceItems(index)
+                }, images)
+                buttons.add(button)
+                row.addView(button, LinearLayout.LayoutParams(0, dp(fitHeight(188, 160)), 1f).apply {
+                    setMargins(dp(8), dp(7), dp(8), dp(7))
+                })
             }
-            buttons.add(button)
-            root.addView(button, LinearLayout.LayoutParams(-1, dp(58)).apply { topMargin = dp(9) })
+            repeat(columns - row.childCount) {
+                row.addView(View(this), LinearLayout.LayoutParams(0, 1, 1f))
+            }
+            root.addView(row)
         }
+        roomServiceDisclaimer(root)
+        activeScroll?.let { roomServiceArt.loadWhenVisible(it, images) }
         buttons.getOrNull(lastMenuCategory.coerceIn(0, buttons.lastIndex))?.post {
             buttons[lastMenuCategory.coerceIn(0, buttons.lastIndex)].requestFocus()
         }
@@ -1177,19 +1326,25 @@ class MainActivity : Activity() {
         val category = categories.getJSONObject(categoryIndex)
         val root = newPage()
         header(root, category.getString("title_en"), "‹  Categories") { showRoomServiceCategories() }
-        root.addView(detailTextBlock("IN-ROOM DINING", "Call ${menu.getString("contact")} to order. Prices in THB."),
-            LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(16) })
+        val images = mutableListOf<Pair<ImageView, String>>()
+        root.addView(textLine("IN-ROOM DINING  ·  Call ${menu.getString("contact")} to order",
+            if (compactTv()) 16f else 19f, true).apply { setTextColor(roomGold) },
+            LinearLayout.LayoutParams(-1, dp(46)).apply { topMargin = dp(12) })
         val items = category.getJSONArray("items")
         val buttons = mutableListOf<View>()
         for (index in 0 until items.length()) {
             val item = items.getJSONObject(index)
-            val button = action("#${item.getInt("number")}  ${item.getString("name_en")}  ·  ${item.getInt("price_thb")} THB\n${item.getString("name_th")}") {
+            val button = roomServiceItemCard(item, category.getString("id"), {
                 lastMenuItem = index
                 showRoomServiceItem(categoryIndex, index)
-            }.apply { textSize = 17f; gravity = Gravity.CENTER_VERTICAL or Gravity.START; setPadding(dp(20), 0, dp(20), 0) }
+            }, images)
             buttons.add(button)
-            root.addView(button, LinearLayout.LayoutParams(-1, dp(82)).apply { topMargin = dp(9) })
+            root.addView(button, LinearLayout.LayoutParams(-1, dp(fitHeight(112, 96))).apply {
+                topMargin = dp(8); leftMargin = dp(7); rightMargin = dp(7)
+            })
         }
+        roomServiceDisclaimer(root)
+        activeScroll?.let { roomServiceArt.loadWhenVisible(it, images) }
         buttons.getOrNull(lastMenuItem.coerceIn(0, buttons.lastIndex))?.post {
             buttons[lastMenuItem.coerceIn(0, buttons.lastIndex)].requestFocus()
         }
@@ -1197,16 +1352,23 @@ class MainActivity : Activity() {
 
     private fun showRoomServiceItem(categoryIndex: Int, itemIndex: Int) {
         val menu = roomServiceMenu() ?: return showRoomServiceCategories()
-        val item = menu.getJSONArray("categories").getJSONObject(categoryIndex)
-            .getJSONArray("items").getJSONObject(itemIndex)
+        val category = menu.getJSONArray("categories").getJSONObject(categoryIndex)
+        val item = category.getJSONArray("items").getJSONObject(itemIndex)
         page = "room_service_item"
         val root = newPage()
         header(root, "Room Service", "‹  Menu") { showRoomServiceItems(categoryIndex) }
+        val art = roomServiceImage(category.getString("id"))
+        root.addView(art, LinearLayout.LayoutParams(-1, dp(fitHeight(290, 190))).apply { topMargin = dp(14) })
+        activeScroll?.let { roomServiceArt.loadWhenVisible(it, listOf(art to category.getString("id"))) }
+        root.addView(textLine("Category illustration · not the actual dish", 13f).apply {
+            setTextColor(Color.rgb(207, 197, 170))
+        }, LinearLayout.LayoutParams(-1, dp(28)))
         root.addView(detailTextBlock("#${item.getInt("number")}  ${item.getString("name_en")}",
             "${item.getString("name_th")}\n${item.getInt("price_thb")} THB\nCall ${menu.getString("contact")} to order."),
             LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(20) })
         root.addView(action("‹  Back to menu") { showRoomServiceItems(categoryIndex) },
             LinearLayout.LayoutParams(dp(240), dp(52)).apply { topMargin = dp(20) })
+        roomServiceDisclaimer(root)
     }
 
     private fun addAppCards(root: LinearLayout) {
@@ -1372,6 +1534,7 @@ class MainActivity : Activity() {
 
     override fun onDestroy() {
         weatherWorker.shutdownNow()
+        roomServiceArt.close()
         super.onDestroy()
     }
 

@@ -36,6 +36,18 @@ class RoomServiceNavigationSourceTests(unittest.TestCase):
         self.assertIn('android.intent.category.HOME', manifest)
         self.assertIn('android.intent.category.LEANBACK_LAUNCHER', manifest)
 
+    def test_premium_menu_is_native_and_counts_come_from_content(self):
+        categories = self.activity.split("private fun showRoomServiceCategories()", 1)[1].split("private fun showRoomServiceItems(", 1)[0]
+        items = self.activity.split("private fun showRoomServiceItems(", 1)[1].split("private fun showRoomServiceItem(", 1)[0]
+        self.assertIn('category.getJSONArray("items").length()', self.activity)
+        self.assertIn("roomServiceCategoryCard(", categories)
+        self.assertIn("roomServiceItemCard(", items)
+        self.assertIn("roomServiceDisclaimer(root)", categories)
+        self.assertIn("roomServiceDisclaimer(root)", items)
+        self.assertIn("roomServiceArt.loadWhenVisible", categories)
+        self.assertIn("roomServiceArt.loadWhenVisible", items)
+        self.assertIn('item.getInt("price_thb")', self.activity)
+
 
 if __name__ == "__main__":
     unittest.main()

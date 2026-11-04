@@ -1,0 +1,119 @@
+{
+  "kind": "ai_generated_promotional_illustration",
+  "disclaimer_th": "ภาพใช้เพื่อการโฆษณาเท่านั้น",
+  "disclaimer_en": "Images for promotional purposes only",
+  "assets": [
+    {
+      "id": "appetizer",
+      "asset": "appetizer.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 45624,
+      "sha256": "caac5bf7e0ec662d83eee1c3af55c57ccb430fc72c0f874ac110f1fa6a67cb4e"
+    },
+    {
+      "id": "burger_sandwich",
+      "asset": "burger_sandwich.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 58042,
+      "sha256": "7deec4d79e7472c1463338692f26352d36156173cc2a5837cbf3afe890da5841"
+    },
+    {
+      "id": "dessert",
+      "asset": "dessert.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 40740,
+      "sha256": "d54391251141244acaa8f3a9bf5234c4e87da66ee77aecd6a083fecdb2a70371"
+    },
+    {
+      "id": "drink",
+      "asset": "drink.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 44092,
+      "sha256": "cc0404fdf89d8076f07d0770f486580ed311dd28d63e0e648af73112304e941e"
+    },
+    {
+      "id": "hero",
+      "asset": "hero.webp",
+      "width": 1280,
+      "height": 720,
+      "bytes": 71570,
+      "sha256": "e5cec30da7bf2798251d5f3f4cf9ebf94e6f7e5fd1b9d34a658f41e9fec48ed6"
+    },
+    {
+      "id": "noodles",
+      "asset": "noodles.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 57338,
+      "sha256": "82e3d812b89043935ada882ea7b6d7db480cd8d9585b22ea49a8d244c7e7f81f"
+    },
+    {
+      "id": "pasta",
+      "asset": "pasta.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 50622,
+      "sha256": "43159e32ab6bb27093d0570192f3ab8f76c04c9c80461583eb509e632b49bd38"
+    },
+    {
+      "id": "pizza",
+      "asset": "pizza.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 74878,
+      "sha256": "3b69ce3b27fd4c0a283764dcad8a27894679a3466dacbde87138dcedbbc6ee24"
+    },
+    {
+      "id": "rice",
+      "asset": "rice.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 52572,
+      "sha256": "f229c450087d8d1e74b33c0ab9289e2b00628bc3fe07cd7d50da1ebe3d043295"
+    },
+    {
+      "id": "southern_thai_traditional_food",
+      "asset": "southern_thai_traditional_food.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 69136,
+      "sha256": "87713891c622542b3b633e031b864dbeda599811b36f6a835521f03bbd55a988"
+    },
+    {
+      "id": "spicy_thai_curry",
+      "asset": "spicy_thai_curry.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 59322,
+      "sha256": "320ef24befebf7c799557077a3b414030725c82a5a79e9d6a5d12d858230c311"
+    },
+    {
+      "id": "spicy_thai_salad",
+      "asset": "spicy_thai_salad.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 64410,
+      "sha256": "2da08ace716ef4284d40553337652d78288616aa45af3c42ffd45e73357a2adf"
+    },
+    {
+      "id": "thai_a_la_carte",
+      "asset": "thai_a_la_carte.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 59944,
+      "sha256": "612c9d39e5037a9894a452f8421e92056a6256ad79bb312fa66cd24622d17b86"
+    },
+    {
+      "id": "thai_soup",
+      "asset": "thai_soup.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 47764,
+      "sha256": "03c510e9c087081d53cbee164b092c90d7e5165a6e0b79dcd494a76b596b5efa"
+    }
+  ]
+}
