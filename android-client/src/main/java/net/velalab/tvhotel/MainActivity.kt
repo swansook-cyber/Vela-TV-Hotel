@@ -68,6 +68,8 @@ class MainActivity : Activity() {
     private var lastMenuCategory = 0
     private var lastMenuItem = 0
     private var diningReturn: (() -> Unit)? = null
+    private val roomServiceNavigation = RoomServiceNavigation()
+    private var restoreHomeRoomServiceFocus = false
     private val isInternalQaBuild: Boolean by lazy {
         applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0
     }
@@ -299,12 +301,13 @@ class MainActivity : Activity() {
         }
     }
 
-    private fun header(root: LinearLayout, title: String, onBack: () -> Unit): View {
+    private fun header(root: LinearLayout, title: String, backLabel: String = "‹  Welcome",
+                       onBack: () -> Unit): View {
         val bar = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
         }
-        val back = action("‹  Welcome", onBack).apply {
+        val back = action(backLabel, onBack).apply {
             textSize = 14f
             // This button starts at the left edge of the header row. Keep its
             // focused stroke within its layout bounds instead of scaling outward.
@@ -578,8 +581,23 @@ class MainActivity : Activity() {
         hero.addView(weatherCard(), LinearLayout.LayoutParams(dp(if (compactTv()) 220 else 260),
             dp(fitHeight(138, 105))).apply { rightMargin = dp(2) })
         root.addView(hero, LinearLayout.LayoutParams(-1, dp(fitHeight(154, 108))).apply { bottomMargin = dp(16) })
-        root.addView(textLine("DISCOVER YOUR STAY", 13f, true).apply { setTextColor(muted); letterSpacing = 0.13f },
-            LinearLayout.LayoutParams(-1, dp(25)))
+        val discoverHeading = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            clipChildren = false
+        }
+        discoverHeading.addView(textLine("DISCOVER YOUR STAY", 13f, true).apply {
+            setTextColor(muted); letterSpacing = 0.13f
+        }, LinearLayout.LayoutParams(0, -1, 1f))
+        val roomServiceHomeAction = action("ROOM SERVICE  ·  MENU") {
+            roomServiceNavigation.enter(RoomServiceOrigin.HOME)
+            showRoomServiceCategories()
+        }.apply { textSize = 14f }
+        discoverHeading.addView(roomServiceHomeAction,
+            LinearLayout.LayoutParams(dp(if (compactTv()) 204 else 230), dp(42)).apply {
+                rightMargin = dp(8)
+            })
+        root.addView(discoverHeading, LinearLayout.LayoutParams(-1, dp(44)))
         val sections = listOf(
             Triple("entertainment", "Entertainment", "Streaming & TV"),
             Triple("resort", "Our Resort", "Rooms, dining & wellbeing"),
@@ -623,7 +641,12 @@ class MainActivity : Activity() {
             setTextColor(Color.rgb(192, 206, 198))
         }, LinearLayout.LayoutParams(-1, dp(28)).apply { topMargin = dp(5) })
         cards[3].setOnLongClickListener { showStaffTools(); true }
-        cards.getOrNull(lastHomeIndex.coerceIn(0, 3))?.post { cards[lastHomeIndex.coerceIn(0, 3)].requestFocus() }
+        val restoreMenu = restoreHomeRoomServiceFocus
+        restoreHomeRoomServiceFocus = false
+        if (restoreMenu) roomServiceHomeAction.post { roomServiceHomeAction.requestFocus() }
+        else cards.getOrNull(lastHomeIndex.coerceIn(0, 3))?.post {
+            cards[lastHomeIndex.coerceIn(0, 3)].requestFocus()
+        }
     }
 
     private fun showSection(id: String, title: String) {
@@ -1048,10 +1071,13 @@ class MainActivity : Activity() {
             })
         }
         var menuAction: View? = null
-        if (mediaCategory == "dining") {
+        if (RoomServiceNavigation.isDiningCategory(mediaCategory)) {
             diningReturn = { showDetail(id, sectionTitle, title, description, mediaCategory,
                 restoreMenuFocus = true) }
-            menuAction = action("Room Service Menu  •  In-Room Dining") { showRoomServiceCategories() }
+            menuAction = action("Room Service Menu  •  In-Room Dining") {
+                roomServiceNavigation.enter(RoomServiceOrigin.DINING)
+                showRoomServiceCategories()
+            }
             root.addView(menuAction, LinearLayout.LayoutParams(-1, dp(60)).apply { topMargin = dp(18) })
         }
         val galleryCards = mutableListOf<View>()
@@ -1101,10 +1127,22 @@ class MainActivity : Activity() {
         return bundled?.takeIf { ContentSyncContract.validRoomService(it) }
     }
 
+    private fun returnFromRoomService() {
+        when (roomServiceNavigation.exitDestination()) {
+            RoomServiceOrigin.HOME -> {
+                restoreHomeRoomServiceFocus = true
+                showHome()
+            }
+            RoomServiceOrigin.DINING -> diningReturn?.invoke() ?: showSection("resort", "Our Resort")
+        }
+    }
+
     private fun showRoomServiceCategories() {
         page = "room_service"
         val root = newPage()
-        val back = header(root, "Room Service") { diningReturn?.invoke() ?: showSection("resort", "Our Resort") }
+        val originLabel = if (roomServiceNavigation.exitDestination() == RoomServiceOrigin.HOME)
+            "‹  Home" else "‹  Dining"
+        val back = header(root, "Room Service", originLabel) { returnFromRoomService() }
         val menu = roomServiceMenu()
         if (menu == null) {
             emptyState(root, "Room Service menu unavailable", "Please contact the restaurant.")
@@ -1138,7 +1176,7 @@ class MainActivity : Activity() {
         page = "room_service_items"
         val category = categories.getJSONObject(categoryIndex)
         val root = newPage()
-        header(root, category.getString("title_en")) { showRoomServiceCategories() }
+        header(root, category.getString("title_en"), "‹  Categories") { showRoomServiceCategories() }
         root.addView(detailTextBlock("IN-ROOM DINING", "Call ${menu.getString("contact")} to order. Prices in THB."),
             LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(16) })
         val items = category.getJSONArray("items")
@@ -1163,7 +1201,7 @@ class MainActivity : Activity() {
             .getJSONArray("items").getJSONObject(itemIndex)
         page = "room_service_item"
         val root = newPage()
-        header(root, "Room Service") { showRoomServiceItems(categoryIndex) }
+        header(root, "Room Service", "‹  Menu") { showRoomServiceItems(categoryIndex) }
         root.addView(detailTextBlock("#${item.getInt("number")}  ${item.getString("name_en")}",
             "${item.getString("name_th")}\n${item.getInt("price_thb")} THB\nCall ${menu.getString("contact")} to order."),
             LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(20) })
@@ -1279,7 +1317,7 @@ class MainActivity : Activity() {
         if (page == "home") super.onBackPressed()
         else if (page == "room_service_item") showRoomServiceItems(lastMenuCategory)
         else if (page == "room_service_items") showRoomServiceCategories()
-        else if (page == "room_service") diningReturn?.invoke() ?: showSection("resort", "Our Resort")
+        else if (page == "room_service") returnFromRoomService()
         else if (page == "staff_tools") showHome()
         else if (page == "media") showHome()
         else if (page == "gallery_photo") galleryBack?.invoke()

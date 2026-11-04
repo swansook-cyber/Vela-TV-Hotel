@@ -47,6 +47,20 @@ class UniversalContentResolverTest {
         assertEquals(ContentSource.ACTIVE, ContentPackageStore(root, bundled).current().source)
     }
 
+    @Test fun offlineOnlyAndAutoSyncBothKeepTheMenuAvailable() {
+        val offline = JSONObject(String(bundled)).put("room_service", menu()).toString().toByteArray()
+        val store = ContentPackageStore(root, offline)
+        val fetcher = FakeFetcher(byteArrayOf(), byteArrayOf())
+        val offlineResult = UniversalContentResolver(store, fetcher).resolve(ContentSyncMode.OFFLINE_ONLY)
+        assertEquals(0, fetcher.requests)
+        assertEquals("2026-11-04.1",
+            offlineResult.snapshot.content.getJSONObject("room_service").getString("menuVersion"))
+        val updatedMenu = menu().put("menuVersion", "2026-11-04.2")
+        val updated = JSONObject(String(bundled)).put("room_service", updatedMenu).toString().toByteArray()
+        assertEquals(ContentSyncStatus.UPDATED, resolve(store, "2", updated).status)
+        assertEquals("2026-11-04.2", store.current().content.getJSONObject("room_service").getString("menuVersion"))
+    }
+
     @Test fun invalidMenuNeverReplacesLastKnownGood() {
         val store = ContentPackageStore(root, bundled)
         val valid = JSONObject(String(bundled)).put("room_service", menu()).toString().toByteArray()
@@ -193,7 +207,7 @@ class UniversalContentResolverTest {
         val store = ContentPackageStore(root, bundled)
         val content = payload("new")
         for (bad in listOf(manifest("1", content, schema = 2),
-                           manifest("1", content, minCode = 17))) {
+                           manifest("1", content, minCode = 18))) {
             assertEquals(ContentSyncStatus.INCOMPATIBLE,
                 resolve(store, "1", content, bad).status)
         }

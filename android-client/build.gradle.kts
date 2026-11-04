@@ -16,8 +16,8 @@ android {
         applicationId = "net.velalab.tvhotel"
         minSdk = 26
         targetSdk = 35
-        versionCode = 16
-        versionName = "1.1.1"
+        versionCode = 17
+        versionName = "1.1.2"
     }
 
     buildTypes {

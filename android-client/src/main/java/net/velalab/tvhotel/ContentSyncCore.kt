@@ -30,7 +30,7 @@ data class ContentSyncResult(val status: ContentSyncStatus, val snapshot: Conten
 
 /** Mirrors the published JSON Schemas without adding an Android runtime dependency. */
 object ContentSyncContract {
-    const val APP_VERSION_CODE = 16
+    const val APP_VERSION_CODE = 17
     private val shaPattern = Regex("[0-9a-f]{64}")
     private val versionPattern = Regex("[1-9][0-9]*")
     private val mediaPattern = Regex("media/[A-Za-z0-9_-]{1,64}\\.(jpg|jpeg|png|mp4)")
