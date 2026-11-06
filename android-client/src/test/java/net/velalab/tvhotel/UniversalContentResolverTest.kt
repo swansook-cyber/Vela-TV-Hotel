@@ -207,7 +207,7 @@ class UniversalContentResolverTest {
         val store = ContentPackageStore(root, bundled)
         val content = payload("new")
         for (bad in listOf(manifest("1", content, schema = 2),
-                           manifest("1", content, minCode = 19))) {
+                           manifest("1", content, minCode = 20))) {
             assertEquals(ContentSyncStatus.INCOMPATIBLE,
                 resolve(store, "1", content, bad).status)
         }

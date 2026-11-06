@@ -1056,6 +1056,8 @@ class MainActivity : Activity() {
                            restoreMenuFocus: Boolean = false) {
         page = "detail:$id"
         val root = newPage()
+        val isDining = RoomServiceNavigation.isDiningCategory(mediaCategory)
+        if (isDining) roomServicePageBackground(root)
         header(root, sectionTitle) { showSection(id, sectionTitle) }
         val box = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL; background = panel(false)
@@ -1064,21 +1066,36 @@ class MainActivity : Activity() {
             contentDescription = "$title. $description"
             setOnFocusChangeListener { _, focused -> background = panel(focused) }
         }
+        if (isDining) {
+            box.background = roomServicePanel(false)
+            box.setOnFocusChangeListener { _, focused -> box.background = roomServicePanel(focused) }
+        }
         box.addView(textLine(title, 27f, true), LinearLayout.LayoutParams(-1, dp(54)))
         box.addView(textLine(description, 18f).apply { setTextColor(muted) })
         root.addView(box, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(18) })
         approvedDetailBlocks(mediaCategory).forEach { (heading, body) ->
-            root.addView(detailTextBlock(heading, body), LinearLayout.LayoutParams(-1, -2).apply {
+            val block = detailTextBlock(heading, body)
+            if (isDining) {
+                block.background = roomServicePanel(false)
+                block.setOnFocusChangeListener { _, focused ->
+                    block.background = roomServicePanel(focused)
+                }
+            }
+            root.addView(block, LinearLayout.LayoutParams(-1, -2).apply {
                 topMargin = dp(12)
             })
         }
         var menuAction: View? = null
-        if (RoomServiceNavigation.isDiningCategory(mediaCategory)) {
+        if (isDining) {
             diningReturn = { showDetail(id, sectionTitle, title, description, mediaCategory,
                 restoreMenuFocus = true) }
             menuAction = action("Room Service Menu  •  In-Room Dining") {
                 roomServiceNavigation.enter(RoomServiceOrigin.DINING)
                 showRoomServiceCategories()
+            }
+            menuAction.background = roomServicePanel(false)
+            menuAction.setOnFocusChangeListener { _, focused ->
+                menuAction.background = roomServicePanel(focused)
             }
             root.addView(menuAction, LinearLayout.LayoutParams(-1, dp(60)).apply { topMargin = dp(18) })
         }
@@ -1145,9 +1162,20 @@ class MainActivity : Activity() {
             LinearLayout.LayoutParams(-1, dp(38)).apply { topMargin = dp(14) })
     }
 
-    private fun roomServiceImage(key: String): ImageView = ImageView(this).apply {
+    private fun roomServicePageBackground(root: LinearLayout) {
+        root.background = GradientDrawable(GradientDrawable.Orientation.TL_BR,
+            intArrayOf(Color.rgb(8, 47, 38), Color.rgb(4, 25, 24)))
+    }
+
+    private fun roomServicePanel(focused: Boolean): GradientDrawable = GradientDrawable().apply {
+        setColor(Color.rgb(9, 42, 34))
+        cornerRadius = dp(16).toFloat()
+        setStroke(dp(if (focused) 4 else 1), if (focused) roomGold else Color.rgb(117, 116, 75))
+    }
+
+    private fun roomServiceImage(key: String): RoomServiceImageView = RoomServiceImageView(this).apply {
         scaleType = ImageView.ScaleType.CENTER_CROP
-        contentDescription = "AI promotional category illustration: $key"
+        contentDescription = "AI promotional illustration: $key"
         background = GradientDrawable().apply {
             setColor(Color.rgb(31, 68, 58)); cornerRadius = dp(15).toFloat()
         }
@@ -1167,9 +1195,27 @@ class MainActivity : Activity() {
             card.animate().scaleX(if (focused) 1.025f else 1f)
                 .scaleY(if (focused) 1.025f else 1f).setDuration(140).start()
             card.elevation = dp(if (focused) 12 else 2).toFloat()
+            if (focused) card.postDelayed({ keepRoomServiceFocusInSafeArea(card) }, 60)
         }
         card.background = GradientDrawable().apply {
             setColor(Color.rgb(9, 42, 34)); cornerRadius = dp(16).toFloat()
+        }
+    }
+
+    private fun keepRoomServiceFocusInSafeArea(card: View) {
+        val scroll = activeScroll ?: return
+        if (!card.isAttachedToWindow || !card.hasFocus() || !scroll.isAttachedToWindow) return
+        val cardLocation = IntArray(2)
+        val scrollLocation = IntArray(2)
+        card.getLocationOnScreen(cardLocation)
+        scroll.getLocationOnScreen(scrollLocation)
+        val safeTop = scrollLocation[1] + dp(36)
+        val safeBottom = scrollLocation[1] + scroll.height - dp(72)
+        val bottomOverflow = cardLocation[1] + card.height - safeBottom
+        val topOverflow = cardLocation[1] - safeTop
+        when {
+            bottomOverflow > 0 -> scroll.scrollBy(0, bottomOverflow)
+            topOverflow < 0 -> scroll.scrollBy(0, topOverflow)
         }
     }
 
@@ -1235,7 +1281,7 @@ class MainActivity : Activity() {
         return card
     }
 
-    private fun roomServiceItemCard(item: JSONObject, categoryId: String, onClick: () -> Unit,
+    private fun roomServiceItemCard(item: JSONObject, onClick: () -> Unit,
                                     images: MutableList<Pair<ImageView, String>>): View {
         val card = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
@@ -1244,10 +1290,17 @@ class MainActivity : Activity() {
             setOnClickListener { onClick() }
         }
         val photoBox = FrameLayout(this)
-        val photo = roomServiceImage(categoryId)
+        val itemKey = RoomServiceItemArtwork.itemKey(item.getInt("number"))
+        val photo = roomServiceImage(itemKey)
         photoBox.addView(photo, FrameLayout.LayoutParams(-1, -1))
-        images.add(photo to categoryId)
-        photoBox.addView(textLine("Category illustration", 11f).apply {
+        images.add(photo to itemKey)
+        val missing = textLine("Image unavailable", 12f).apply {
+            gravity = Gravity.CENTER
+            setTextColor(Color.rgb(207, 197, 170))
+        }
+        photoBox.addView(missing, FrameLayout.LayoutParams(-1, -1))
+        photo.missingLabel = missing
+        photoBox.addView(textLine("AI promotional image", 11f).apply {
             gravity = Gravity.CENTER
             setBackgroundColor(Color.argb(210, 3, 30, 25))
         }, FrameLayout.LayoutParams(-1, dp(25), Gravity.BOTTOM))
@@ -1269,13 +1322,16 @@ class MainActivity : Activity() {
             maxLines = 1
         }, LinearLayout.LayoutParams(dp(if (compactTv()) 95 else 135), -1).apply { rightMargin = dp(16) })
         roomServiceFocus(card)
-        card.contentDescription = "#${item.getInt("number")}, ${item.getString("name_en")}, ${item.getString("name_th")}, ${item.getInt("price_thb")} THB. Category illustration, not the actual dish."
+        card.contentDescription = "#${item.getInt("number")}, ${item.getString("name_en")}, ${item.getString("name_th")}, ${item.getInt("price_thb")} THB. AI promotional illustration, not a hotel dish photograph."
         return card
     }
 
     private fun showRoomServiceCategories() {
         page = "room_service"
         val root = newPage()
+        roomServicePageBackground(root)
+        activeScroll?.isSmoothScrollingEnabled = false
+        root.setPadding(root.paddingLeft, root.paddingTop, root.paddingRight, dp(80))
         val originLabel = if (roomServiceNavigation.exitDestination() == RoomServiceOrigin.HOME)
             "‹  Home" else "‹  Dining"
         val back = header(root, "Room Service", originLabel) { returnFromRoomService() }
@@ -1325,6 +1381,9 @@ class MainActivity : Activity() {
         page = "room_service_items"
         val category = categories.getJSONObject(categoryIndex)
         val root = newPage()
+        roomServicePageBackground(root)
+        activeScroll?.isSmoothScrollingEnabled = false
+        root.setPadding(root.paddingLeft, root.paddingTop, root.paddingRight, dp(80))
         header(root, category.getString("title_en"), "‹  Categories") { showRoomServiceCategories() }
         val images = mutableListOf<Pair<ImageView, String>>()
         root.addView(textLine("IN-ROOM DINING  ·  Call ${menu.getString("contact")} to order",
@@ -1334,7 +1393,7 @@ class MainActivity : Activity() {
         val buttons = mutableListOf<View>()
         for (index in 0 until items.length()) {
             val item = items.getJSONObject(index)
-            val button = roomServiceItemCard(item, category.getString("id"), {
+            val button = roomServiceItemCard(item, {
                 lastMenuItem = index
                 showRoomServiceItem(categoryIndex, index)
             }, images)
@@ -1356,11 +1415,23 @@ class MainActivity : Activity() {
         val item = category.getJSONArray("items").getJSONObject(itemIndex)
         page = "room_service_item"
         val root = newPage()
+        roomServicePageBackground(root)
         header(root, "Room Service", "‹  Menu") { showRoomServiceItems(categoryIndex) }
-        val art = roomServiceImage(category.getString("id"))
-        root.addView(art, LinearLayout.LayoutParams(-1, dp(fitHeight(290, 190))).apply { topMargin = dp(14) })
-        activeScroll?.let { roomServiceArt.loadWhenVisible(it, listOf(art to category.getString("id"))) }
-        root.addView(textLine("Category illustration · not the actual dish", 13f).apply {
+        val itemKey = RoomServiceItemArtwork.itemKey(item.getInt("number"))
+        val art = roomServiceImage(itemKey)
+        val artBox = FrameLayout(this)
+        artBox.addView(art, FrameLayout.LayoutParams(-1, -1))
+        val missing = textLine("Image unavailable", 16f).apply {
+            gravity = Gravity.CENTER
+            setTextColor(Color.rgb(207, 197, 170))
+        }
+        artBox.addView(missing, FrameLayout.LayoutParams(-1, -1))
+        art.missingLabel = missing
+        root.addView(artBox, LinearLayout.LayoutParams(-1, dp(fitHeight(290, 190))).apply {
+            topMargin = dp(14)
+        })
+        activeScroll?.let { roomServiceArt.loadWhenVisible(it, listOf(art to itemKey)) }
+        root.addView(textLine("AI promotional illustration · not a hotel dish photograph", 13f).apply {
             setTextColor(Color.rgb(207, 197, 170))
         }, LinearLayout.LayoutParams(-1, dp(28)))
         root.addView(detailTextBlock("#${item.getInt("number")}  ${item.getString("name_en")}",

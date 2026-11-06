@@ -6,6 +6,7 @@ plugins {
 val stagePublicHotelAssets = tasks.register<Copy>("stagePublicHotelAssets") {
     from("src/main/assets/hotel_content.json")
     from("src/main/assets/room_service_art") { into("room_service_art") }
+    from("src/main/assets/room_service_items") { into("room_service_items") }
     into(layout.buildDirectory.dir("generated/publicHotelAssets"))
 }
 
@@ -17,8 +18,8 @@ android {
         applicationId = "net.velalab.tvhotel"
         minSdk = 26
         targetSdk = 35
-        versionCode = 18
-        versionName = "1.1.3"
+        versionCode = 19
+        versionName = "1.1.4"
     }
 
     buildTypes {

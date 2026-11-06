@@ -56,7 +56,7 @@ jobs:
           AAPT="$(find "${ANDROID_HOME}/build-tools" -name aapt -type f | sort -V | tail -n 1)"
           test -x "$AAPT"
           "$AAPT" dump badging "$APK" | grep '^package:'
-          "$AAPT" dump badging "$APK" | grep -E "^package: name='net.velalab.tvhotel' versionCode='18' versionName='1.1.3'"
+          "$AAPT" dump badging "$APK" | grep -E "^package: name='net.velalab.tvhotel' versionCode='19' versionName='1.1.4'"
           python3 - <<'PY'
           import hashlib, json
           from pathlib import Path
@@ -78,24 +78,39 @@ jobs:
                   assert data[:4] == b'RIFF' and data[8:12] == b'WEBP'
                   assert len(data) == entry['bytes']
                   assert hashlib.sha256(data).hexdigest() == entry['sha256']
+              item_root = Path('android-client/src/main/assets/room_service_items')
+              item_art = json.loads(archive.read('assets/room_service_items/index.json'))
+              assert len(item_art['images']) == 81
+              assert {entry['number'] for entry in item_art['images']} == set(numbers)
+              assert len({entry['sha256'] for entry in item_art['images']}) == 81
+              approved = {item['number']: item for category in menu['categories'] for item in category['items']}
+              for entry in item_art['images']:
+                  n = entry['number']
+                  assert entry['asset'] == f'item_{n:03d}.webp'
+                  assert (entry['name_en'], entry['name_th']) == (approved[n]['name_en'], approved[n]['name_th'])
+                  data = archive.read('assets/room_service_items/' + entry['asset'])
+                  assert data == (item_root / entry['asset']).read_bytes()
+                  assert data[:4] == b'RIFF' and data[8:12] == b'WEBP'
+                  assert len(data) == entry['bytes']
+                  assert hashlib.sha256(data).hexdigest() == entry['sha256']
               index = json.loads(archive.read('assets/fiore_approved/index.json'))
               assert len(index['images']) == 24
               for image in index['images']:
                   asset = archive.read('assets/fiore_approved/' + image['asset'])
                   assert hashlib.sha256(asset).hexdigest() == image['export_sha256']
-          print('Approved offline seed, 14 AI illustrations, room service menu and Fiore24 verified in Internal QA APK')
+          print('Approved offline seed, 81 item images, 14 category images, room service menu and Fiore24 verified in Internal QA APK')
           PY
           mkdir -p dist
           SOURCE_SHA="${{ github.event.pull_request.head.sha || github.sha }}"
-          cp "$APK" dist/Vela-TV-Hotel-v1.1.3-code18-${SOURCE_SHA:0:7}-Fiore24-debug.apk
+          cp "$APK" dist/Vela-TV-Hotel-v1.1.4-code19-${SOURCE_SHA:0:7}-Fiore24-debug.apk
           sha256sum dist/*.apk | tee dist/SHA256SUMS.txt
-          printf 'source_commit=%s\nversion_name=1.1.3\nversion_code=18\nasset_profile=internal_qa_fiore24\n' "$SOURCE_SHA" > dist/BUILD-IDENTITY.txt
+          printf 'source_commit=%s\nversion_name=1.1.4\nversion_code=19\nasset_profile=internal_qa_fiore24\n' "$SOURCE_SHA" > dist/BUILD-IDENTITY.txt
           APKSIGNER="$(find "${ANDROID_HOME}/build-tools" -name apksigner -type f | sort -V | tail -n 1)"
           test -x "$APKSIGNER"
           "$APKSIGNER" verify --print-certs "$APK" > dist/CI-SIGNING-CERT.txt
           test -s dist/CI-SIGNING-CERT.txt
       - uses: actions/upload-artifact@v4
         with:
-          name: Vela-TV-Hotel-V1.1.3-FIORE24-INTERNAL-QA-${{ github.run_number }}
+          name: Vela-TV-Hotel-V1.1.4-FIORE24-INTERNAL-QA-${{ github.run_number }}
           path: dist/
           if-no-files-found: error

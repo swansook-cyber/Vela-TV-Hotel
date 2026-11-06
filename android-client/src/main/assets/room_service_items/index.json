@@ -1,0 +1,817 @@
+{
+  "kind": "ai_generated_item_promotional_illustration",
+  "disclaimer_th": "ภาพใช้เพื่อการโฆษณาเท่านั้น",
+  "disclaimer_en": "Images for promotional purposes only",
+  "images": [
+    {
+      "number": 1,
+      "name_en": "Deep fried spring rolls",
+      "name_th": "ปอเปี๊ยะ",
+      "asset": "item_001.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 64076,
+      "sha256": "cf2d1501f3af806848f1621ddfcdc7ae7c4a7a48f7f6d5123081949c48ce51c7"
+    },
+    {
+      "number": 2,
+      "name_en": "Deep fried shrimp cake",
+      "name_th": "ทอดมันกุ้ง",
+      "asset": "item_002.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 72942,
+      "sha256": "2f8a546a4ac0f3b8b47af8877eba7a770c03461d00ff9726859a1a27d4a7a66c"
+    },
+    {
+      "number": 3,
+      "name_en": "Deep fried fish cake",
+      "name_th": "ทอดมันปลา",
+      "asset": "item_003.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 88864,
+      "sha256": "ea5c4fbc92b5bcebb951ebc3c872b1275f1632924562d9800a148f09d5c9e099"
+    },
+    {
+      "number": 4,
+      "name_en": "Deep fried batter - fried prawns",
+      "name_th": "กุ้งชุบแป้งทอด",
+      "asset": "item_004.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 89418,
+      "sha256": "f4abb25a84739b6e9994b3cc68fb2e3a337e422d49bfecc6bcf37b7297dd4245"
+    },
+    {
+      "number": 5,
+      "name_en": "Deep fried batter-fried squid",
+      "name_th": "ปลาหมึกชุบแป้งทอด",
+      "asset": "item_005.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 79618,
+      "sha256": "77b5c9ff00e42f539147c1933024703f55adf98be4db086f6bd9c7e1abd26ace"
+    },
+    {
+      "number": 6,
+      "name_en": "Deep fried chicken with fish sauce",
+      "name_th": "ปีกไก่ทอดน้ำปลา",
+      "asset": "item_006.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 92926,
+      "sha256": "dfcbe4e76595e8ad2a0e7d69ffb77c46136ec8020dcf3ed6d37519048d51d165"
+    },
+    {
+      "number": 7,
+      "name_en": "Bbq chicken wing",
+      "name_th": "ปีกไก่ย่าง บาร์บีคิว",
+      "asset": "item_007.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 89304,
+      "sha256": "6ffd5b0bc327a88b30e186fd09bc63ecbfa2955b9521e6014428d4824d1cdd78"
+    },
+    {
+      "number": 8,
+      "name_en": "French fried",
+      "name_th": "มันฝรั่งทอด",
+      "asset": "item_008.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 79020,
+      "sha256": "66f646332d359b2b94a9025d38c1c2619f7a998c3e2450898e87bac1fe515678"
+    },
+    {
+      "number": 9,
+      "name_en": "Spaghetti carbonara",
+      "name_th": "สปาเก็ตตี้คาโบนาร่า",
+      "asset": "item_009.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 66400,
+      "sha256": "d7f4d9b18225339fad48574e1a1fa2985e34189ad455eeeb49621f402a94c1a0"
+    },
+    {
+      "number": 10,
+      "name_en": "Spaghetti bolognese",
+      "name_th": "สปาเก็ตตี้ซอสเนื้อ",
+      "asset": "item_010.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 87766,
+      "sha256": "d6e8d908a2f810fe02e00c5774ab9002f1da88bad62cb824b220e438e40ef4c8"
+    },
+    {
+      "number": 11,
+      "name_en": "Spaghetti tomato sauce",
+      "name_th": "สปาเก็ตตี้ซอสมะเขือเทศ",
+      "asset": "item_011.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 75144,
+      "sha256": "69f192542d8e16bff6f13c939a655c16537d00c8ea2be4f25b8b98856d8fce65"
+    },
+    {
+      "number": 12,
+      "name_en": "Pizza margarita",
+      "name_th": "พิซซ่ามะเขือเทศ",
+      "asset": "item_012.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 84176,
+      "sha256": "ec79788b13a0ae1581a48421baf4e5b63627238331cf82f401a570ddec53d996"
+    },
+    {
+      "number": 13,
+      "name_en": "Pizza hawaiian",
+      "name_th": "พิซซ่าฮาวาย",
+      "asset": "item_013.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 89404,
+      "sha256": "51ac2f56b4d87a1f62a03f33efa798910a07f0ff47b2c69eada55cd34889b58f"
+    },
+    {
+      "number": 14,
+      "name_en": "Pizza marinara (seafood)",
+      "name_th": "พิซซ่าซีฟู้ด",
+      "asset": "item_014.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 85434,
+      "sha256": "8ffbe65b679b170eb14e8a68f6568f28724221efd13a654916329ce3d00482cc"
+    },
+    {
+      "number": 15,
+      "name_en": "Cheese burger",
+      "name_th": "ชีสเบอร์เกอร์",
+      "asset": "item_015.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 69972,
+      "sha256": "94488ab8d970e3f5b9bd513c9e233c7e0b050fdc3971bece7a8ff54ca2c28b70"
+    },
+    {
+      "number": 16,
+      "name_en": "Chicken burger",
+      "name_th": "เบอร์เกอร์ไก่",
+      "asset": "item_016.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 77078,
+      "sha256": "51496f4d92f5a4724f0bda284c4de4f5baa1e308c3df6b2b3669ffda5fdebc68"
+    },
+    {
+      "number": 17,
+      "name_en": "Fish burger",
+      "name_th": "เบอร์เกอร์ปลา",
+      "asset": "item_017.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 77324,
+      "sha256": "cfa20985a41aedad024260819ef404f87ecec6a7c4a516663f00382908dbaaa2"
+    },
+    {
+      "number": 18,
+      "name_en": "Tuna sandwich",
+      "name_th": "ทูน่าแซนวิส",
+      "asset": "item_018.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 82712,
+      "sha256": "05688be3f2904ca5680b6184cc1a1a248064eca252ba3661b96dec79e6eaab67"
+    },
+    {
+      "number": 19,
+      "name_en": "Club sandwich",
+      "name_th": "คลับแซนวิส",
+      "asset": "item_019.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 91360,
+      "sha256": "921ca773c9838c6902b1dcbceae75c9578109f2ce202e8889891d80920f14e8a"
+    },
+    {
+      "number": 20,
+      "name_en": "Cheese sandwich",
+      "name_th": "ชีสแซนวิส",
+      "asset": "item_020.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 89972,
+      "sha256": "2f2d6c9c22781c948ef72d73f2441074928d20dae441800be125a2d38cc22b5f"
+    },
+    {
+      "number": 21,
+      "name_en": "Papaya salad",
+      "name_th": "ส้มตำ",
+      "asset": "item_021.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 73902,
+      "sha256": "0ee099f8939807e621eb2b29843fa633f943b988debd9977de604377b81189de"
+    },
+    {
+      "number": 22,
+      "name_en": "Spicy seafood salad",
+      "name_th": "ยำซีฟู้ด",
+      "asset": "item_022.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 74964,
+      "sha256": "d0404b54cb76d0da7d99df75832d26bc021beece19fa4b7c4b62bb97dbdae8ca"
+    },
+    {
+      "number": 23,
+      "name_en": "Spicy minced chicken salad",
+      "name_th": "ลาบไก่",
+      "asset": "item_023.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 83600,
+      "sha256": "4eb845d68b67d683a8d6042268fc67f98d9f187bf12425e18dfe0cd194396d28"
+    },
+    {
+      "number": 24,
+      "name_en": "Spicy minced beef salad",
+      "name_th": "ลาบเนื้อ",
+      "asset": "item_024.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 86290,
+      "sha256": "70125a60ff277bbfa257d8217cab32aa01425d70679175b10e044d19cda3cfac"
+    },
+    {
+      "number": 25,
+      "name_en": "Tom yum goong or seafood",
+      "name_th": "ต้มยำกุ้ง,ซีฟู้ด",
+      "asset": "item_025.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 68234,
+      "sha256": "2b4200ed9577cd24be0b2d664db3fdf4031c2e6252224652bb09cfc83a8be6b3"
+    },
+    {
+      "number": 26,
+      "name_en": "Tom kha gai",
+      "name_th": "ต้มข่าไก่",
+      "asset": "item_026.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 59112,
+      "sha256": "02e2739e02ddb6fe98645d61ef46551b2a2abd8f692184b8808304d2718f5fcc"
+    },
+    {
+      "number": 27,
+      "name_en": "Tom kha seafood",
+      "name_th": "ต้มข่าซีฟู้ด",
+      "asset": "item_027.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 62028,
+      "sha256": "093f683f5f3d1ee89d9468f475c0e1469ba01a722dc760537f5bd60c7d305d2c"
+    },
+    {
+      "number": 28,
+      "name_en": "Green curry with chicken",
+      "name_th": "แกงเขียวหวานไก่",
+      "asset": "item_028.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 64678,
+      "sha256": "246809d615894d09d89da071df0e2af10985b6ee5619cfac4a239d82953404ad"
+    },
+    {
+      "number": 29,
+      "name_en": "Green curry with shrimp or beef",
+      "name_th": "แกงเขียวหวานกุ้ง, เนื้อ",
+      "asset": "item_029.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 72468,
+      "sha256": "17f5e92dce356f4f70d8b6881033e4e6e3bbfe74d14f12defe9493bb6b5d362b"
+    },
+    {
+      "number": 30,
+      "name_en": "Massaman curry with chicken",
+      "name_th": "แกงมัสมั่นไก่",
+      "asset": "item_030.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 75384,
+      "sha256": "adf5d38973f0e31bf96f1ba45c12b4b4b3f72fc70f907c7cee4f71caa43b51ce"
+    },
+    {
+      "number": 31,
+      "name_en": "Massaman curry with beef",
+      "name_th": "แกงมัสมั่นเนื้อ",
+      "asset": "item_031.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 72150,
+      "sha256": "2ec616165b3ae1e26ada1ac7933ec0ae43419b24bd2b377f83deeb48f930d61e"
+    },
+    {
+      "number": 32,
+      "name_en": "Red curry with chicken",
+      "name_th": "แพนงไก่",
+      "asset": "item_032.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 69860,
+      "sha256": "410f6706157772429e7da9b0a5378df605fb4818f59c603c50a9cdde5f19715b"
+    },
+    {
+      "number": 33,
+      "name_en": "Red curry with shrimp or beef",
+      "name_th": "แพนงกุ้ง, เนื้อ",
+      "asset": "item_033.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 72010,
+      "sha256": "c15503976748322bdc96ce112a6fdf60b08e672a1e4071795ad060071dd96a6a"
+    },
+    {
+      "number": 34,
+      "name_en": "Pad thai chicken",
+      "name_th": "ผัดไทยไก่",
+      "asset": "item_034.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 81356,
+      "sha256": "a5709e2d9ceb705f9d393bbc1ca08a1c763a63a0c1f262b71ef956129afbe1e1"
+    },
+    {
+      "number": 35,
+      "name_en": "Pad thai shrimp",
+      "name_th": "ผัดไทยกุ้ง",
+      "asset": "item_035.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 83426,
+      "sha256": "9841bc75b6e43463919327e61f54c16a13abe2fd53fa1ec9d368c7652338d669"
+    },
+    {
+      "number": 36,
+      "name_en": "Stir fried noodle with chicken",
+      "name_th": "ผัดซีอิ๊วไก่",
+      "asset": "item_036.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 74960,
+      "sha256": "6994e2a1472c48e36c29a73e6c8c03a20367020db6602c4be7d308220ec0867f"
+    },
+    {
+      "number": 39,
+      "name_en": "Fried noodle gravy with shrimp or beef or seafood",
+      "name_th": "ราดหน้ากุ้ง, เนื้อ, ซีฟู้ด",
+      "asset": "item_039.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 89762,
+      "sha256": "5932756459ea37a06b5efc978655d00961ce1a142bd502499c0060c8a5c95d75"
+    },
+    {
+      "number": 40,
+      "name_en": "Fried yellow noodle with chicken",
+      "name_th": "หมี่เหลืองผัดซีอิ๊วไก่",
+      "asset": "item_040.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 84278,
+      "sha256": "0fb43d45f45b1c86330eda65a8579850f110850ba064fabdde90665c193fe3eb"
+    },
+    {
+      "number": 41,
+      "name_en": "Fried yellow noodle with beef or shrimp, seafood",
+      "name_th": "หมี่เหลืองผัดซีอิ๊วเนื้อ, กุ้ง, ซีฟู้ด",
+      "asset": "item_041.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 81716,
+      "sha256": "fd697c27b2a73040e74e3c614834cf96f9f0f34149ba9d4b4eddc1ab45f594f3"
+    },
+    {
+      "number": 42,
+      "name_en": "Steamed rice",
+      "name_th": "ข้าวเปล่า",
+      "asset": "item_042.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 55500,
+      "sha256": "257df0d33cb9274a35fb8d7fbb441b022e1da30f7a75d424e4e707f51e80704f"
+    },
+    {
+      "number": 43,
+      "name_en": "Fried rice with chicken",
+      "name_th": "ข้าวผัดไก่",
+      "asset": "item_043.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 67326,
+      "sha256": "79a85547f0abc12ac6d21b1652c48fd02347470c41d81ac9aa25bc3f91508d85"
+    },
+    {
+      "number": 44,
+      "name_en": "Fried rice with shrimp or beef or seafood or crab meat or squid",
+      "name_th": "ข้าวผัดกุ้ง, เนื้อ, ซีฟู้ด, เนื้อปู, ปลาหมึก",
+      "asset": "item_044.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 68780,
+      "sha256": "694f931974bd44ea0ccd691715ae4277ff794812774c95ed6e09addf94d75d92"
+    },
+    {
+      "number": 45,
+      "name_en": "Stir fried hot basil with chicken on top rice",
+      "name_th": "กะเพราไก่ราดข้าว",
+      "asset": "item_045.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 71400,
+      "sha256": "05692cce63a58574fb59d8c0029701ada527d7d21891b5b0025db5d44e9faa9d"
+    },
+    {
+      "number": 46,
+      "name_en": "Stir fried hot basil with beef or shrimp or squid or seafood on top rice",
+      "name_th": "กะเพราเนื้อ, กุ้ง, ปลาหมึก, ซีฟู้ด ราดข้าว",
+      "asset": "item_046.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 75792,
+      "sha256": "880fda8ab6f96b9e960b5a5ab2c39acbeae099b5fe670b8ea1be5231161b826f"
+    },
+    {
+      "number": 47,
+      "name_en": "Stir fried curry with chicken on top rice",
+      "name_th": "เครื่องแกงไก่ราดข้าว",
+      "asset": "item_047.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 63468,
+      "sha256": "18baf15d49b624bab78044837d40bbfd38c3fa326077132d90f712e7245316ce"
+    },
+    {
+      "number": 48,
+      "name_en": "Stir fried curry with beef or shrimp or squid or seafood on top rice",
+      "name_th": "เครื่องแกงเนื้อ, กุ้ง, ปลาหมึก, ซีฟู้ด ราดข้าว",
+      "asset": "item_048.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 80670,
+      "sha256": "89e7e7dce32f6c5e8e9356570e464a8faf8790a7f945238d5d4e30e8ed585861"
+    },
+    {
+      "number": 49,
+      "name_en": "Deep fried chicken with garlic & pepper on top rice",
+      "name_th": "ไก่ทอดกระเทียมราดข้าว",
+      "asset": "item_049.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 81006,
+      "sha256": "d7a579ca424994c4e50dc0bc634f342bfd6b13d8e14fbd408cd1e07087811427"
+    },
+    {
+      "number": 50,
+      "name_en": "Deep fried beef with garlic & pepper on top rice",
+      "name_th": "เนื้อทอดกระเทียมราดข้าว",
+      "asset": "item_050.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 91456,
+      "sha256": "43c50f4d209d23ca168b2f5b957997b043cb9243671b72c62b5a6ab3b8cfa8fc"
+    },
+    {
+      "number": 51,
+      "name_en": "Stir fried chicken or beef with oyster sauce, onion, mushroom",
+      "name_th": "ไก่, เนื้อ ผัดน้ำมันหอย",
+      "asset": "item_051.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 67818,
+      "sha256": "1e902ec4d18a2ef1a2043d5b4b4d970e4ab0b9b6ec3eb433600b23b326ebfe8a"
+    },
+    {
+      "number": 52,
+      "name_en": "Stir fried chicken with cashew nuts",
+      "name_th": "ไก่ผัดเม็ดมะม่วง",
+      "asset": "item_052.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 73466,
+      "sha256": "1a56df17e8bc680f79c74a265cc0e94ab6d9947503b1ea89d513e489637346ec"
+    },
+    {
+      "number": 53,
+      "name_en": "Stir fried chicken with sweet & sour",
+      "name_th": "ผัดเปรี้ยวหวานไก่",
+      "asset": "item_053.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 73442,
+      "sha256": "f70f236885e9718e96d16d5fd3ea77049f2b56ef27ac86dc5e03b22e91257ca2"
+    },
+    {
+      "number": 54,
+      "name_en": "Stir fried fish or shrimp with sweet & sour",
+      "name_th": "ผัดเปรี้ยวหวานปลา, กุ้ง",
+      "asset": "item_054.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 71326,
+      "sha256": "2b0f78ad76f24c9dab5384750c86dd19fae920947340499e558f6f1ec6ab1035"
+    },
+    {
+      "number": 55,
+      "name_en": "Stir fried curry powder with shrimp or seafood",
+      "name_th": "ผัดผงกะหรี่กุ้ง, ซีฟู้ด",
+      "asset": "item_055.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 70812,
+      "sha256": "9f65d933dc9164c084610ce3f15249303897ce5e2bdaa3ca522af0522ee0bbc8"
+    },
+    {
+      "number": 56,
+      "name_en": "Stir fried mixed vegetable",
+      "name_th": "ผัดผักรวม",
+      "asset": "item_056.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 72564,
+      "sha256": "b29ef26cb7069185955e7329a5a83077a48763c87ca5989745b275b5350084eb"
+    },
+    {
+      "number": 57,
+      "name_en": "Stir fried beef or chicken or fish with black pepper",
+      "name_th": "ผัดพริกไทยดำ เนื้อ, ไก่, ปลา",
+      "asset": "item_057.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 85080,
+      "sha256": "066c87a514ff4a90311578046f1ccc044eeda32fe51252aaaa30a18e9db094ef"
+    },
+    {
+      "number": 58,
+      "name_en": "Stir fried morning glory",
+      "name_th": "ผัดผักบุ้งไฟแดง",
+      "asset": "item_058.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 76490,
+      "sha256": "8242b1dd9bd9834a3008253638f97e21da94f91e18fdcb704a7500001fe78d91"
+    },
+    {
+      "number": 59,
+      "name_en": "Thai omelet with crab or shrimp, chicken",
+      "name_th": "ไข่เจียวปู, กุ้ง, ไก่สับ",
+      "asset": "item_059.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 70646,
+      "sha256": "fa206d9dd947853094300dc3ec4f470819ad728c2e80f617dd631882a5df3c9b"
+    },
+    {
+      "number": 60,
+      "name_en": "Thai omelet",
+      "name_th": "ไข่เจียว",
+      "asset": "item_060.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 67144,
+      "sha256": "9a9a2a7fd14f7af54e219b7d338d0a9c89661eacd5ef95a1aa02416c33738d24"
+    },
+    {
+      "number": 61,
+      "name_en": "Fried egg",
+      "name_th": "ไข่ดาว",
+      "asset": "item_061.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 60816,
+      "sha256": "fbdff41126203a94afab943e04ee8350349c726ed0b3c3bca6e87d96f463a509"
+    },
+    {
+      "number": 62,
+      "name_en": "Hot & sour curry with fish & vegetable",
+      "name_th": "แกงส้มปลา",
+      "asset": "item_062.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 70342,
+      "sha256": "e098af37eb51e1dea88e751c1f13f6a574960c9f82f232c618b57983a0b78a70"
+    },
+    {
+      "number": 63,
+      "name_en": "Spicy dry fried chicken or beef / kua kling",
+      "name_th": "คั่วกลิ้งไก่, เนื้อ",
+      "asset": "item_063.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 82212,
+      "sha256": "bfc86fc4ef592de669daee93dd19561542cd8366fda44dd13e32664841e4460d"
+    },
+    {
+      "number": 64,
+      "name_en": "Stir fried gnetum gnemon with egg",
+      "name_th": "ผักเหมียงผัดไข่",
+      "asset": "item_064.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 76484,
+      "sha256": "8e72de59a3f30025a4c61bfe1e4d290271822b45fab8a9d16ef45b0653b51747"
+    },
+    {
+      "number": 65,
+      "name_en": "Wing bean mixed dried coconut, chilli paste, shrimp serve with boiled egg",
+      "name_th": "ยำถั่วพลูกุ้งสด",
+      "asset": "item_065.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 75478,
+      "sha256": "109a00d7876aa437857249f1c2db36b8c67891c389808aa5600bd9f47ed43547"
+    },
+    {
+      "number": 66,
+      "name_en": "Spicy 3 crispy salad",
+      "name_th": "ยำสามกรอบ",
+      "asset": "item_066.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 84986,
+      "sha256": "24d54f9fbd16f9a93d902ec44470192ff1934746ea5086cc9adc2c12f12487e9"
+    },
+    {
+      "number": 67,
+      "name_en": "Banana blossom spicy salad",
+      "name_th": "ยำหัวปลี",
+      "asset": "item_067.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 75678,
+      "sha256": "4ca13143bd069b598670893f6d000f991e81a9be2c41cf069ae85cac1e9366c7"
+    },
+    {
+      "number": 68,
+      "name_en": "Fruit shake",
+      "name_th": "น้ำผลไม้ปั่น",
+      "asset": "item_068.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 49944,
+      "sha256": "daccfb4e1c5412418ebc11f3340867de946783c5a7c2bdf10163425930accf6b"
+    },
+    {
+      "number": 69,
+      "name_en": "Fruit smoothies",
+      "name_th": "สมูทตี้ผลไม้",
+      "asset": "item_069.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 43002,
+      "sha256": "8af8aae6cdabeb637fd4957d25051fbfe4abcf56510aa703e49e7fe010b75a55"
+    },
+    {
+      "number": 70,
+      "name_en": "Fruit juice",
+      "name_th": "น้ำผลไม้",
+      "asset": "item_070.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 45322,
+      "sha256": "d5321c9a64511f21f82d8aea96be605b01dea5ce9527e59c4f8cf4aedcff76ed"
+    },
+    {
+      "number": 71,
+      "name_en": "Coconut",
+      "name_th": "น้ำมะพร้าว",
+      "asset": "item_071.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 45812,
+      "sha256": "76517fbe64f465db858f5166d853221a2c11ce39336e9b353edea2d4a38b81f9"
+    },
+    {
+      "number": 72,
+      "name_en": "Lemon soda",
+      "name_th": "โซดามะนาว",
+      "asset": "item_072.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 53900,
+      "sha256": "f242ef7913c53acd462aa5c06780aa8140b21db9eadee633c0b855e5b660dd66"
+    },
+    {
+      "number": 73,
+      "name_en": "Red lemon soda",
+      "name_th": "แดงโซดามะนาว",
+      "asset": "item_073.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 56900,
+      "sha256": "3422a50d61a1f5b462664c697a5e804184d53db5ee6e6314371f740a71904187"
+    },
+    {
+      "number": 74,
+      "name_en": "Thai ice milk tea",
+      "name_th": "ชานมเย็น",
+      "asset": "item_074.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 64926,
+      "sha256": "f71c22e4d46330a504c0ec42f84ddc5e62a5ec45268e6013307ec9b1d1ff972b"
+    },
+    {
+      "number": 75,
+      "name_en": "Thai black tea",
+      "name_th": "ชาดำเย็น",
+      "asset": "item_075.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 60832,
+      "sha256": "0613ecac974298c0ec4d18a6f516d847849ef44238013c7a43705613f66393e1"
+    },
+    {
+      "number": 76,
+      "name_en": "Ice lemon tea",
+      "name_th": "ชามะนาว",
+      "asset": "item_076.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 49844,
+      "sha256": "876e781779a726ede329558da5dc6e7f4a26ce37b8dbc8b84d0ee0945bc8ee2a"
+    },
+    {
+      "number": 77,
+      "name_en": "Ice coffee",
+      "name_th": "กาแฟเย็น",
+      "asset": "item_077.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 53204,
+      "sha256": "82fe39e4a239662825ce685f9203ee97ce24ab4b1409a399fc00abd7bc692fea"
+    },
+    {
+      "number": 78,
+      "name_en": "Ice green tea",
+      "name_th": "ชาเขียว",
+      "asset": "item_078.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 64536,
+      "sha256": "eef22987516b3502d7c3bc2b1dea69aace5aff27422ea02e0c0f48a4e559671b"
+    },
+    {
+      "number": 79,
+      "name_en": "Roselle juice",
+      "name_th": "น้ำกระเจี๊ยบ",
+      "asset": "item_079.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 55410,
+      "sha256": "e609f341a28559a42df6b2ecceffa1fc9d02becb350fd83e7297ae50e186e128"
+    },
+    {
+      "number": 80,
+      "name_en": "Chrysanthemum tea",
+      "name_th": "น้ำเก๊กฮวย",
+      "asset": "item_080.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 56050,
+      "sha256": "bef0c9b021ca6d19340203cf3b980a0f4851f41d296ad54a81290444dfa552bb"
+    },
+    {
+      "number": 81,
+      "name_en": "Fresh seasonal fruit platter",
+      "name_th": "ผลไม้รวม",
+      "asset": "item_081.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 64352,
+      "sha256": "f758f8df466daa05c8a656e07dec9c7a6225914d31c894b9a20f6b695ed80bff"
+    },
+    {
+      "number": 82,
+      "name_en": "Thai sweet sticky rice with mango",
+      "name_th": "ข้าวเหนียวมะม่วง",
+      "asset": "item_082.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 58128,
+      "sha256": "6d72b79301299999b3819a35ece3c663ddca1061bacbacc04a71d7c809e09e02"
+    },
+    {
+      "number": 83,
+      "name_en": "Deep fried banana",
+      "name_th": "กล้วยหอมทอด",
+      "asset": "item_083.webp",
+      "width": 960,
+      "height": 540,
+      "bytes": 71138,
+      "sha256": "9dde6b2d887951b220681dad55ab4b5371d813e490d3e2dd8faaccc5e5a9c2f1"
+    }
+  ]
+}

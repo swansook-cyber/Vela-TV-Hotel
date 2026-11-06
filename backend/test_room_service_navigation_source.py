@@ -48,6 +48,16 @@ class RoomServiceNavigationSourceTests(unittest.TestCase):
         self.assertIn("roomServiceArt.loadWhenVisible", items)
         self.assertIn('item.getInt("price_thb")', self.activity)
 
+    def test_item_art_uses_menu_number_and_focus_scrolls_inside_safe_area(self):
+        item_card = self.activity.split("private fun roomServiceItemCard(", 1)[1].split(
+            "private fun showRoomServiceCategories()", 1)[0]
+        self.assertIn('RoomServiceItemArtwork.itemKey(item.getInt("number"))', item_card)
+        self.assertNotIn('roomServiceImage(categoryId)', item_card)
+        self.assertIn('keepRoomServiceFocusInSafeArea(card)', self.activity)
+        self.assertIn('scroll.scrollBy(0, bottomOverflow)', self.activity)
+        self.assertGreaterEqual(self.activity.count('root.paddingRight, dp(80)'), 2)
+        self.assertIn('buttons[lastMenuItem.coerceIn(0, buttons.lastIndex)].requestFocus()', self.activity)
+
 
 if __name__ == "__main__":
     unittest.main()
