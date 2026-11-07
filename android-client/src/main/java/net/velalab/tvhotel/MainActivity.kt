@@ -11,6 +11,7 @@ import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.os.Build
 import android.util.LruCache
 import android.view.Gravity
 import android.view.View
@@ -785,10 +786,13 @@ class MainActivity : Activity() {
                 letterSpacing = 0.12f
                 setTextColor(Color.rgb(236, 210, 158))
             })
-            box.addView(textLine(description, 16f).apply {
-                maxLines = 2
-                ellipsize = android.text.TextUtils.TruncateAt.END
+            box.addView(textLine(ResortAboutPresentation.preview(description), 16f).apply {
+                gravity = Gravity.START
             })
+            box.addView(textLine("Press OK to read the full description", 13f, true).apply {
+                gravity = Gravity.START
+                setTextColor(Color.rgb(236, 210, 158))
+            }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(8) })
             // Keep the full focus ring inside the wide About panel's bounds.
             // Scaling this edge-to-edge row clips the left/right stroke on TV.
             box.setOnFocusChangeListener { _, focused ->
@@ -805,7 +809,7 @@ class MainActivity : Activity() {
                 box.elevation = dp(if (focused) 8 else 0).toFloat()
                 box.invalidate()
             }
-            root.addView(box, LinearLayout.LayoutParams(-1, dp(fitHeight(100, 82))).apply {
+            root.addView(box, LinearLayout.LayoutParams(-1, -2).apply {
                 bottomMargin = dp(15)
             })
             aboutView = box
@@ -1195,7 +1199,11 @@ class MainActivity : Activity() {
             card.animate().scaleX(if (focused) 1.025f else 1f)
                 .scaleY(if (focused) 1.025f else 1f).setDuration(140).start()
             card.elevation = dp(if (focused) 12 else 2).toFloat()
-            if (focused) card.postDelayed({ keepRoomServiceFocusInSafeArea(card) }, 60)
+            if (focused) {
+                card.postOnAnimation { keepRoomServiceFocusInSafeArea(card) }
+                // ScrollView can perform its own focus scroll after the focus callback.
+                card.postDelayed({ keepRoomServiceFocusInSafeArea(card) }, 140)
+            }
         }
         card.background = GradientDrawable().apply {
             setColor(Color.rgb(9, 42, 34)); cornerRadius = dp(16).toFloat()
@@ -1209,14 +1217,21 @@ class MainActivity : Activity() {
         val scrollLocation = IntArray(2)
         card.getLocationOnScreen(cardLocation)
         scroll.getLocationOnScreen(scrollLocation)
-        val safeTop = scrollLocation[1] + dp(36)
-        val safeBottom = scrollLocation[1] + scroll.height - dp(72)
-        val bottomOverflow = cardLocation[1] + card.height - safeBottom
-        val topOverflow = cardLocation[1] - safeTop
-        when {
-            bottomOverflow > 0 -> scroll.scrollBy(0, bottomOverflow)
-            topOverflow < 0 -> scroll.scrollBy(0, topOverflow)
-        }
+        val insets = window.decorView.rootWindowInsets
+        val systemTop = if (Build.VERSION.SDK_INT >= 30) insets?.getInsets(
+            android.view.WindowInsets.Type.systemBars() or android.view.WindowInsets.Type.displayCutout()
+        )?.top ?: 0 else insets?.systemWindowInsetTop ?: 0
+        val systemBottom = if (Build.VERSION.SDK_INT >= 30) insets?.getInsets(
+            android.view.WindowInsets.Type.systemBars() or android.view.WindowInsets.Type.displayCutout()
+        )?.bottom ?: 0 else insets?.systemWindowInsetBottom ?: 0
+        val safeTop = maxOf(scrollLocation[1] + dp(36), systemTop + dp(24))
+        val safeBottom = minOf(
+            scrollLocation[1] + scroll.height - maxOf(dp(100), scroll.height / 10),
+            resources.displayMetrics.heightPixels - systemBottom - dp(32)
+        )
+        val delta = TvFocusViewport.scrollDelta(cardLocation[1], cardLocation[1] + card.height,
+            safeTop, safeBottom)
+        if (delta != 0) scroll.scrollBy(0, delta)
     }
 
     private fun roomServiceCover(root: LinearLayout, contact: String,
@@ -1331,7 +1346,7 @@ class MainActivity : Activity() {
         val root = newPage()
         roomServicePageBackground(root)
         activeScroll?.isSmoothScrollingEnabled = false
-        root.setPadding(root.paddingLeft, root.paddingTop, root.paddingRight, dp(80))
+        root.setPadding(root.paddingLeft, root.paddingTop, root.paddingRight, dp(120))
         val originLabel = if (roomServiceNavigation.exitDestination() == RoomServiceOrigin.HOME)
             "‹  Home" else "‹  Dining"
         val back = header(root, "Room Service", originLabel) { returnFromRoomService() }
@@ -1383,7 +1398,7 @@ class MainActivity : Activity() {
         val root = newPage()
         roomServicePageBackground(root)
         activeScroll?.isSmoothScrollingEnabled = false
-        root.setPadding(root.paddingLeft, root.paddingTop, root.paddingRight, dp(80))
+        root.setPadding(root.paddingLeft, root.paddingTop, root.paddingRight, dp(120))
         header(root, category.getString("title_en"), "‹  Categories") { showRoomServiceCategories() }
         val images = mutableListOf<Pair<ImageView, String>>()
         root.addView(textLine("IN-ROOM DINING  ·  Call ${menu.getString("contact")} to order",
